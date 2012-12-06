@@ -293,4 +293,8 @@ public class NetPlayerInfo implements Serializable {
 	public void delete() {
 		ruleOpt = null;
 	}
+	
+	public boolean isWatching(){
+		return seatID == -1;
+	}
 }

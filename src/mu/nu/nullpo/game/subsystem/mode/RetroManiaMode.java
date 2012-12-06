@@ -333,7 +333,7 @@ public class RetroManiaMode extends DummyMode {
 			receiver.drawScoreFont(engine, playerID, 0, 10, String.valueOf(engine.statistics.level));
 
 			receiver.drawScoreFont(engine, playerID, 0, 12, "TIME", EventReceiver.COLOR_BLUE);
-			receiver.drawScoreFont(engine, playerID, 0, 13, GeneralUtil.getTime(engine.statistics.time));
+			receiver.drawScoreFont(engine, playerID, 0, 13, GeneralUtil.getTime(engine.statistics.getTime()));
 
 			//receiver.drawScoreFont(engine, playerID, 0, 15, String.valueOf(linesAfterLastLevelUp));
 			//receiver.drawScoreFont(engine, playerID, 0, 16, GeneralUtil.getTime(levelTime[Math.min(engine.statistics.level,15)] - levelTimer));
@@ -394,11 +394,11 @@ public class RetroManiaMode extends DummyMode {
 		linesAfterLastLevelUp += lines;
 
 		// Update the meter
-		engine.meterValue = ((linesAfterLastLevelUp % 4) * receiver.getMeterMax(engine)) / 3;
-		engine.meterColor = GameEngine.METER_COLOR_GREEN;
-		if(linesAfterLastLevelUp >= 1) engine.meterColor = GameEngine.METER_COLOR_YELLOW;
-		if(linesAfterLastLevelUp >= 2) engine.meterColor = GameEngine.METER_COLOR_ORANGE;
-		if(linesAfterLastLevelUp >= 3) engine.meterColor = GameEngine.METER_COLOR_RED;
+		engine.setMeterValue(((linesAfterLastLevelUp % 4) * receiver.getMeterMax(engine)) / 3);
+		engine.setMeterColor(GameEngine.METER_COLOR_GREEN);
+		if(linesAfterLastLevelUp >= 1) engine.setMeterColor(GameEngine.METER_COLOR_YELLOW);
+		if(linesAfterLastLevelUp >= 2) engine.setMeterColor(GameEngine.METER_COLOR_ORANGE);
+		if(linesAfterLastLevelUp >= 3) engine.setMeterColor(GameEngine.METER_COLOR_RED);
 
 		// Level up
 		if( (linesAfterLastLevelUp >= 4) ||
@@ -414,7 +414,7 @@ public class RetroManiaMode extends DummyMode {
 			levelTimer = 0;
 			linesAfterLastLevelUp = 0;
 
-			engine.meterValue = 0;
+			engine.setMeterValue(0);
 
 			setSpeed(engine);
 			engine.playSE("levelup");
@@ -461,7 +461,7 @@ public class RetroManiaMode extends DummyMode {
 
 		// Checks/Updates the ranking
 		if((owner.replayMode == false) && (big == false) && (engine.ai == null)) {
-			updateRanking(engine.statistics.score, engine.statistics.lines, engine.statistics.time, gametype);
+			updateRanking(engine.statistics.score, engine.statistics.lines, engine.statistics.getTime(), gametype);
 
 			if(rankingRank != -1) {
 				saveRanking(owner.modeConfig, engine.ruleopt.strRuleName);

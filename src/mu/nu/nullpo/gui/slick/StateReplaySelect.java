@@ -164,7 +164,7 @@ public class StateReplaySelect extends DummyMenuScrollState {
 									, NormalFont.COLOR_CYAN);
 		NormalFont.printFontGrid(1, 26,
 									"LEVEL:" + (statsList[cursor].level + statsList[cursor].levelDispAdd) +
-									" TIME:" + GeneralUtil.getTime(statsList[cursor].time)
+									" TIME:" + GeneralUtil.getTime(statsList[cursor].getTime())
 									, NormalFont.COLOR_CYAN);
 		NormalFont.printFontGrid(1, 27,
 									"GAME RATE:" + ( (statsList[cursor].gamerate == 0f) ? "UNKNOWN" : ((100*statsList[cursor].gamerate) + "%") )
@@ -185,6 +185,8 @@ public class StateReplaySelect extends DummyMenuScrollState {
 			log.error("Failed to load replay file from " + list[cursor], e);
 			return true;
 		}
+		
+		NullpoMinoSlick.propGlobal.setProperty("latest.replay.file", list[cursor]);
 
 		NullpoMinoSlick.stateInGame.startReplayGame(prop);
 

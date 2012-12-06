@@ -54,6 +54,8 @@ public class StateSelectMode extends DummyMenuScrollState {
 
 	/** Current folder name */
 	protected String strCurrentFolder;
+	
+	private boolean moreEnabled = false;
 
 	/**
 	 * Constructor
@@ -87,11 +89,11 @@ public class StateSelectMode extends DummyMenuScrollState {
 		LinkedList<String> listMode = null;
 		if(isTopLevel) {
 			listMode = StateSelectModeFolder.listTopLevelModes;
-			list = new String[listMode.size() + 1];
+			list = new String[listMode.size()];
 			for(int i = 0; i < listMode.size(); i++) {
 				list[i] = listMode.get(i);
 			}
-			list[list.length - 1] = "[MORE...]";
+			//list[list.length - 1] = "[MORE...]";
 		} else {
 			listMode = StateSelectModeFolder.mapFolder.get(strCurrentFolder);
 			if(listMode != null) {
@@ -183,7 +185,7 @@ public class StateSelectMode extends DummyMenuScrollState {
 	protected boolean onDecide(GameContainer container, StateBasedGame game, int delta) {
 		ResourceHolder.soundManager.play("decide");
 
-		if(isTopLevel && (cursor == list.length - 1)) {
+		if(isTopLevel && (cursor == list.length - 1) && moreEnabled) {
 			// More...
 			NullpoMinoSlick.propGlobal.setProperty("name.mode.toplevel", list[cursor]);
 			game.enterState(StateSelectModeFolder.ID);
@@ -197,7 +199,11 @@ public class StateSelectMode extends DummyMenuScrollState {
 			}
 			NullpoMinoSlick.propGlobal.setProperty("name.mode", list[cursor]);
 			NullpoMinoSlick.saveConfig();
-			game.enterState(StateSelectRuleFromList.ID);
+			
+			NullpoMinoSlick.stateInGame.startNewGame(null);
+			game.enterState(StateInGame.ID);
+			
+			//game.enterState(StateSelectRuleFromList.ID);
 		}
 
 		return false;

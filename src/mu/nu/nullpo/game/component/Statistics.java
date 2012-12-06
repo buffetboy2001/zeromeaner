@@ -29,7 +29,11 @@
 package mu.nu.nullpo.game.component;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 
+import mu.nu.nullpo.game.play.GameEngine;
 import mu.nu.nullpo.util.CustomProperties;
 
 /**
@@ -58,7 +62,7 @@ public class Statistics implements Serializable {
 	public int lines;
 
 	/** 経過 time */
-	public int time;
+	private int time;
 
 	/** Level */
 	public int level;
@@ -74,6 +78,8 @@ public class Statistics implements Serializable {
 
 	/** ピースを移動させた合計 count */
 	public int totalPieceMove;
+
+	public int totalPieceMoveWithDasAsOne;
 
 	/** ピースをrotationさせた合計 count */
 	public int totalPieceRotate;
@@ -142,7 +148,10 @@ public class Statistics implements Serializable {
 	public float ppm;
 
 	/** 1秒間あたりのピースcount (Pieces Per Second) */
-	public float pps;
+	private float pps;
+	
+	/** the current speed **/
+	private float currentPPM;
 
 	/** TAS detection: slowdown rate */
 	public float gamerate;
@@ -152,6 +161,16 @@ public class Statistics implements Serializable {
 
 	/** Roll cleared flag (0=Died 1=Reached 2=Fully Survived) */
 	public int rollclear;
+	
+	/** Stat to keep track of the delta with optimal finesse. **/
+	public int finesseDelta;
+	
+	/** keys per tetrimino, without the drops **/
+	public float kpt;
+	
+	public List<SpeedEntry> speedEntries = new ArrayList<SpeedEntry>();
+	
+	private HashMap<Manipulation, ArrayList<Integer>> manipulations = new HashMap<Manipulation, ArrayList<Integer>>();
 
 	/**
 	 * Constructor
@@ -194,7 +213,7 @@ public class Statistics implements Serializable {
 		scoreFromHardDrop = 0;
 		scoreFromOtherBonus = 0;
 		lines = 0;
-		time = 0;
+		setTime(0);
 		level = 0;
 		levelDispAdd = 0;
 		totalPieceLocked = 0;
@@ -222,10 +241,20 @@ public class Statistics implements Serializable {
 		lpm = 0f;
 		lps = 0f;
 		ppm = 0f;
-		pps = 0f;
+		setPps(0f);
+		setCurrentPPM(0f);
 		gamerate = 0f;
 		maxChain = 0;
 		rollclear = 0;
+		finesseDelta = 0;
+		kpt = 0;
+		fillManipulationsWithEmptyValues();
+	}
+
+	private void fillManipulationsWithEmptyValues() {
+		for (Manipulation manipulationKey : Manipulation.values()){
+			getManipulations().put(manipulationKey, new ArrayList<Integer>());
+		}
 	}
 
 	/**
@@ -239,7 +268,7 @@ public class Statistics implements Serializable {
 		scoreFromHardDrop = s.scoreFromHardDrop;
 		scoreFromOtherBonus = s.scoreFromOtherBonus;
 		lines = s.lines;
-		time = s.time;
+		setTime(s.getTime());
 		level = s.level;
 		levelDispAdd = s.levelDispAdd;
 		totalPieceLocked = s.totalPieceLocked;
@@ -266,27 +295,71 @@ public class Statistics implements Serializable {
 		lpm = s.lpm;
 		lps = s.lps;
 		ppm = s.ppm;
-		pps = s.pps;
+		setPps(s.getPps());
 		gamerate = s.gamerate;
 		maxChain = s.maxChain;
 		rollclear = s.rollclear;
+		finesseDelta = s.finesseDelta;
+		kpt = s.kpt;
+		
+		for(Manipulation manipulation : s.getManipulations().keySet()){
+			getManipulations().put(manipulation,  s.getManipulations().get(manipulation));
+		}
 	}
 
 	/**
 	 * SPMやLPMの更新
 	 */
-	public void update() {
+	public void update(GameEngine engine) {
 		if(lines > 0) {
 			spl = (double)(score) / (double)(lines);
 		}
-		if(time > 0) {
-			spm = (double)(score * 3600.0) / (double)(time);
-			sps = (double)(score * 60.0) / (double)(time);
-			lpm = (float)(lines * 3600f) / (float)(time);
-			lps = (float)(lines * 60f) / (float)(time);
-			ppm = (float)(totalPieceLocked * 3600f) / (float)(time);
-			pps = (float)(totalPieceLocked * 60f) / (float)(time);
+		if(getTime() > 0) {
+			spm = (double)(score * 3600.0) / (double)(getTime());
+			sps = (double)(score * 60.0) / (double)(getTime());
+			lpm = (float)(lines * 3600f) / (float)(getTime());
+			lps = (float)(lines * 60f) / (float)(getTime());
+			ppm = (float)(totalPieceLocked * 3600f) / (float)(getTime());
+			setPps((float)(totalPieceLocked * 60f) / (float)(getTime()));
+			updateCurrentPPM(engine);
 		}
+	}
+
+	private void updateCurrentPPM(GameEngine engine) {
+		int amountOfPiecesToUseForCalculation = 5;
+		ArrayList<PiecePlacement> piecePlacements = engine.getPiecePlacements();
+		int amountOfPiecesPlaced = piecePlacements.size();
+		int nrOfPiecesAvailableToCalculate = Math.min(amountOfPiecesToUseForCalculation,amountOfPiecesPlaced);
+		if (nrOfPiecesAvailableToCalculate > 0) {
+			PiecePlacement piecePlacement = piecePlacements.get(amountOfPiecesPlaced - nrOfPiecesAvailableToCalculate);
+			int startIntervalTime = piecePlacement.getTime();
+			float delta = nrOfPiecesAvailableToCalculate == amountOfPiecesToUseForCalculation ? (getTime() - startIntervalTime) : getTime();
+			setCurrentPPM((float)(nrOfPiecesAvailableToCalculate * 3600f) / (float)(delta));
+		}
+	}
+
+	private void updateCurrentPPMStaticTimeInterval(GameEngine engine) {
+		
+		int nrOfFramesUsedForCalculation = 60;
+		ArrayList<PiecePlacement> piecePlacements = engine.getPiecePlacements();
+		
+		if (getTime() > nrOfFramesUsedForCalculation){
+			int lowerBoundInTime = getTime()-nrOfFramesUsedForCalculation;
+			int amountOfPiecesPlaced = piecePlacements.size();
+			int amountOfPiecesInTheInterval = 0;
+			
+			for (int i=amountOfPiecesPlaced; i>0; i--){
+				PiecePlacement piecePlacement = piecePlacements.get(i - 1);
+				int pieceTime = piecePlacement.getTime();
+				if (pieceTime > lowerBoundInTime){
+					amountOfPiecesInTheInterval++;
+				} else break;
+			}
+			setCurrentPPM((float)(amountOfPiecesInTheInterval * 3600f) / (float)(nrOfFramesUsedForCalculation));
+		} else {
+			setCurrentPPM((float)(totalPieceLocked * 3600f) / (float)(getTime()));
+		}
+		
 	}
 
 	/**
@@ -301,7 +374,7 @@ public class Statistics implements Serializable {
 		p.setProperty(id + ".statistics.scoreFromHardDrop", scoreFromHardDrop);
 		p.setProperty(id + ".statistics.scoreFromOtherBonus", scoreFromOtherBonus);
 		p.setProperty(id + ".statistics.lines", lines);
-		p.setProperty(id + ".statistics.time", time);
+		p.setProperty(id + ".statistics.time", getTime());
 		p.setProperty(id + ".statistics.level", level);
 		p.setProperty(id + ".statistics.levelDispAdd", levelDispAdd);
 		p.setProperty(id + ".statistics.totalPieceLocked", totalPieceLocked);
@@ -329,17 +402,19 @@ public class Statistics implements Serializable {
 		p.setProperty(id + ".statistics.lpm", lpm);
 		p.setProperty(id + ".statistics.lps", lps);
 		p.setProperty(id + ".statistics.ppm", ppm);
-		p.setProperty(id + ".statistics.pps", pps);
+		p.setProperty(id + ".statistics.pps", getPps());
 		p.setProperty(id + ".statistics.gamerate", gamerate);
 		p.setProperty(id + ".statistics.maxChain", maxChain);
 		p.setProperty(id + ".statistics.rollclear", rollclear);
+		p.setProperty(id + ".statistics.finesse", finesseDelta);
+		p.setProperty(id + ".statistics.kpt", kpt);
 
 		// 旧Versionとの互換用
 		if(id == 0) {
 			p.setProperty("result.score", score);
 			p.setProperty("result.totallines", lines);
 			p.setProperty("result.level", level);
-			p.setProperty("result.time", time);
+			p.setProperty("result.time", getTime());
 		}
 	}
 
@@ -355,7 +430,7 @@ public class Statistics implements Serializable {
 		scoreFromHardDrop = p.getProperty(id + ".statistics.scoreFromHardDrop", 0);
 		scoreFromOtherBonus = p.getProperty(id + ".statistics.scoreFromOtherBonus", 0);
 		lines = p.getProperty(id + ".statistics.lines", 0);
-		time = p.getProperty(id + ".statistics.time", 0);
+		setTime(p.getProperty(id + ".statistics.time", 0));
 		level = p.getProperty(id + ".statistics.level", 0);
 		levelDispAdd = p.getProperty(id + ".statistics.levelDispAdd", 0);
 		totalPieceLocked = p.getProperty(id + ".statistics.totalPieceLocked", 0);
@@ -383,10 +458,12 @@ public class Statistics implements Serializable {
 		lpm = p.getProperty(id + ".statistics.lpm", 0f);
 		lps = p.getProperty(id + ".statistics.lps", 0f);
 		ppm = p.getProperty(id + ".statistics.ppm", 0f);
-		pps = p.getProperty(id + ".statistics.pps", 0f);
+		setPps(p.getProperty(id + ".statistics.pps", 0f));
 		gamerate = p.getProperty(id + ".statistics.gamerate", 0f);
 		maxChain = p.getProperty(id + ".statistics.maxChain", 0);
 		rollclear = p.getProperty(id + ".statistics.rollclear", 0);
+		finesseDelta = p.getProperty(id + ".statistics.finesse", 0);
+		kpt = p.getProperty(id + ".statistics.kpt", 0);
 	}
 
 	/**
@@ -400,7 +477,7 @@ public class Statistics implements Serializable {
 		scoreFromHardDrop = Integer.parseInt(s[3]);
 		scoreFromOtherBonus = Integer.parseInt(s[4]);
 		lines = Integer.parseInt(s[5]);
-		time = Integer.parseInt(s[6]);
+		setTime(Integer.parseInt(s[6]));
 		level = Integer.parseInt(s[7]);
 		levelDispAdd = Integer.parseInt(s[8]);
 		totalPieceLocked = Integer.parseInt(s[9]);
@@ -428,10 +505,12 @@ public class Statistics implements Serializable {
 		lpm = Float.parseFloat(s[31]);
 		lps = Float.parseFloat(s[32]);
 		ppm = Float.parseFloat(s[33]);
-		pps = Float.parseFloat(s[34]);
+		setPps(Float.parseFloat(s[34]));
 		gamerate = Float.parseFloat(s[35]);
 		maxChain = Integer.parseInt(s[36]);
 		if(s.length > 37) rollclear = Integer.parseInt(s[37]);
+		if(s.length > 38) finesseDelta = Integer.parseInt(s[38]);
+		if(s.length > 39) kpt = Float.parseFloat(s[39]);
 	}
 
 	/**
@@ -447,14 +526,14 @@ public class Statistics implements Serializable {
 	 * @return String Array (String[38])
 	 */
 	public String[] exportStringArray() {
-		String[] s = new String[38];
+		String[] s = new String[40];
 		s[0] = Integer.toString(score);
 		s[1] = Integer.toString(scoreFromLineClear);
 		s[2] = Integer.toString(scoreFromSoftDrop);
 		s[3] = Integer.toString(scoreFromHardDrop);
 		s[4] = Integer.toString(scoreFromOtherBonus);
 		s[5] = Integer.toString(lines);
-		s[6] = Integer.toString(time);
+		s[6] = Integer.toString(getTime());
 		s[7] = Integer.toString(level);
 		s[8] = Integer.toString(levelDispAdd);
 		s[9] = Integer.toString(totalPieceLocked);
@@ -482,10 +561,12 @@ public class Statistics implements Serializable {
 		s[31] = Float.toString(lpm);
 		s[32] = Float.toString(lps);
 		s[33] = Float.toString(ppm);
-		s[34] = Float.toString(pps);
+		s[34] = Float.toString(getPps());
 		s[35] = Float.toString(gamerate);
 		s[36] = Integer.toString(maxChain);
 		s[37] = Integer.toString(rollclear);
+		s[38] = Integer.toString(finesseDelta);
+		s[39] = Float.toString(kpt);
 		return s;
 	}
 
@@ -501,5 +582,66 @@ public class Statistics implements Serializable {
 			result += array[i];
 		}
 		return result;
+	}
+
+	public void setPps(float pps) {
+		this.pps = pps;
+	}
+
+	public float getPps() {
+		return pps;
+	}
+
+	public void setTime(int time) {
+		this.time = time;
+	}
+
+	public int getTime() {
+		return time;
+	}
+	
+	public float getCurrentPPM() {
+		return currentPPM;
+	}
+
+	public void setCurrentPPM(float currentPPM) {
+		this.currentPPM = currentPPM;
+	}
+	
+	public HashMap<Manipulation, ArrayList<Integer>> getManipulations() {
+		return manipulations;
+	}
+
+	public class SpeedEntry {
+		
+		private int time;
+		private float localspeed;
+		private float globalspeed;
+		
+		public SpeedEntry(int time, float localspeed, float globalspeed) {
+			super();
+			this.time = time;
+			this.localspeed = localspeed;
+			this.globalspeed = globalspeed;
+		}
+		
+		public int getTime() {
+			return time;
+		}
+		public void setTime(int time) {
+			this.time = time;
+		}
+		public float getLocalspeed() {
+			return localspeed;
+		}
+		public void setLocalspeed(float localspeed) {
+			this.localspeed = localspeed;
+		}
+		public float getGlobalspeed() {
+			return globalspeed;
+		}
+		public void setGlobalspeed(float globalspeed) {
+			this.globalspeed = globalspeed;
+		}
 	}
 }

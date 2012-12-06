@@ -730,7 +730,7 @@ public class AvalancheVSSPFMode extends AvalancheVSDummyMode {
 
 		// Timer
 		if(playerID == 0) {
-			receiver.drawDirectFont(engine, playerID, 224, 8, GeneralUtil.getTime(engine.statistics.time));
+			receiver.drawDirectFont(engine, playerID, 224, 8, GeneralUtil.getTime(engine.statistics.getTime()));
 		}
 
 		// Ojama Counter

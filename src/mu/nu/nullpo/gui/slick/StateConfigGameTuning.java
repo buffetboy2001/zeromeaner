@@ -128,37 +128,39 @@ public class StateConfigGameTuning extends BaseGameState {
 		String strTemp = "";
 		g.drawImage(ResourceHolder.imgMenu, 0, 0);
 
-		NormalFont.printFontGrid(1, 1, "GAME TUNING (" + (player+1) + "P)", NormalFont.COLOR_ORANGE);
+		NormalFont.printFontGrid(1, 1, "GAME TUNING", NormalFont.COLOR_ORANGE);
 		NormalFont.printFontGrid(1, 3 + cursor, "b", NormalFont.COLOR_RED);
 
 		if(owRotateButtonDefaultRight == -1) strTemp = "AUTO";
 		if(owRotateButtonDefaultRight == 0) strTemp = "LEFT";
 		if(owRotateButtonDefaultRight == 1) strTemp = "RIGHT";
-		NormalFont.printFontGrid(2, 3, "A BUTTON ROTATE:" + strTemp, (cursor == 0));
+		
+		//NormalFont.printFontGrid(2, 3, "A BUTTON ROTATE:" + strTemp, (cursor == 0));
 
-		NormalFont.printFontGrid(2, 4, "BLOCK SKIN:" + ((owSkin == -1) ? "AUTO": String.valueOf(owSkin)), (cursor == 1));
+		NormalFont.printFontGrid(2, 3, "BLOCK SKIN     " + ((owSkin == -1) ? "AUTO": String.valueOf(owSkin)), (cursor == 0));
 		if((owSkin >= 0) && (owSkin < ResourceHolder.imgNormalBlockList.size())) {
 			//ResourceHolder.imgBlock.draw(256, 64, 256 + 144, 64 + 16, 0, owSkin * 16, 144, (owSkin * 16) + 16);
 			Image imgBlock = ResourceHolder.imgNormalBlockList.get(owSkin);
 
 			if(ResourceHolder.blockStickyFlagList.get(owSkin) == true) {
 				for(int j = 0; j < 9; j++) {
-					imgBlock.draw(256 + (j * 16), 64, 256 + (j * 16) + 16, 64 + 16, 0, (j * 16), 16, (j * 16) + 16);
+					imgBlock.draw(320 + (j * 16), 48, 320 + (j * 16) + 16, 48 + 16, 0, (j * 16), 16, (j * 16) + 16);
 				}
 			} else {
-				imgBlock.draw(256, 64, 256+144, 64+16, 0, 0, 144, 16);
+				imgBlock.draw(320, 48, 320+144, 48+16, 0, 0, 144, 16);
 			}
 		}
 
-		NormalFont.printFontGrid(2, 5, "MIN DAS:" + ((owMinDAS == -1) ? "AUTO" : String.valueOf(owMinDAS)), (cursor == 2));
-		NormalFont.printFontGrid(2, 6, "MAX DAS:" + ((owMaxDAS == -1) ? "AUTO" : String.valueOf(owMaxDAS)), (cursor == 3));
-		NormalFont.printFontGrid(2, 7, "DAS DELAY:" + ((owDasDelay == -1) ? "AUTO" : String.valueOf(owDasDelay)), (cursor == 4));
-		NormalFont.printFontGrid(2, 8, "REVERSE UP/DOWN:" + GeneralUtil.getOorX(owReverseUpDown), (cursor == 5));
+		NormalFont.printFontGrid(2, 4, "DAS            " + ((owMinDAS == -1) ? "AUTO" : String.valueOf(owMinDAS)), (cursor == 1));
+		//NormalFont.printFontGrid(2, 6, "MAX DAS:" + ((owMaxDAS == -1) ? "AUTO" : String.valueOf(owMaxDAS)), (cursor == 3));
+		NormalFont.printFontGrid(2, 5, "REPEAT DELAY   " + ((owDasDelay == -1) ? "AUTO" : String.valueOf(owDasDelay)), (cursor == 2));
+		//NormalFont.printFontGrid(2, 8, "REVERSE UP/DOWN:" + GeneralUtil.getOorX(owReverseUpDown), (cursor == 5));
 
-		if(owMoveDiagonal == -1) strTemp = "AUTO";
-		if(owMoveDiagonal == 0) strTemp = "e";
-		if(owMoveDiagonal == 1) strTemp = "c";
-		NormalFont.printFontGrid(2, 9, "DIAGONAL MOVE:" + strTemp, (cursor == 6));
+		if(owMoveDiagonal == -1) strTemp = "AUTO  ";
+		if(owMoveDiagonal == 0) strTemp = "OFF";
+		if(owMoveDiagonal == 1) strTemp = "ON";
+		
+		NormalFont.printFontGrid(2, 6, "DIAGONAL MOVE  " + strTemp, (cursor == 3));
 	}
 
 	/*
@@ -171,12 +173,12 @@ public class StateConfigGameTuning extends BaseGameState {
 		// Cursor movement
 		if(GameKey.gamekey[0].isMenuRepeatKey(GameKey.BUTTON_UP)) {
 			cursor--;
-			if(cursor < 0) cursor = 6;
+			if(cursor < 0) cursor = 3;
 			ResourceHolder.soundManager.play("cursor");
 		}
 		if(GameKey.gamekey[0].isMenuRepeatKey(GameKey.BUTTON_DOWN)) {
 			cursor++;
-			if(cursor > 6) cursor = 0;
+			if(cursor > 3) cursor = 0;
 			ResourceHolder.soundManager.play("cursor");
 		}
 
@@ -189,35 +191,36 @@ public class StateConfigGameTuning extends BaseGameState {
 			ResourceHolder.soundManager.play("change");
 
 			switch(cursor) {
+//			case 0:
+//				owRotateButtonDefaultRight += change;
+//				if(owRotateButtonDefaultRight < -1) owRotateButtonDefaultRight = 1;
+//				if(owRotateButtonDefaultRight > 1) owRotateButtonDefaultRight = -1;
+//				break;
 			case 0:
-				owRotateButtonDefaultRight += change;
-				if(owRotateButtonDefaultRight < -1) owRotateButtonDefaultRight = 1;
-				if(owRotateButtonDefaultRight > 1) owRotateButtonDefaultRight = -1;
-				break;
-			case 1:
 				owSkin += change;
 				if(owSkin < -1) owSkin = ResourceHolder.imgNormalBlockList.size() - 1;
 				if(owSkin > ResourceHolder.imgNormalBlockList.size() - 1) owSkin = -1;
 				break;
-			case 2:
+			case 1:
 				owMinDAS += change;
+				owMaxDAS = owMinDAS;
 				if(owMinDAS < -1) owMinDAS = 99;
 				if(owMinDAS > 99) owMinDAS = -1;
 				break;
-			case 3:
-				owMaxDAS += change;
-				if(owMaxDAS < -1) owMaxDAS = 99;
-				if(owMaxDAS > 99) owMaxDAS = -1;
-				break;
-			case 4:
+//			case 3:
+//				owMaxDAS += change;
+//				if(owMaxDAS < -1) owMaxDAS = 99;
+//				if(owMaxDAS > 99) owMaxDAS = -1;
+//				break;
+			case 2:
 				owDasDelay += change;
 				if(owDasDelay < -1) owDasDelay = 99;
 				if(owDasDelay > 99) owDasDelay = -1;
 				break;
-			case 5:
-				owReverseUpDown ^= true;
-				break;
-			case 6:
+//			case 5:
+//				owReverseUpDown ^= true;
+//				break;
+			case 3:
 				owMoveDiagonal += change;
 				if(owMoveDiagonal < -1) owMoveDiagonal = 1;
 				if(owMoveDiagonal > 1) owMoveDiagonal = -1;

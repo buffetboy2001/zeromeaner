@@ -368,7 +368,7 @@ public class RetroMasteryMode extends DummyMode {
 			receiver.drawScoreFont(engine, playerID, 0, 10, String.format("%02d", engine.statistics.level));
 
 			receiver.drawScoreFont(engine, playerID, 0, 12, "TIME", EventReceiver.COLOR_BLUE);
-			receiver.drawScoreFont(engine, playerID, 0, 13, GeneralUtil.getTime(engine.statistics.time));
+			receiver.drawScoreFont(engine, playerID, 0, 13, GeneralUtil.getTime(engine.statistics.getTime()));
 		}
 	}
 
@@ -452,23 +452,23 @@ public class RetroMasteryMode extends DummyMode {
 		// Update meter
 		int togo = levellines - loons;
 		if (gametype == GAMETYPE_PRESSURE) {
-			engine.meterValue = ((loons % 5) * receiver.getMeterMax(engine)) / 4;
-			if(togo == 1) engine.meterColor = GameEngine.METER_COLOR_RED;
-			else if(togo == 2) engine.meterColor = GameEngine.METER_COLOR_ORANGE;
-			else if(togo == 3) engine.meterColor = GameEngine.METER_COLOR_YELLOW;
-			else engine.meterColor = GameEngine.METER_COLOR_GREEN;
+			engine.setMeterValue(((loons % 5) * receiver.getMeterMax(engine)) / 4);
+			if(togo == 1) engine.setMeterColor(GameEngine.METER_COLOR_RED);
+			else if(togo == 2) engine.setMeterColor(GameEngine.METER_COLOR_ORANGE);
+			else if(togo == 3) engine.setMeterColor(GameEngine.METER_COLOR_YELLOW);
+			else engine.setMeterColor(GameEngine.METER_COLOR_GREEN);
 		} else if (engine.statistics.level == startlevel && startlevel != 0){
-			engine.meterValue = (loons * receiver.getMeterMax(engine)) / (levellines - 1);
-			if(togo <= 5) engine.meterColor = GameEngine.METER_COLOR_RED;
-			else if(togo <= 10) engine.meterColor = GameEngine.METER_COLOR_ORANGE;
-			else if(togo <= 20) engine.meterColor = GameEngine.METER_COLOR_YELLOW;
-			else engine.meterColor = GameEngine.METER_COLOR_GREEN;
+			engine.setMeterValue((loons * receiver.getMeterMax(engine)) / (levellines - 1));
+			if(togo <= 5) engine.setMeterColor(GameEngine.METER_COLOR_RED);
+			else if(togo <= 10) engine.setMeterColor(GameEngine.METER_COLOR_ORANGE);
+			else if(togo <= 20) engine.setMeterColor(GameEngine.METER_COLOR_YELLOW);
+			else engine.setMeterColor(GameEngine.METER_COLOR_GREEN);
 		} else {
-			engine.meterValue = ((10 - togo) * receiver.getMeterMax(engine)) / 9;
-			if(togo <= 2) engine.meterColor = GameEngine.METER_COLOR_RED;
-			else if(togo <= 5) engine.meterColor = GameEngine.METER_COLOR_ORANGE;
-			else if(togo <= 8) engine.meterColor = GameEngine.METER_COLOR_YELLOW;
-			else engine.meterColor = GameEngine.METER_COLOR_GREEN;
+			engine.setMeterValue(((10 - togo) * receiver.getMeterMax(engine)) / 9);
+			if(togo <= 2) engine.setMeterColor(GameEngine.METER_COLOR_RED);
+			else if(togo <= 5) engine.setMeterColor(GameEngine.METER_COLOR_ORANGE);
+			else if(togo <= 8) engine.setMeterColor(GameEngine.METER_COLOR_YELLOW);
+			else engine.setMeterColor(GameEngine.METER_COLOR_GREEN);
 
 		}
 	}

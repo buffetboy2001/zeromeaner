@@ -385,7 +385,7 @@ public class RetroMarathonMode extends DummyMode {
 			receiver.drawScoreFont(engine, playerID, 0, 10, LEVEL_NAME[engine.statistics.level]);
 
 			receiver.drawScoreFont(engine, playerID, 0, 12, "TIME", EventReceiver.COLOR_BLUE);
-			receiver.drawScoreFont(engine, playerID, 0, 13, GeneralUtil.getTime(engine.statistics.time));
+			receiver.drawScoreFont(engine, playerID, 0, 13, GeneralUtil.getTime(engine.statistics.getTime()));
 		}
 	}
 
@@ -446,19 +446,19 @@ public class RetroMarathonMode extends DummyMode {
 		// Update meter
 		if (gametype == GAMETYPE_TYPE_B)
 		{
-			engine.meterValue = (Math.min(engine.statistics.lines,25) * receiver.getMeterMax(engine)) / 25;
-			engine.meterColor = GameEngine.METER_COLOR_GREEN;
-			if(engine.statistics.lines >= 10) engine.meterColor = GameEngine.METER_COLOR_YELLOW;
-			if(engine.statistics.lines >= 15) engine.meterColor = GameEngine.METER_COLOR_ORANGE;
-			if(engine.statistics.lines >= 20) engine.meterColor = GameEngine.METER_COLOR_RED;
+			engine.setMeterValue((Math.min(engine.statistics.lines,25) * receiver.getMeterMax(engine)) / 25);
+			engine.setMeterColor(GameEngine.METER_COLOR_GREEN);
+			if(engine.statistics.lines >= 10) engine.setMeterColor(GameEngine.METER_COLOR_YELLOW);
+			if(engine.statistics.lines >= 15) engine.setMeterColor(GameEngine.METER_COLOR_ORANGE);
+			if(engine.statistics.lines >= 20) engine.setMeterColor(GameEngine.METER_COLOR_RED);
 		}
 		else
 		{
-			engine.meterValue = ((engine.statistics.lines % 10) * receiver.getMeterMax(engine)) / 9;
-			engine.meterColor = GameEngine.METER_COLOR_GREEN;
-			if(engine.statistics.lines % 10 >= 2) engine.meterColor = GameEngine.METER_COLOR_YELLOW;
-			if(engine.statistics.lines % 10 >= 5) engine.meterColor = GameEngine.METER_COLOR_ORANGE;
-			if(engine.statistics.lines % 10 >= 8) engine.meterColor = GameEngine.METER_COLOR_RED;
+			engine.setMeterValue(((engine.statistics.lines % 10) * receiver.getMeterMax(engine)) / 9);
+			engine.setMeterColor(GameEngine.METER_COLOR_GREEN);
+			if(engine.statistics.lines % 10 >= 2) engine.setMeterColor(GameEngine.METER_COLOR_YELLOW);
+			if(engine.statistics.lines % 10 >= 5) engine.setMeterColor(GameEngine.METER_COLOR_ORANGE);
+			if(engine.statistics.lines % 10 >= 8) engine.setMeterColor(GameEngine.METER_COLOR_RED);
 		}
 
 		if(!(gametype == GAMETYPE_TYPE_B) && engine.statistics.lines >= levellines ) {

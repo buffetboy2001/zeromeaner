@@ -422,7 +422,7 @@ public class GradeMania2Mode extends DummyMode {
 	 * @param engine GameEngine
 	 */
 	private void setSpeed(GameEngine engine) {
-		if((always20g == true) || (engine.statistics.time >= 54000)) {
+		if((always20g == true) || (engine.statistics.getTime() >= 54000)) {
 			engine.speed.gravity = -1;
 		} else {
 			while(engine.statistics.level >= tableGravityChangeLevel[gravityindex]) gravityindex++;
@@ -433,7 +433,7 @@ public class GradeMania2Mode extends DummyMode {
 		if(section > tableARE.length - 1) section = tableARE.length - 1;
 		engine.speed.das = tableDAS[section];
 
-		if(engine.statistics.time >= 54000) {
+		if(engine.statistics.getTime() >= 54000) {
 			engine.speed.are = 3;
 			engine.speed.areLine = 6;
 			engine.speed.lineDelay = 6;
@@ -729,7 +729,7 @@ public class GradeMania2Mode extends DummyMode {
 
 			// Time
 			receiver.drawScoreFont(engine, playerID, 0, 14, "TIME", EventReceiver.COLOR_BLUE);
-			receiver.drawScoreFont(engine, playerID, 0, 15, GeneralUtil.getTime(engine.statistics.time));
+			receiver.drawScoreFont(engine, playerID, 0, 15, GeneralUtil.getTime(engine.statistics.getTime()));
 
 			// Roll 残り time
 			if((engine.gameActive) && (engine.ending == 2)) {
@@ -874,11 +874,11 @@ public class GradeMania2Mode extends DummyMode {
 	 */
 	private void levelUp(GameEngine engine) {
 		// Meter
-		engine.meterValue = ((engine.statistics.level % 100) * receiver.getMeterMax(engine)) / 99;
-		engine.meterColor = GameEngine.METER_COLOR_GREEN;
-		if(engine.statistics.level % 100 >= 50) engine.meterColor = GameEngine.METER_COLOR_YELLOW;
-		if(engine.statistics.level % 100 >= 80) engine.meterColor = GameEngine.METER_COLOR_ORANGE;
-		if(engine.statistics.level == nextseclv - 1) engine.meterColor = GameEngine.METER_COLOR_RED;
+		engine.setMeterValue(((engine.statistics.level % 100) * receiver.getMeterMax(engine)) / 99);
+		engine.setMeterColor(GameEngine.METER_COLOR_GREEN);
+		if(engine.statistics.level % 100 >= 50) engine.setMeterColor(GameEngine.METER_COLOR_YELLOW);
+		if(engine.statistics.level % 100 >= 80) engine.setMeterColor(GameEngine.METER_COLOR_ORANGE);
+		if(engine.statistics.level == nextseclv - 1) engine.setMeterColor(GameEngine.METER_COLOR_RED);
 
 		// 速度変更
 		setSpeed(engine);
@@ -957,7 +957,7 @@ public class GradeMania2Mode extends DummyMode {
 					engine.playSE("gradeup");
 					grade++;
 					gradeflash = 180;
-					lastGradeTime = engine.statistics.time;
+					lastGradeTime = engine.statistics.getTime();
 				}
 			}
 
@@ -1026,7 +1026,7 @@ public class GradeMania2Mode extends DummyMode {
 				engine.ending = 1;
 				rollclear = 1;
 
-				lastGradeTime = engine.statistics.time;
+				lastGradeTime = engine.statistics.getTime();
 
 				// Section Timeを記録
 				sectionlasttime = sectiontime[levelb / 100];
@@ -1043,7 +1043,7 @@ public class GradeMania2Mode extends DummyMode {
 				roMedalCheck(engine);
 
 				// 条件を全て満たしているなら消えRoll 発動
-				if((mrollSectiontime == true) && (mrollFourline == true) && (engine.statistics.time <= M_ROLL_TIME_REQUIRE) && (grade >= 17))
+				if((mrollSectiontime == true) && (mrollFourline == true) && (engine.statistics.getTime() <= M_ROLL_TIME_REQUIRE) && (grade >= 17))
 					mrollFlag = true;
 			} else if(engine.statistics.level >= nextseclv) {
 				// Next Section
@@ -1122,7 +1122,7 @@ public class GradeMania2Mode extends DummyMode {
 		if(scgettime > 0) scgettime--;
 
 		// 15分経過
-		if(engine.statistics.time >= 54000) {
+		if(engine.statistics.getTime() >= 54000) {
 			setSpeed(engine);
 		}
 
@@ -1141,11 +1141,11 @@ public class GradeMania2Mode extends DummyMode {
 
 			// Time meter
 			int remainRollTime = ROLLTIMELIMIT - rolltime;
-			engine.meterValue = (remainRollTime * receiver.getMeterMax(engine)) / ROLLTIMELIMIT;
-			engine.meterColor = GameEngine.METER_COLOR_GREEN;
-			if(remainRollTime <= 30*60) engine.meterColor = GameEngine.METER_COLOR_YELLOW;
-			if(remainRollTime <= 20*60) engine.meterColor = GameEngine.METER_COLOR_ORANGE;
-			if(remainRollTime <= 10*60) engine.meterColor = GameEngine.METER_COLOR_RED;
+			engine.setMeterValue((remainRollTime * receiver.getMeterMax(engine)) / ROLLTIMELIMIT);
+			engine.setMeterColor(GameEngine.METER_COLOR_GREEN);
+			if(remainRollTime <= 30*60) engine.setMeterColor(GameEngine.METER_COLOR_YELLOW);
+			if(remainRollTime <= 20*60) engine.setMeterColor(GameEngine.METER_COLOR_ORANGE);
+			if(remainRollTime <= 10*60) engine.setMeterColor(GameEngine.METER_COLOR_RED);
 
 			// Roll 終了
 			if(rolltime >= ROLLTIMELIMIT) {
@@ -1154,7 +1154,7 @@ public class GradeMania2Mode extends DummyMode {
 				if(mrollFlag == true) {
 					grade = 19;
 					gradeflash = 180;
-					lastGradeTime = engine.statistics.time;
+					lastGradeTime = engine.statistics.getTime();
 					engine.playSE("gradeup");
 
 					rollclear = 3;
@@ -1179,7 +1179,7 @@ public class GradeMania2Mode extends DummyMode {
 		if((mrollFlag == true) && (grade < 18) && (engine.ending == 2) && (engine.statc[0] == 0)) {
 			grade = 18;
 			gradeflash = 180;
-			lastGradeTime = engine.statistics.time;
+			lastGradeTime = engine.statistics.getTime();
 			engine.playSE("gradeup");
 		}
 

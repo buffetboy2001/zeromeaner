@@ -360,7 +360,7 @@ public class SquareMode extends DummyMode {
 			receiver.drawScoreFont(engine, playerID, 0, 12, "TIME", EventReceiver.COLOR_BLUE);
 			if(gametype == 1) {
 				// Ultra timer
-				int time = ULTRA_MAX_TIME - engine.statistics.time;
+				int time = ULTRA_MAX_TIME - engine.statistics.getTime();
 				if(time < 0) time = 0;
 				int fontcolor = EventReceiver.COLOR_WHITE;
 				if((time < 30 * 60) && (time > 0)) fontcolor = EventReceiver.COLOR_YELLOW;
@@ -369,7 +369,7 @@ public class SquareMode extends DummyMode {
 				receiver.drawScoreFont(engine, playerID, 0, 13, GeneralUtil.getTime(time), fontcolor);
 			} else {
 				// Normal timer
-				receiver.drawScoreFont(engine, playerID, 0, 13, GeneralUtil.getTime(engine.statistics.time));
+				receiver.drawScoreFont(engine, playerID, 0, 13, GeneralUtil.getTime(engine.statistics.getTime()));
 			}
 		}
 	}
@@ -382,16 +382,16 @@ public class SquareMode extends DummyMode {
 		if (scgettime > 0) scgettime--;
 
 		if (gametype == 1) {
-			int remainTime = ULTRA_MAX_TIME - engine.statistics.time;
+			int remainTime = ULTRA_MAX_TIME - engine.statistics.getTime();
 			// Timer meter
-			engine.meterValue = (remainTime * receiver.getMeterMax(engine)) / ULTRA_MAX_TIME;
-			engine.meterColor = GameEngine.METER_COLOR_GREEN;
-			if(remainTime <= 3600) engine.meterColor = GameEngine.METER_COLOR_YELLOW;
-			if(remainTime <= 1800) engine.meterColor = GameEngine.METER_COLOR_ORANGE;
-			if(remainTime <= 600) engine.meterColor = GameEngine.METER_COLOR_RED;
+			engine.setMeterValue((remainTime * receiver.getMeterMax(engine)) / ULTRA_MAX_TIME);
+			engine.setMeterColor(GameEngine.METER_COLOR_GREEN);
+			if(remainTime <= 3600) engine.setMeterColor(GameEngine.METER_COLOR_YELLOW);
+			if(remainTime <= 1800) engine.setMeterColor(GameEngine.METER_COLOR_ORANGE);
+			if(remainTime <= 600) engine.setMeterColor(GameEngine.METER_COLOR_RED);
 
 			// Countdown
-			if((remainTime > 0) && (remainTime <= 10 * 60) && (engine.statistics.time % 60 == 0) && (engine.timerActive == true)) {
+			if((remainTime > 0) && (remainTime <= 10 * 60) && (engine.statistics.getTime() % 60 == 0) && (engine.timerActive == true)) {
 				engine.playSE("countdown");
 			}
 
@@ -401,7 +401,7 @@ public class SquareMode extends DummyMode {
 			}
 
 			// Time up!
-			if((engine.statistics.time >= ULTRA_MAX_TIME) && (engine.timerActive == true)) {
+			if((engine.statistics.getTime() >= ULTRA_MAX_TIME) && (engine.timerActive == true)) {
 				engine.gameEnded();
 				engine.resetStatc();
 				engine.stat = GameEngine.STAT_ENDINGSTART;
@@ -410,11 +410,11 @@ public class SquareMode extends DummyMode {
 		} else if (gametype == 2) {
 			int remainScore = SPRINT_MAX_SCORE - engine.statistics.score;
 			if(engine.timerActive == false) remainScore = 0;
-			engine.meterValue = (remainScore * receiver.getMeterMax(engine)) / SPRINT_MAX_SCORE;
-			engine.meterColor = GameEngine.METER_COLOR_GREEN;
-			if(remainScore <= 50) engine.meterColor = GameEngine.METER_COLOR_YELLOW;
-			if(remainScore <= 30) engine.meterColor = GameEngine.METER_COLOR_ORANGE;
-			if(remainScore <= 10) engine.meterColor = GameEngine.METER_COLOR_RED;
+			engine.setMeterValue((remainScore * receiver.getMeterMax(engine)) / SPRINT_MAX_SCORE);
+			engine.setMeterColor(GameEngine.METER_COLOR_GREEN);
+			if(remainScore <= 50) engine.setMeterColor(GameEngine.METER_COLOR_YELLOW);
+			if(remainScore <= 30) engine.setMeterColor(GameEngine.METER_COLOR_ORANGE);
+			if(remainScore <= 10) engine.setMeterColor(GameEngine.METER_COLOR_RED);
 
 			// Goal
 			if((engine.statistics.score >= SPRINT_MAX_SCORE) && (engine.timerActive == true)) {
@@ -651,7 +651,7 @@ public class SquareMode extends DummyMode {
 				"SCORE", String.format("%10d", engine.statistics.score),
 				"LINE", String.format("%10d", engine.statistics.lines),
 				"SQUARE", String.format("%10d", squares),
-				"TIME", String.format("%10s", GeneralUtil.getTime(engine.statistics.time)));
+				"TIME", String.format("%10s", GeneralUtil.getTime(engine.statistics.getTime())));
 		drawResultRank(engine, playerID, receiver, 11, EventReceiver.COLOR_BLUE, rankingRank);
 	}
 
@@ -665,7 +665,7 @@ public class SquareMode extends DummyMode {
 
 		// Update the ranking
 		if((owner.replayMode == false) && (engine.ai == null)) {
-			updateRanking(engine.statistics.score, engine.statistics.time, squares, gametype);
+			updateRanking(engine.statistics.score, engine.statistics.getTime(), squares, gametype);
 
 			if(rankingRank != -1) {
 				saveRanking(owner.modeConfig, engine.ruleopt.strRuleName);

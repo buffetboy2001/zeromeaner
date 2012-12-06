@@ -831,12 +831,12 @@ public class VSBattleMode extends DummyMode {
 	public void renderLast(GameEngine engine, int playerID) {
 		// Status display
 		if(playerID == 0) {
-			receiver.drawDirectFont(engine, playerID, 256, 16, GeneralUtil.getTime(engine.statistics.time));
+			receiver.drawDirectFont(engine, playerID, 256, 16, GeneralUtil.getTime(engine.statistics.getTime()));
 
 			if((hurryupSeconds[playerID] >= 0) && (engine.timerActive) &&
-			   (engine.statistics.time >= hurryupSeconds[playerID] * 60) && (engine.statistics.time < (hurryupSeconds[playerID] + 5) * 60))
+			   (engine.statistics.getTime() >= hurryupSeconds[playerID] * 60) && (engine.statistics.getTime() < (hurryupSeconds[playerID] + 5) * 60))
 			{
-				receiver.drawDirectFont(engine, playerID, 256 - 8, 32, "HURRY UP!", (engine.statistics.time % 2 == 0));
+				receiver.drawDirectFont(engine, playerID, 256 - 8, 32, "HURRY UP!", (engine.statistics.getTime() % 2 == 0));
 			}
 		}
 
@@ -1177,7 +1177,7 @@ public class VSBattleMode extends DummyMode {
 		// HURRY UP!
 		if(version >= 2) {
 			if((hurryupSeconds[playerID] >= 0) && (engine.timerActive)) {
-				if(engine.statistics.time >= hurryupSeconds[playerID] * 60) {
+				if(engine.statistics.getTime() >= hurryupSeconds[playerID] * 60) {
 					hurryupCount[playerID]++;
 
 					if(hurryupCount[playerID] % hurryupInterval[playerID] == 0) {
@@ -1188,7 +1188,7 @@ public class VSBattleMode extends DummyMode {
 				}
 			}
 		} else {
-			if((hurryupSeconds[playerID] >= 0) && (engine.timerActive) && (engine.statistics.time >= hurryupSeconds[playerID] * 60)) {
+			if((hurryupSeconds[playerID] >= 0) && (engine.timerActive) && (engine.statistics.getTime() >= hurryupSeconds[playerID] * 60)) {
 				hurryupCount[playerID]++;
 
 				if(hurryupCount[playerID] % hurryupInterval[playerID] == 0) {
@@ -1206,20 +1206,20 @@ public class VSBattleMode extends DummyMode {
 		scgettime[playerID]++;
 
 		// HURRY UP!
-		if((playerID == 0) && (engine.timerActive) && (hurryupSeconds[playerID] >= 0) && (engine.statistics.time == hurryupSeconds[playerID] * 60)) {
+		if((playerID == 0) && (engine.timerActive) && (hurryupSeconds[playerID] >= 0) && (engine.statistics.getTime() == hurryupSeconds[playerID] * 60)) {
 			owner.receiver.playSE("hurryup");
 		}
 
 		// せり上がりMeter
-		if(garbage[playerID] * receiver.getBlockGraphicsHeight(engine, playerID) > engine.meterValue) {
-			engine.meterValue += receiver.getBlockGraphicsHeight(engine, playerID) / 2;
-		} else if(garbage[playerID] * receiver.getBlockGraphicsHeight(engine, playerID) < engine.meterValue) {
-			engine.meterValue--;
+		if(garbage[playerID] * receiver.getBlockGraphicsHeight(engine, playerID) > engine.getMeterValue()) {
+			engine.setMeterValue(engine.getMeterValue() + (receiver.getBlockGraphicsHeight(engine, playerID) / 2));
+		} else if(garbage[playerID] * receiver.getBlockGraphicsHeight(engine, playerID) < engine.getMeterValue()) {
+			engine.setMeterValue(engine.getMeterValue() - 1);
 		}
-		if(garbage[playerID] >= 4) engine.meterColor = GameEngine.METER_COLOR_RED;
-		else if(garbage[playerID] >= 3) engine.meterColor = GameEngine.METER_COLOR_ORANGE;
-		else if(garbage[playerID] >= 1) engine.meterColor = GameEngine.METER_COLOR_YELLOW;
-		else engine.meterColor = GameEngine.METER_COLOR_GREEN;
+		if(garbage[playerID] >= 4) engine.setMeterColor(GameEngine.METER_COLOR_RED);
+		else if(garbage[playerID] >= 3) engine.setMeterColor(GameEngine.METER_COLOR_ORANGE);
+		else if(garbage[playerID] >= 1) engine.setMeterColor(GameEngine.METER_COLOR_YELLOW);
+		else engine.setMeterColor(GameEngine.METER_COLOR_GREEN);
 
 		// 決着
 		if((playerID == 1) && (owner.engine[0].gameActive)) {
@@ -1267,7 +1267,7 @@ public class VSBattleMode extends DummyMode {
 			receiver.drawMenuFont(engine, playerID, 6, 1, "LOSE", EventReceiver.COLOR_WHITE);
 		}
 
-		float apm = (float)(garbageSent[playerID] * 3600) / (float)(engine.statistics.time);
+		float apm = (float)(garbageSent[playerID] * 3600) / (float)(engine.statistics.getTime());
 		float apl = 0f;
 		if(engine.statistics.lines > 0) apl = (float)(garbageSent[playerID]) / (float)(engine.statistics.lines);
 

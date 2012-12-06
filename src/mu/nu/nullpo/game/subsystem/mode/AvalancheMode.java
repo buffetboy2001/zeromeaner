@@ -358,7 +358,7 @@ public class AvalancheMode extends Avalanche1PDummyMode {
 			receiver.drawScoreFont(engine, playerID, 0, 10, strSent);
 
 			receiver.drawScoreFont(engine, playerID, 0, 12, "TIME", EventReceiver.COLOR_BLUE);
-			receiver.drawScoreFont(engine, playerID, 0, 13, GeneralUtil.getTime(engine.statistics.time));
+			receiver.drawScoreFont(engine, playerID, 0, 13, GeneralUtil.getTime(engine.statistics.getTime()));
 
 			receiver.drawScoreFont(engine, playerID, 11, 6, "CLEARED", EventReceiver.COLOR_BLUE);
 			receiver.drawScoreFont(engine, playerID, 11, 7, String.valueOf(blocksCleared));
@@ -415,16 +415,16 @@ public class AvalancheMode extends Avalanche1PDummyMode {
 			chainDisplay--;
 
 		if (gametype == 1) {
-			int remainTime = ULTRA_MAX_TIME - engine.statistics.time;
+			int remainTime = ULTRA_MAX_TIME - engine.statistics.getTime();
 			// Time meter
-			engine.meterValue = (remainTime * receiver.getMeterMax(engine)) / ULTRA_MAX_TIME;
-			engine.meterColor = GameEngine.METER_COLOR_GREEN;
-			if(remainTime <= 3600) engine.meterColor = GameEngine.METER_COLOR_YELLOW;
-			if(remainTime <= 1800) engine.meterColor = GameEngine.METER_COLOR_ORANGE;
-			if(remainTime <= 600) engine.meterColor = GameEngine.METER_COLOR_RED;
+			engine.setMeterValue((remainTime * receiver.getMeterMax(engine)) / ULTRA_MAX_TIME);
+			engine.setMeterColor(GameEngine.METER_COLOR_GREEN);
+			if(remainTime <= 3600) engine.setMeterColor(GameEngine.METER_COLOR_YELLOW);
+			if(remainTime <= 1800) engine.setMeterColor(GameEngine.METER_COLOR_ORANGE);
+			if(remainTime <= 600) engine.setMeterColor(GameEngine.METER_COLOR_RED);
 
 			// Out of time
-			if((engine.statistics.time >= ULTRA_MAX_TIME) && (engine.timerActive == true)) {
+			if((engine.statistics.getTime() >= ULTRA_MAX_TIME) && (engine.timerActive == true)) {
 				engine.gameEnded();
 				engine.resetStatc();
 				engine.stat = GameEngine.STAT_ENDINGSTART;
@@ -433,11 +433,11 @@ public class AvalancheMode extends Avalanche1PDummyMode {
 		} else if (gametype == 2) {
 			int remainScore = SPRINT_MAX_SCORE[sprintTarget] - engine.statistics.score;
 			if(engine.timerActive == false) remainScore = 0;
-			engine.meterValue = (remainScore * receiver.getMeterMax(engine)) / SPRINT_MAX_SCORE[sprintTarget];
-			engine.meterColor = GameEngine.METER_COLOR_GREEN;
-			if(remainScore <= 50) engine.meterColor = GameEngine.METER_COLOR_YELLOW;
-			if(remainScore <= 30) engine.meterColor = GameEngine.METER_COLOR_ORANGE;
-			if(remainScore <= 10) engine.meterColor = GameEngine.METER_COLOR_RED;
+			engine.setMeterValue((remainScore * receiver.getMeterMax(engine)) / SPRINT_MAX_SCORE[sprintTarget]);
+			engine.setMeterColor(GameEngine.METER_COLOR_GREEN);
+			if(remainScore <= 50) engine.setMeterColor(GameEngine.METER_COLOR_YELLOW);
+			if(remainScore <= 30) engine.setMeterColor(GameEngine.METER_COLOR_ORANGE);
+			if(remainScore <= 10) engine.setMeterColor(GameEngine.METER_COLOR_RED);
 
 			// ゴール
 			if((engine.statistics.score >= SPRINT_MAX_SCORE[sprintTarget]) && (engine.timerActive == true)) {
@@ -497,7 +497,7 @@ public class AvalancheMode extends Avalanche1PDummyMode {
 		{
 			receiver.drawMenuFont(engine, playerID,  0, 1, "PLAY DATA", EventReceiver.COLOR_ORANGE);
 			receiver.drawMenuFont(engine, playerID,  0, 3, "TIME", EventReceiver.COLOR_BLUE);
-			String strTime = String.format("%10s", GeneralUtil.getTime(engine.statistics.time));
+			String strTime = String.format("%10s", GeneralUtil.getTime(engine.statistics.getTime()));
 			receiver.drawMenuFont(engine, playerID,  0, 4, strTime);
 			receiver.drawMenuFont(engine, playerID,  0, 5, "SCORE", EventReceiver.COLOR_BLUE);
 			receiver.drawMenuFont(engine, playerID,  0, 6, String.valueOf(engine.statistics.score));
@@ -532,7 +532,7 @@ public class AvalancheMode extends Avalanche1PDummyMode {
 
 		// Update rankings
 		if((owner.replayMode == false) && (engine.ai == null) && (engine.colorClearSize == 4)) {
-			updateRanking(engine.statistics.score, engine.statistics.time, gametype, scoreType, numColors);
+			updateRanking(engine.statistics.score, engine.statistics.getTime(), gametype, scoreType, numColors);
 
 			if(rankingRank != -1) {
 				saveRanking(owner.modeConfig, engine.ruleopt.strRuleName);

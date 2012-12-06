@@ -52,7 +52,7 @@ public class ResourceHolder {
 	static Logger log = Logger.getLogger(ResourceHolder.class);
 
 	/** Backgroundのcount */
-	public static final int BACKGROUND_MAX = 20;
+	public static final int BACKGROUND_MAX = 1;
 
 	/** Number of images for block spatter animation during line clears */
 	public static final int BLOCK_BREAK_MAX = 8;
@@ -195,63 +195,65 @@ public class ResourceHolder {
 			soundManager.load("died", skindir + "/se/died.wav");
 			soundManager.load("gameover", skindir + "/se/gameover.wav");
 			soundManager.load("hold", skindir + "/se/hold.wav");
-			soundManager.load("holdfail", skindir + "/se/holdfail.wav");
+			//soundManager.load("holdfail", skindir + "/se/holdfail.wav");
 			soundManager.load("initialhold", skindir + "/se/initialhold.wav");
-			soundManager.load("initialrotate", skindir + "/se/initialrotate.wav");
-			soundManager.load("levelup", skindir + "/se/levelup.wav");
+			//soundManager.load("initialrotate", skindir + "/se/initialrotate.wav");
+			//soundManager.load("levelup", skindir + "/se/levelup.wav");
 			soundManager.load("linefall", skindir + "/se/linefall.wav");
-			soundManager.load("lock", skindir + "/se/lock.wav");
-			soundManager.load("move", skindir + "/se/move.wav");
+			//soundManager.load("lock", skindir + "/se/lock.wav");
+			//soundManager.load("move", skindir + "/se/move.wav");
 			soundManager.load("pause", skindir + "/se/pause.wav");
-			soundManager.load("rotate", skindir + "/se/rotate.wav");
+			//soundManager.load("rotate", skindir + "/se/rotate.wav");
 			soundManager.load("step", skindir + "/se/step.wav");
-			soundManager.load("piece0", skindir + "/se/piece0.wav");
-			soundManager.load("piece1", skindir + "/se/piece1.wav");
-			soundManager.load("piece2", skindir + "/se/piece2.wav");
-			soundManager.load("piece3", skindir + "/se/piece3.wav");
-			soundManager.load("piece4", skindir + "/se/piece4.wav");
-			soundManager.load("piece5", skindir + "/se/piece5.wav");
-			soundManager.load("piece6", skindir + "/se/piece6.wav");
-			soundManager.load("piece7", skindir + "/se/piece7.wav");
-			soundManager.load("piece8", skindir + "/se/piece8.wav");
-			soundManager.load("piece9", skindir + "/se/piece9.wav");
-			soundManager.load("piece10", skindir + "/se/piece10.wav");
-			soundManager.load("harddrop", skindir + "/se/harddrop.wav");
-			soundManager.load("softdrop", skindir + "/se/softdrop.wav");
+//			soundManager.load("piece0", skindir + "/se/piece0.wav");
+//			soundManager.load("piece1", skindir + "/se/piece1.wav");
+//			soundManager.load("piece2", skindir + "/se/piece2.wav");
+//			soundManager.load("piece3", skindir + "/se/piece3.wav");
+//			soundManager.load("piece4", skindir + "/se/piece4.wav");
+//			soundManager.load("piece5", skindir + "/se/piece5.wav");
+//			soundManager.load("piece6", skindir + "/se/piece6.wav");
+//			soundManager.load("piece7", skindir + "/se/piece7.wav");
+//			soundManager.load("piece8", skindir + "/se/piece8.wav");
+//			soundManager.load("piece9", skindir + "/se/piece9.wav");
+//			soundManager.load("piece10", skindir + "/se/piece10.wav");
+//			soundManager.load("harddrop", skindir + "/se/harddrop.wav");
+			//soundManager.load("softdrop", skindir + "/se/softdrop.wav");
 			soundManager.load("levelstop", skindir + "/se/levelstop.wav");
 			soundManager.load("endingstart", skindir + "/se/endingstart.wav");
 			soundManager.load("excellent", skindir + "/se/excellent.wav");
-			soundManager.load("b2b_start", skindir + "/se/b2b_start.wav");
-			soundManager.load("b2b_continue", skindir + "/se/b2b_continue.wav");
-			soundManager.load("b2b_end", skindir + "/se/b2b_end.wav");
-			soundManager.load("gradeup", skindir + "/se/gradeup.wav");
-			soundManager.load("countdown", skindir + "/se/countdown.wav");
+			//soundManager.load("b2b_start", skindir + "/se/b2b_start.wav");
+			//soundManager.load("b2b_continue", skindir + "/se/b2b_continue.wav");
+			//soundManager.load("b2b_end", skindir + "/se/b2b_end.wav");
+			//soundManager.load("gradeup", skindir + "/se/gradeup.wav");
+			//soundManager.load("countdown", skindir + "/se/countdown.wav");
 			soundManager.load("tspin0", skindir + "/se/tspin0.wav");
 			soundManager.load("tspin1", skindir + "/se/tspin1.wav");
 			soundManager.load("tspin2", skindir + "/se/tspin2.wav");
 			soundManager.load("tspin3", skindir + "/se/tspin3.wav");
 			soundManager.load("ready", skindir + "/se/ready.wav");
 			soundManager.load("go", skindir + "/se/go.wav");
-			soundManager.load("movefail", skindir + "/se/movefail.wav");
-			soundManager.load("rotfail", skindir + "/se/rotfail.wav");
-			soundManager.load("medal", skindir + "/se/medal.wav");
-			soundManager.load("change", skindir + "/se/change.wav");
+			//soundManager.load("movefail", skindir + "/se/movefail.wav");
+			//soundManager.load("rotfail", skindir + "/se/rotfail.wav");
+			//soundManager.load("medal", skindir + "/se/medal.wav");
+			//soundManager.load("change", skindir + "/se/change.wav");
 			soundManager.load("bravo", skindir + "/se/bravo.wav");
-			soundManager.load("cool", skindir + "/se/cool.wav");
-			soundManager.load("regret", skindir + "/se/regret.wav");
-			soundManager.load("garbage", skindir + "/se/garbage.wav");
-			soundManager.load("stageclear", skindir + "/se/stageclear.wav");
-			soundManager.load("stagefail", skindir + "/se/stagefail.wav");
-			soundManager.load("gem", skindir + "/se/gem.wav");
+//			soundManager.load("cool", skindir + "/se/cool.wav");
+//			soundManager.load("regret", skindir + "/se/regret.wav");
+//			soundManager.load("garbage", skindir + "/se/garbage.wav");
+//			soundManager.load("stageclear", skindir + "/se/stageclear.wav");
+//			soundManager.load("stagefail", skindir + "/se/stagefail.wav");
+//			soundManager.load("gem", skindir + "/se/gem.wav");
 			soundManager.load("danger", skindir + "/se/danger.wav");
 			soundManager.load("matchend", skindir + "/se/matchend.wav");
 			soundManager.load("hurryup", skindir + "/se/hurryup.wav");
-			soundManager.load("square_s", skindir + "/se/square_s.wav");
-			soundManager.load("square_g", skindir + "/se/square_g.wav");
+//			soundManager.load("square_s", skindir + "/se/square_s.wav");
+//			soundManager.load("square_g", skindir + "/se/square_g.wav");
+			soundManager.load("multiplayer_in", skindir + "/se/multiplayer_in.wav");
+			soundManager.load("multiplayer_out", skindir + "/se/multiplayer_out.wav");
 
-			for(int i = 0; i < 20; i++) {
-				soundManager.load("combo" + (i + 1), skindir + "/se/combo" + (i + 1) + ".wav");
-			}
+//			for(int i = 0; i < 20; i++) {
+//				soundManager.load("combo" + (i + 1), skindir + "/se/combo" + (i + 1) + ".wav");
+//			}
 		}
 
 		// 音楽
@@ -314,7 +316,7 @@ public class ResourceHolder {
 		try {
 			img = new Image(filename);
 		} catch (Throwable e) {
-			log.error("Failed to load image from " + filename, e);
+			//log.error("Failed to load image from " + filename, e);
 			try {
 				img = new Image(256, 256);
 			} catch (Throwable e2) {}
@@ -383,7 +385,7 @@ public class ResourceHolder {
 		bgmStop();
 
 		int bgmvolume = NullpoMinoSlick.propConfig.getProperty("option.bgmvolume", 128);
-		NullpoMinoSlick.appGameContainer.setMusicVolume(bgmvolume / (float)128);
+		//NullpoMinoSlick.appGameContainer.setMusicVolume(bgmvolume / (float)128);
 
 		if(no >= 0) {
 			if(bgm[no] == null) {

@@ -442,8 +442,8 @@ public class UltraMode extends NetDummyMode {
 		engine.b2bEnable = enableB2B;
 		if(enableCombo) engine.comboType = GameEngine.COMBO_TYPE_NORMAL;
 		else engine.comboType = GameEngine.COMBO_TYPE_DISABLE;
-		engine.meterValue = 320;
-		engine.meterColor = GameEngine.METER_COLOR_GREEN;
+		engine.setMeterValue(320);
+		engine.setMeterColor(GameEngine.METER_COLOR_GREEN);
 
 		if(netIsWatch) {
 			owner.bgmStatus.bgm = BGMStatus.BGM_NOTHING;
@@ -520,7 +520,7 @@ public class UltraMode extends NetDummyMode {
 			receiver.drawScoreFont(engine, playerID, 0, 13, String.valueOf(engine.statistics.lpm));
 
 			receiver.drawScoreFont(engine, playerID, 0, 15, "TIME", EventReceiver.COLOR_BLUE);
-			int time = ((goaltype + 1) * 3600) - engine.statistics.time;
+			int time = ((goaltype + 1) * 3600) - engine.statistics.getTime();
 			if(time < 0) time = 0;
 			int fontcolor = EventReceiver.COLOR_WHITE;
 			if((time < 30 * 60) && (time > 0)) fontcolor = EventReceiver.COLOR_YELLOW;
@@ -737,18 +737,18 @@ public class UltraMode extends NetDummyMode {
 	public void onLast(GameEngine engine, int playerID) {
 		if(engine.gameActive && engine.timerActive) {
 			int limitTime = ((goaltype + 1) * 3600);
-			int remainTime = ((goaltype + 1) * 3600) - engine.statistics.time;
+			int remainTime = ((goaltype + 1) * 3600) - engine.statistics.getTime();
 
 			// Time meter
-			engine.meterValue = (remainTime * receiver.getMeterMax(engine)) / limitTime;
-			engine.meterColor = GameEngine.METER_COLOR_GREEN;
-			if(remainTime <= 30*60) engine.meterColor = GameEngine.METER_COLOR_YELLOW;
-			if(remainTime <= 20*60) engine.meterColor = GameEngine.METER_COLOR_ORANGE;
-			if(remainTime <= 10*60) engine.meterColor = GameEngine.METER_COLOR_RED;
+			engine.setMeterValue((remainTime * receiver.getMeterMax(engine)) / limitTime);
+			engine.setMeterColor(GameEngine.METER_COLOR_GREEN);
+			if(remainTime <= 30*60) engine.setMeterColor(GameEngine.METER_COLOR_YELLOW);
+			if(remainTime <= 20*60) engine.setMeterColor(GameEngine.METER_COLOR_ORANGE);
+			if(remainTime <= 10*60) engine.setMeterColor(GameEngine.METER_COLOR_RED);
 
 			if(!netIsWatch) {
 				// Out of time
-				if(engine.statistics.time >= limitTime) {
+				if(engine.statistics.getTime() >= limitTime) {
 					engine.gameEnded();
 					engine.resetStatc();
 					engine.stat = GameEngine.STAT_ENDINGSTART;
@@ -756,17 +756,17 @@ public class UltraMode extends NetDummyMode {
 				}
 
 				// 10秒前からのカウントダウン
-				if((engine.statistics.time >= limitTime - (10 * 60)) && (engine.statistics.time % 60 == 0)) {
+				if((engine.statistics.getTime() >= limitTime - (10 * 60)) && (engine.statistics.getTime() % 60 == 0)) {
 					engine.playSE("countdown");
 				}
 
 				// 5秒前からのBGM fadeout
-				if(engine.statistics.time >= limitTime - (5 * 60)) {
+				if(engine.statistics.getTime() >= limitTime - (5 * 60)) {
 					owner.bgmStatus.fadesw = true;
 				}
 
 				// 1分ごとのBackground切り替え
-				if((engine.statistics.time > 0) && (engine.statistics.time % 3600 == 0)) {
+				if((engine.statistics.getTime() > 0) && (engine.statistics.getTime() % 3600 == 0)) {
 					engine.playSE("levelup");
 					owner.backgroundStatus.fadesw = true;
 					owner.backgroundStatus.fadebg = owner.backgroundStatus.bg + 1;
@@ -927,7 +927,7 @@ public class UltraMode extends NetDummyMode {
 		int bg = owner.backgroundStatus.fadesw ? owner.backgroundStatus.fadebg : owner.backgroundStatus.bg;
 		String msg = "game\tstats\t";
 		msg += engine.statistics.score + "\t" + engine.statistics.lines + "\t" + engine.statistics.totalPieceLocked + "\t";
-		msg += engine.statistics.time + "\t" + engine.statistics.spm + "\t";
+		msg += engine.statistics.getTime() + "\t" + engine.statistics.spm + "\t";
 		msg += engine.statistics.lpm + "\t" + engine.statistics.spl + "\t" + goaltype + "\t";
 		msg += engine.gameActive + "\t" + engine.timerActive + "\t";
 		msg += lastscore + "\t" + scgettime + "\t" + lastevent + "\t" + lastb2b + "\t" + lastcombo + "\t" + lastpiece + "\t";
@@ -943,7 +943,7 @@ public class UltraMode extends NetDummyMode {
 		engine.statistics.score = Integer.parseInt(message[4]);
 		engine.statistics.lines = Integer.parseInt(message[5]);
 		engine.statistics.totalPieceLocked = Integer.parseInt(message[6]);
-		engine.statistics.time = Integer.parseInt(message[7]);
+		engine.statistics.setTime(Integer.parseInt(message[7]));
 		engine.statistics.spm = Double.parseDouble(message[8]);
 		engine.statistics.lpm = Float.parseFloat(message[9]);
 		engine.statistics.spl = Double.parseDouble(message[10]);
@@ -960,12 +960,12 @@ public class UltraMode extends NetDummyMode {
 
 		// Time meter
 		int limitTime = ((goaltype + 1) * 3600);
-		int remainTime = ((goaltype + 1) * 3600) - engine.statistics.time;
-		engine.meterValue = (remainTime * receiver.getMeterMax(engine)) / limitTime;
-		engine.meterColor = GameEngine.METER_COLOR_GREEN;
-		if(remainTime <= 30*60) engine.meterColor = GameEngine.METER_COLOR_YELLOW;
-		if(remainTime <= 20*60) engine.meterColor = GameEngine.METER_COLOR_ORANGE;
-		if(remainTime <= 10*60) engine.meterColor = GameEngine.METER_COLOR_RED;
+		int remainTime = ((goaltype + 1) * 3600) - engine.statistics.getTime();
+		engine.setMeterValue((remainTime * receiver.getMeterMax(engine)) / limitTime);
+		engine.setMeterColor(GameEngine.METER_COLOR_GREEN);
+		if(remainTime <= 30*60) engine.setMeterColor(GameEngine.METER_COLOR_YELLOW);
+		if(remainTime <= 20*60) engine.setMeterColor(GameEngine.METER_COLOR_ORANGE);
+		if(remainTime <= 10*60) engine.setMeterColor(GameEngine.METER_COLOR_RED);
 	}
 
 	/**
@@ -981,7 +981,7 @@ public class UltraMode extends NetDummyMode {
 		subMsg += "SCORE/LINE;" + engine.statistics.spl + "\t";
 		subMsg += "SCORE/MIN;" + engine.statistics.spm + "\t";
 		subMsg += "LINE/MIN;" + engine.statistics.lpm + "\t";
-		subMsg += "PIECE/SEC;" + engine.statistics.pps + "\t";
+		subMsg += "PIECE/SEC;" + engine.statistics.getPps() + "\t";
 
 		String msg = "gstat1p\t" + NetUtil.urlEncode(subMsg) + "\n";
 		netLobby.netPlayerClient.send(msg);

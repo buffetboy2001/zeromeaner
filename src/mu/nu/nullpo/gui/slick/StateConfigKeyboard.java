@@ -131,7 +131,7 @@ public class StateConfigKeyboard extends BasicGameState {
 		g.drawImage(ResourceHolder.imgMenu, 0, 0);
 
 		if(!isNavSetting) {
-			NormalFont.printFontGrid(1, 1, "KEYBOARD SETTING (" + (player + 1) + "P)", NormalFont.COLOR_ORANGE);
+			NormalFont.printFontGrid(1, 1, "KEYBOARD SETTING", NormalFont.COLOR_ORANGE);
 		} else {
 			NormalFont.printFontGrid(1, 1, "KEYBOARD NAVIGATION SETTING (" + (player + 1) + "P)", NormalFont.COLOR_ORANGE);
 		}
@@ -141,16 +141,17 @@ public class StateConfigKeyboard extends BasicGameState {
 			NormalFont.printFontGrid(1, 2, "JINPUT MODE", NormalFont.COLOR_PINK);
 		}
 
-		NormalFont.printFontGrid(2,  4, "UP          : " + getKeyName(keymap[GameKey.BUTTON_UP]), (keynum == 0));
-		NormalFont.printFontGrid(2,  5, "DOWN        : " + getKeyName(keymap[GameKey.BUTTON_DOWN]), (keynum == 1));
+		NormalFont.printFontGrid(2,  4, "HARD DROP   : " + getKeyName(keymap[GameKey.BUTTON_UP]), (keynum == 0));
+		NormalFont.printFontGrid(2,  5, "SOFT DROP   : " + getKeyName(keymap[GameKey.BUTTON_DOWN]), (keynum == 1));
 		NormalFont.printFontGrid(2,  6, "LEFT        : " + getKeyName(keymap[GameKey.BUTTON_LEFT]), (keynum == 2));
 		NormalFont.printFontGrid(2,  7, "RIGHT       : " + getKeyName(keymap[GameKey.BUTTON_RIGHT]), (keynum == 3));
+		
 		if(!isNavSetting) {
-			NormalFont.printFontGrid(2,  8, "A (L/R-ROT) : " + getKeyName(keymap[GameKey.BUTTON_A]), (keynum == 4));
-			NormalFont.printFontGrid(2,  9, "B (R/L-ROT) : " + getKeyName(keymap[GameKey.BUTTON_B]), (keynum == 5));
-			NormalFont.printFontGrid(2, 10, "C (L/R-ROT) : " + getKeyName(keymap[GameKey.BUTTON_C]), (keynum == 6));
-			NormalFont.printFontGrid(2, 11, "D (HOLD)    : " + getKeyName(keymap[GameKey.BUTTON_D]), (keynum == 7));
-			NormalFont.printFontGrid(2, 12, "E (180-ROT) : " + getKeyName(keymap[GameKey.BUTTON_E]), (keynum == 8));
+			NormalFont.printFontGrid(2,  8, "ROTATE LEFT : " + getKeyName(keymap[GameKey.BUTTON_A]), (keynum == 4));
+			NormalFont.printFontGrid(2,  9, "ROTATE RIGHT: " + getKeyName(keymap[GameKey.BUTTON_B]), (keynum == 5));
+			NormalFont.printFontGrid(2, 10, "ROTATE LEFT : " + getKeyName(keymap[GameKey.BUTTON_C]), (keynum == 6));
+			NormalFont.printFontGrid(2, 11, "HOLD        : " + getKeyName(keymap[GameKey.BUTTON_D]), (keynum == 7));
+			NormalFont.printFontGrid(2, 12, "ROTATE 180  : " + getKeyName(keymap[GameKey.BUTTON_E]), (keynum == 8));
 		} else {
 			NormalFont.printFontGrid(2,  8, "A (SELECT)  : " + getKeyName(keymap[GameKey.BUTTON_A]), (keynum == 4));
 			NormalFont.printFontGrid(2,  9, "B (CANCEL)  : " + getKeyName(keymap[GameKey.BUTTON_B]), (keynum == 5));
@@ -158,29 +159,30 @@ public class StateConfigKeyboard extends BasicGameState {
 			NormalFont.printFontGrid(2, 11, "D           : " + getKeyName(keymap[GameKey.BUTTON_D]), (keynum == 7));
 			NormalFont.printFontGrid(2, 12, "E           : " + getKeyName(keymap[GameKey.BUTTON_E]), (keynum == 8));
 		}
-		NormalFont.printFontGrid(2, 13, "F           : " + getKeyName(keymap[GameKey.BUTTON_F]), (keynum == 9));
+		
+		NormalFont.printFontGrid(2, 13, "ACTION      : " + getKeyName(keymap[GameKey.BUTTON_F]), (keynum == 9));
 		NormalFont.printFontGrid(2, 14, "QUIT        : " + getKeyName(keymap[GameKey.BUTTON_QUIT]), (keynum == 10));
 		NormalFont.printFontGrid(2, 15, "PAUSE       : " + getKeyName(keymap[GameKey.BUTTON_PAUSE]), (keynum == 11));
 		NormalFont.printFontGrid(2, 16, "GIVEUP      : " + getKeyName(keymap[GameKey.BUTTON_GIVEUP]), (keynum == 12));
 		NormalFont.printFontGrid(2, 17, "RETRY       : " + getKeyName(keymap[GameKey.BUTTON_RETRY]), (keynum == 13));
 		NormalFont.printFontGrid(2, 18, "FRAME STEP  : " + getKeyName(keymap[GameKey.BUTTON_FRAMESTEP]), (keynum == 14));
 		NormalFont.printFontGrid(2, 19, "SCREEN SHOT : " + getKeyName(keymap[GameKey.BUTTON_SCREENSHOT]), (keynum == 15));
-		NormalFont.printFontGrid(2, 20, "[SAVE & EXIT]", (keynum == 16));
+		NormalFont.printFontGrid(2, 20, "[ SAVE ]", (keynum == 16));
 
 		NormalFont.printFontGrid(1, 4 + keynum, "b", NormalFont.COLOR_RED);
 
 		if(frame >= KEYACCEPTFRAME) {
 			if(keyConfigRestFrame > 0) {
-				NormalFont.printFontGrid(1, 22, "PUSH KEY... " + GeneralUtil.getTime(keyConfigRestFrame), NormalFont.COLOR_PINK);
+				NormalFont.printFontGrid(1, 23, "PUSH KEY... " + GeneralUtil.getTime(keyConfigRestFrame), NormalFont.COLOR_PINK);
 			} else if(keynum < NUM_KEYS) {
-				NormalFont.printFontGrid(1, 22, "UP/DOWN:   MOVE CURSOR", NormalFont.COLOR_GREEN);
-				NormalFont.printFontGrid(1, 23, "ENTER:     SET KEY", NormalFont.COLOR_GREEN);
-				NormalFont.printFontGrid(1, 24, "DELETE:    SET TO NONE", NormalFont.COLOR_GREEN);
-				NormalFont.printFontGrid(1, 25, "BACKSPACE: CANCEL", NormalFont.COLOR_GREEN);
+				NormalFont.printFontGrid(1, 25, "UP/DOWN:   MOVE CURSOR", NormalFont.COLOR_GREEN);
+				NormalFont.printFontGrid(1, 26, "ENTER:     SET KEY", NormalFont.COLOR_GREEN);
+				NormalFont.printFontGrid(1, 27, "DELETE:    SET TO NONE", NormalFont.COLOR_GREEN);
+				NormalFont.printFontGrid(1, 28, "BACKSPACE: CANCEL", NormalFont.COLOR_GREEN);
 			} else {
-				NormalFont.printFontGrid(1, 22, "UP/DOWN:   MOVE CURSOR", NormalFont.COLOR_GREEN);
-				NormalFont.printFontGrid(1, 23, "ENTER:     SAVE & EXIT", NormalFont.COLOR_GREEN);
-				NormalFont.printFontGrid(1, 24, "BACKSPACE: CANCEL", NormalFont.COLOR_GREEN);
+				NormalFont.printFontGrid(1, 29, "UP/DOWN:   MOVE CURSOR", NormalFont.COLOR_GREEN);
+				NormalFont.printFontGrid(1, 30, "ENTER:     SAVE & EXIT", NormalFont.COLOR_GREEN);
+				NormalFont.printFontGrid(1, 31, "BACKSPACE: CANCEL", NormalFont.COLOR_GREEN);
 			}
 		}
 
@@ -246,12 +248,12 @@ public class StateConfigKeyboard extends BasicGameState {
 				// Menu mode
 				if(key == Input.KEY_UP) {
 					ResourceHolder.soundManager.play("cursor");
-					keynum--;
+						keynum--;
 					if(keynum < 0) keynum = NUM_KEYS;
 				}
 				if(key == Input.KEY_DOWN) {
 					ResourceHolder.soundManager.play("cursor");
-					keynum++;
+						keynum++;
 					if(keynum > NUM_KEYS) keynum = 0;
 				}
 

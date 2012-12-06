@@ -535,7 +535,7 @@ public class ScoreRaceMode extends NetDummyMode {
 			receiver.drawScoreFont(engine, playerID, 0, 16, String.format("%-10g", engine.statistics.spl));
 
 			receiver.drawScoreFont(engine, playerID, 0, 18, "TIME", EventReceiver.COLOR_BLUE);
-			receiver.drawScoreFont(engine, playerID, 0, 19, GeneralUtil.getTime(engine.statistics.time));
+			receiver.drawScoreFont(engine, playerID, 0, 19, GeneralUtil.getTime(engine.statistics.getTime()));
 
 			if((lastevent != EVENT_NONE) && (scgettime < 120)) {
 				String strPieceName = Piece.getPieceName(lastpiece);
@@ -747,11 +747,11 @@ public class ScoreRaceMode extends NetDummyMode {
 		// Update meter
 		int remainScore = GOAL_TABLE[goaltype] - engine.statistics.score;
 		if(engine.timerActive == false) remainScore = 0;
-		engine.meterValue = (remainScore * receiver.getMeterMax(engine)) / GOAL_TABLE[goaltype];
-		engine.meterColor = GameEngine.METER_COLOR_GREEN;
-		if(remainScore <= 9600) engine.meterColor = GameEngine.METER_COLOR_YELLOW;
-		if(remainScore <= 4800) engine.meterColor = GameEngine.METER_COLOR_ORANGE;
-		if(remainScore <= 2400) engine.meterColor = GameEngine.METER_COLOR_RED;
+		engine.setMeterValue((remainScore * receiver.getMeterMax(engine)) / GOAL_TABLE[goaltype]);
+		engine.setMeterColor(GameEngine.METER_COLOR_GREEN);
+		if(remainScore <= 9600) engine.setMeterColor(GameEngine.METER_COLOR_YELLOW);
+		if(remainScore <= 4800) engine.setMeterColor(GameEngine.METER_COLOR_ORANGE);
+		if(remainScore <= 2400) engine.setMeterColor(GameEngine.METER_COLOR_RED);
 
 		// Goal reached
 		if((engine.statistics.score >= GOAL_TABLE[goaltype]) && (engine.timerActive == true)) {
@@ -832,7 +832,7 @@ public class ScoreRaceMode extends NetDummyMode {
 
 		// Update rankings
 		if((owner.replayMode == false) && (engine.statistics.score >= GOAL_TABLE[goaltype]) && (big == false) && (engine.ai == null)) {
-			updateRanking(engine.statistics.time, engine.statistics.lines, engine.statistics.spl);
+			updateRanking(engine.statistics.getTime(), engine.statistics.lines, engine.statistics.spl);
 
 			if(rankingRank != -1) {
 				saveRanking(owner.modeConfig, engine.ruleopt.strRuleName);
@@ -931,7 +931,7 @@ public class ScoreRaceMode extends NetDummyMode {
 	protected void netSendStats(GameEngine engine) {
 		String msg = "game\tstats\t";
 		msg += engine.statistics.score + "\t" + engine.statistics.lines + "\t" + engine.statistics.totalPieceLocked + "\t";
-		msg += engine.statistics.time + "\t" + engine.statistics.spm + "\t";
+		msg += engine.statistics.getTime() + "\t" + engine.statistics.spm + "\t";
 		msg += engine.statistics.lpm + "\t" + engine.statistics.spl + "\t" + goaltype + "\t";
 		msg += engine.gameActive + "\t" + engine.timerActive + "\t";
 		msg += lastscore + "\t" + scgettime + "\t" + lastevent + "\t" + lastb2b + "\t" + lastcombo + "\t" + lastpiece;
@@ -947,7 +947,7 @@ public class ScoreRaceMode extends NetDummyMode {
 		engine.statistics.score = Integer.parseInt(message[4]);
 		engine.statistics.lines = Integer.parseInt(message[5]);
 		engine.statistics.totalPieceLocked = Integer.parseInt(message[6]);
-		engine.statistics.time = Integer.parseInt(message[7]);
+		engine.statistics.setTime(Integer.parseInt(message[7]));
 		engine.statistics.spm = Double.parseDouble(message[8]);
 		engine.statistics.lpm = Float.parseFloat(message[9]);
 		engine.statistics.spl = Double.parseDouble(message[10]);
@@ -971,12 +971,12 @@ public class ScoreRaceMode extends NetDummyMode {
 		String subMsg = "";
 		subMsg += "SCORE;" + engine.statistics.score + "/" + GOAL_TABLE[goaltype] + "\t";
 		subMsg += "LINE;" + engine.statistics.lines + "\t";
-		subMsg += "TIME;" + GeneralUtil.getTime(engine.statistics.time) + "\t";
+		subMsg += "TIME;" + GeneralUtil.getTime(engine.statistics.getTime()) + "\t";
 		subMsg += "PIECE;" + engine.statistics.totalPieceLocked + "\t";
 		subMsg += "SCORE/LINE;" + engine.statistics.spl + "\t";
 		subMsg += "SCORE/MIN;" + engine.statistics.spm + "\t";
 		subMsg += "LINE/MIN;" + engine.statistics.lpm + "\t";
-		subMsg += "PIECE/SEC;" + engine.statistics.pps + "\t";
+		subMsg += "PIECE/SEC;" + engine.statistics.getPps() + "\t";
 
 		String msg = "gstat1p\t" + NetUtil.urlEncode(subMsg) + "\n";
 		netLobby.netPlayerClient.send(msg);

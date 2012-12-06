@@ -383,7 +383,7 @@ public class AvalancheFeverMode extends Avalanche1PDummyMode {
 			receiver.drawScoreFont(engine, playerID, 0, 7, String.valueOf(level));
 
 			receiver.drawScoreFont(engine, playerID, 0, 9, "TIME", EventReceiver.COLOR_BLUE);
-			receiver.drawScoreFont(engine, playerID, 0, 10, GeneralUtil.getTime(engine.statistics.time));
+			receiver.drawScoreFont(engine, playerID, 0, 10, GeneralUtil.getTime(engine.statistics.getTime()));
 
 			receiver.drawScoreFont(engine, playerID, 0, 12, "LIMIT TIME", EventReceiver.COLOR_BLUE);
 			receiver.drawScoreFont(engine, playerID, 0, 13, GeneralUtil.getTime(timeLimit));
@@ -495,11 +495,11 @@ public class AvalancheFeverMode extends Avalanche1PDummyMode {
 			timeLimitAddDisplay--;
 
 		// Time meter
-		engine.meterValue = (timeLimit * receiver.getMeterMax(engine)) / TIME_LIMIT;
-		engine.meterColor = GameEngine.METER_COLOR_GREEN;
-		if(timeLimit <= 1800) engine.meterColor = GameEngine.METER_COLOR_YELLOW;
-		if(timeLimit <= 900) engine.meterColor = GameEngine.METER_COLOR_ORANGE;
-		if(timeLimit <= 300) engine.meterColor = GameEngine.METER_COLOR_RED;
+		engine.setMeterValue((timeLimit * receiver.getMeterMax(engine)) / TIME_LIMIT);
+		engine.setMeterColor(GameEngine.METER_COLOR_GREEN);
+		if(timeLimit <= 1800) engine.setMeterColor(GameEngine.METER_COLOR_YELLOW);
+		if(timeLimit <= 900) engine.setMeterColor(GameEngine.METER_COLOR_ORANGE);
+		if(timeLimit <= 300) engine.setMeterColor(GameEngine.METER_COLOR_RED);
 
 		if (!fastinuse && engine.ctrl.isPress(Controller.BUTTON_F) &&
 				((fastenable == 2) || (engine.stat == GameEngine.STAT_LINECLEAR && fastenable == 1))) {
@@ -619,7 +619,7 @@ public class AvalancheFeverMode extends Avalanche1PDummyMode {
 		receiver.drawMenuFont(engine, playerID,  0, 12, strScore, EventReceiver.COLOR_RED);
 
 		receiver.drawMenuFont(engine, playerID,  0, 13, "TIME", EventReceiver.COLOR_BLUE);
-		String strTime = String.format("%10s", GeneralUtil.getTime(engine.statistics.time));
+		String strTime = String.format("%10s", GeneralUtil.getTime(engine.statistics.getTime()));
 		receiver.drawMenuFont(engine, playerID,  0, 14, strTime);
 
 		if(rankingRank != -1) {
@@ -638,7 +638,7 @@ public class AvalancheFeverMode extends Avalanche1PDummyMode {
 
 		// Update rankings
 		if((owner.replayMode == false) && (engine.ai == null)) {
-			updateRanking(engine.statistics.score, engine.statistics.time, mapSet, numColors);
+			updateRanking(engine.statistics.score, engine.statistics.getTime(), mapSet, numColors);
 
 			if(rankingRank != -1) {
 				saveRanking(owner.modeConfig, engine.ruleopt.strRuleName);

@@ -46,11 +46,11 @@ public class StateTitle extends DummyMenuChooseState {
 	public static final int ID = 1;
 
 	/** Strings for menu choices */
-	private static final String[] CHOICES = {"START", "REPLAY", "NETPLAY", "OPTIONS", "EXIT"};
+	private static final String[] CHOICES = {"SINGLEPLAYER", "MULTIPLAYER", "OPTIONS", "USER", "REPLAY", "EXIT"};
 
 	/** UI Text identifier Strings */
 	private static final String[] UI_TEXT = {
-        "Title_Start", "Title_Replay", "Title_NetPlay", "Title_Config", "Title_Exit"
+        "Title_Start", "Title_NetPlay", "Title_Config", "Enter your username here.", "Title_Replay", "Title_Exit"
 	};
 
 	/** Log */
@@ -60,8 +60,8 @@ public class StateTitle extends DummyMenuChooseState {
 	protected boolean isNewVersionChecked = false;
 
 	public StateTitle () {
-		maxCursor = 4;
-		minChoiceY = 4;
+		maxCursor = 5;
+		minChoiceY = 5;
 	}
 
 	/*
@@ -91,7 +91,7 @@ public class StateTitle extends DummyMenuChooseState {
 
 		// Update title bar
 		if(container instanceof AppGameContainer) {
-			((AppGameContainer) container).setTitle("NullpoMino version" + GameManager.getVersionString());
+			((AppGameContainer) container).setTitle("NullpoMino version " + GameManager.getVersionString() + " League Edition");
 			((AppGameContainer) container).setUpdateOnlyWhenVisible(true);
 		}
 
@@ -115,6 +115,7 @@ public class StateTitle extends DummyMenuChooseState {
 				NullpoMinoSlick.saveConfig();
 			}
 		}
+		
 	}
 
 	/*
@@ -126,8 +127,8 @@ public class StateTitle extends DummyMenuChooseState {
 		g.drawImage(ResourceHolder.imgTitle, 0, 0);
 
 		// Menu
-		NormalFont.printFontGrid(1, 1, "NULLPOMINO", NormalFont.COLOR_ORANGE);
-		NormalFont.printFontGrid(1, 2, "VERSION " + GameManager.getVersionString(), NormalFont.COLOR_ORANGE);
+		NormalFont.printFontGrid(1, 1, "NULLPOMINO LEAGUE", NormalFont.COLOR_ORANGE);
+		//NormalFont.printFontGrid(1, 2, "VERSION " + GameManager.getVersionString(), NormalFont.COLOR_ORANGE);
 
 		renderChoices(2, 4, CHOICES);
 
@@ -150,19 +151,24 @@ public class StateTitle extends DummyMenuChooseState {
 			game.enterState(StateSelectMode.ID);
 			break;
 		case 1:
-			game.enterState(StateReplaySelect.ID);
+			game.enterState(StateNetGame.ID);
+			ResourceHolder.soundManager.play("multiplayer_in");
 			break;
 		case 2:
-			game.enterState(StateNetGame.ID);
-			break;
-		case 3:
 			game.enterState(StateConfigMainMenu.ID);
 			break;
+		case 3:
+			game.enterState(StateEnterUserName.ID);
+			break;
 		case 4:
+			game.enterState(StateReplaySelect.ID);
+			break;
+		case 5:
 			container.exit();
+			NullpoMinoSlick.mainFrame.dispose();
+			System.exit(0);
 			break;
 		}
-
 		return false;
 	}
 }

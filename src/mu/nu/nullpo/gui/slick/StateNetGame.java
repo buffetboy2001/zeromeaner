@@ -28,6 +28,7 @@
 */
 package mu.nu.nullpo.gui.slick;
 
+import java.awt.Dimension;
 import java.io.IOException;
 
 import org.apache.log4j.Logger;
@@ -74,7 +75,7 @@ public class StateNetGame extends BasicGameState implements NetLobbyListener {
 	protected boolean ssflag = false;
 
 	/** AppGameContainer (これを使ってタイトルバーを変える) */
-	protected AppGameContainer appContainer = null;
+	protected GameContainer appContainer = null;
 
 	/** Mode name to enter (null=Exit) */
 	protected String strModeToEnter = "";
@@ -91,7 +92,7 @@ public class StateNetGame extends BasicGameState implements NetLobbyListener {
 	 * State initialization
 	 */
 	public void init(GameContainer container, StateBasedGame game) throws SlickException {
-		appContainer = (AppGameContainer)container;
+		appContainer = container;
 	}
 
 	/*
@@ -115,14 +116,17 @@ public class StateNetGame extends BasicGameState implements NetLobbyListener {
 		gameManager.receiver.setGraphics(appContainer.getGraphics());
 
 		// Lobby initialization
-		netLobby = new NetLobbyFrame();
+		netLobby = NetLobbyFrame.getNetLobbyFrame();
 		netLobby.addListener(this);
 
 		// Mode initialization
 		enterNewMode(null);
 
 		// Lobby start
-		netLobby.init();
+		//netLobby.init();
+		
+		NullpoMinoSlick.setWindowToSizeWithMultiplayer();
+		netLobby.changeCurrentScreenCard(NetLobbyFrame.SCREENCARD_SERVERSELECT);
 		netLobby.setVisible(true);
 	}
 
@@ -135,11 +139,15 @@ public class StateNetGame extends BasicGameState implements NetLobbyListener {
 			gameManager.shutdown();
 			gameManager = null;
 		}
-		if(netLobby != null) {
+		netLobby.changeCurrentScreenCard(NetLobbyFrame.SCREENCARD_NOTHING);
+		NullpoMinoSlick.setWindowToSizeWithoutMultiplayer();
+		
+		//if(netLobby != null) {
 			netLobby.shutdown();
-			netLobby = null;
-		}
+		//	netLobby = null;
+		//}
 		container.setClearEachFrame(false);
+		
 
 		// FPS restore
 		NullpoMinoSlick.altMaxFPS = NullpoMinoSlick.propConfig.getProperty("option.maxfps", 60);
@@ -148,6 +156,8 @@ public class StateNetGame extends BasicGameState implements NetLobbyListener {
 
 		// Reload global config (because it can change rules)
 		NullpoMinoSlick.loadGlobalConfig();
+		
+		ResourceHolder.soundManager.play("multiplayer_out");
 	}
 
 	/*
@@ -182,7 +192,7 @@ public class StateNetGame extends BasicGameState implements NetLobbyListener {
 	public void update(GameContainer container, StateBasedGame game, int delta) throws SlickException {
 		try {
 			// Clear input states if game window does not have focus
-			if(!container.hasFocus() || netLobby.isFocused()) {
+			if(!container.hasFocus()){// || netLobby.isFocused()) {
 				GameKey.gamekey[0].clear();
 			}
 
@@ -190,7 +200,7 @@ public class StateNetGame extends BasicGameState implements NetLobbyListener {
 			if(ResourceHolder.ttfFont != null) ResourceHolder.ttfFont.loadGlyphs();
 
 			// Update key input states
-			if(container.hasFocus() && !netLobby.isFocused()) {
+			if(container.hasFocus()){// && !netLobby.isFocused()) {
 				if((gameManager != null) && (gameManager.engine.length > 0) &&
 				   (gameManager.engine[0] != null) && (gameManager.engine[0].isInGame)) {
 					GameKey.gamekey[0].update(container.getInput(), true);
@@ -269,8 +279,9 @@ public class StateNetGame extends BasicGameState implements NetLobbyListener {
 			log.info("Enter new mode:" + newModeTemp.getName());
 
 			NetDummyMode newMode = (NetDummyMode)newModeTemp;
-			appContainer.setTitle("NullpoMino - " + newMode.getName());
-
+			if (appContainer instanceof AppGameContainer){
+				((AppGameContainer) appContainer).setTitle("NullpoMino - " + newMode.getName());
+			}
 			if(previousMode != null) previousMode.netplayUnload(netLobby);
 			gameManager.mode = newMode;
 			gameManager.init();

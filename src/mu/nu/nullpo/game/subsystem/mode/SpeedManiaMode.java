@@ -574,7 +574,7 @@ public class SpeedManiaMode extends DummyMode {
 
 			// Time
 			receiver.drawScoreFont(engine, playerID, 0, 14, "TIME", EventReceiver.COLOR_BLUE);
-			receiver.drawScoreFont(engine, playerID, 0, 15, GeneralUtil.getTime(engine.statistics.time));
+			receiver.drawScoreFont(engine, playerID, 0, 15, GeneralUtil.getTime(engine.statistics.getTime()));
 
 			// Roll 残り time
 			if((engine.gameActive) && (engine.ending == 2)) {
@@ -689,11 +689,11 @@ public class SpeedManiaMode extends DummyMode {
 	 */
 	private void levelUp(GameEngine engine) {
 		// Meter
-		engine.meterValue = ((engine.statistics.level % 100) * receiver.getMeterMax(engine)) / 99;
-		engine.meterColor = GameEngine.METER_COLOR_GREEN;
-		if(engine.statistics.level % 100 >= 50) engine.meterColor = GameEngine.METER_COLOR_YELLOW;
-		if(engine.statistics.level % 100 >= 80) engine.meterColor = GameEngine.METER_COLOR_ORANGE;
-		if(engine.statistics.level == nextseclv - 1) engine.meterColor = GameEngine.METER_COLOR_RED;
+		engine.setMeterValue(((engine.statistics.level % 100) * receiver.getMeterMax(engine)) / 99);
+		engine.setMeterColor(GameEngine.METER_COLOR_GREEN);
+		if(engine.statistics.level % 100 >= 50) engine.setMeterColor(GameEngine.METER_COLOR_YELLOW);
+		if(engine.statistics.level % 100 >= 80) engine.setMeterColor(GameEngine.METER_COLOR_ORANGE);
+		if(engine.statistics.level == nextseclv - 1) engine.setMeterColor(GameEngine.METER_COLOR_RED);
 
 		// 速度変更
 		setSpeed(engine);
@@ -815,7 +815,7 @@ public class SpeedManiaMode extends DummyMode {
 
 				// RO medal
 				roMedalCheck(engine);
-			} else if((nextseclv == 500) && (engine.statistics.level >= 500) && (lv500torikan > 0) && (engine.statistics.time > lv500torikan)) {
+			} else if((nextseclv == 500) && (engine.statistics.level >= 500) && (lv500torikan > 0) && (engine.statistics.getTime() > lv500torikan)) {
 				//  level500とりカン
 				engine.playSE("endingstart");
 				engine.statistics.level = 500;
@@ -922,11 +922,11 @@ public class SpeedManiaMode extends DummyMode {
 
 			// Time meter
 			int remainRollTime = ROLLTIMELIMIT - rolltime;
-			engine.meterValue = (remainRollTime * receiver.getMeterMax(engine)) / ROLLTIMELIMIT;
-			engine.meterColor = GameEngine.METER_COLOR_GREEN;
-			if(remainRollTime <= 30*60) engine.meterColor = GameEngine.METER_COLOR_YELLOW;
-			if(remainRollTime <= 20*60) engine.meterColor = GameEngine.METER_COLOR_ORANGE;
-			if(remainRollTime <= 10*60) engine.meterColor = GameEngine.METER_COLOR_RED;
+			engine.setMeterValue((remainRollTime * receiver.getMeterMax(engine)) / ROLLTIMELIMIT);
+			engine.setMeterColor(GameEngine.METER_COLOR_GREEN);
+			if(remainRollTime <= 30*60) engine.setMeterColor(GameEngine.METER_COLOR_YELLOW);
+			if(remainRollTime <= 20*60) engine.setMeterColor(GameEngine.METER_COLOR_ORANGE);
+			if(remainRollTime <= 10*60) engine.setMeterColor(GameEngine.METER_COLOR_RED);
 
 			// Roll 終了
 			if(rolltime >= ROLLTIMELIMIT) {
@@ -1031,7 +1031,7 @@ public class SpeedManiaMode extends DummyMode {
 
 		// Update rankings
 		if((owner.replayMode == false) && (startlevel == 0) && (big == false) && (engine.ai == null)) {
-			updateRanking(grade, engine.statistics.level, engine.statistics.time);
+			updateRanking(grade, engine.statistics.level, engine.statistics.getTime());
 			if(medalST == 3) updateBestSectionTime();
 
 			if((rankingRank != -1) || (medalST == 3)) {

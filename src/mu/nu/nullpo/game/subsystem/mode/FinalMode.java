@@ -538,7 +538,7 @@ public class FinalMode extends DummyMode {
 
 			// Time
 			receiver.drawScoreFont(engine, playerID, 0, 14, "TIME", EventReceiver.COLOR_BLUE);
-			receiver.drawScoreFont(engine, playerID, 0, 15, GeneralUtil.getTime(engine.statistics.time));
+			receiver.drawScoreFont(engine, playerID, 0, 15, GeneralUtil.getTime(engine.statistics.getTime()));
 
 			// Remain roll time
 			if((engine.gameActive) && (engine.ending == 2)) {
@@ -639,11 +639,11 @@ public class FinalMode extends DummyMode {
 	 */
 	private void levelUp(GameEngine engine) {
 		// Meter
-		engine.meterValue = ((engine.statistics.level % 100) * receiver.getMeterMax(engine)) / 99;
-		engine.meterColor = GameEngine.METER_COLOR_GREEN;
-		if(engine.statistics.level % 100 >= 50) engine.meterColor = GameEngine.METER_COLOR_YELLOW;
-		if(engine.statistics.level % 100 >= 80) engine.meterColor = GameEngine.METER_COLOR_ORANGE;
-		if(engine.statistics.level == nextseclv - 1) engine.meterColor = GameEngine.METER_COLOR_RED;
+		engine.setMeterValue(((engine.statistics.level % 100) * receiver.getMeterMax(engine)) / 99);
+		engine.setMeterColor(GameEngine.METER_COLOR_GREEN);
+		if(engine.statistics.level % 100 >= 50) engine.setMeterColor(GameEngine.METER_COLOR_YELLOW);
+		if(engine.statistics.level % 100 >= 80) engine.setMeterColor(GameEngine.METER_COLOR_ORANGE);
+		if(engine.statistics.level == nextseclv - 1) engine.setMeterColor(GameEngine.METER_COLOR_RED);
 
 		// Update speed
 		setSpeed(engine);
@@ -816,11 +816,11 @@ public class FinalMode extends DummyMode {
 			// Time meter
 			int rollTimeLimit = (version >= 3) ? ROLLTIMELIMIT : ROLLTIMELIMIT_OLD;
 			int remainRollTime = rollTimeLimit - rolltime;
-			engine.meterValue = (remainRollTime * receiver.getMeterMax(engine)) / rollTimeLimit;
-			engine.meterColor = GameEngine.METER_COLOR_GREEN;
-			if(remainRollTime <= 30*60) engine.meterColor = GameEngine.METER_COLOR_YELLOW;
-			if(remainRollTime <= 20*60) engine.meterColor = GameEngine.METER_COLOR_ORANGE;
-			if(remainRollTime <= 10*60) engine.meterColor = GameEngine.METER_COLOR_RED;
+			engine.setMeterValue((remainRollTime * receiver.getMeterMax(engine)) / rollTimeLimit);
+			engine.setMeterColor(GameEngine.METER_COLOR_GREEN);
+			if(remainRollTime <= 30*60) engine.setMeterColor(GameEngine.METER_COLOR_YELLOW);
+			if(remainRollTime <= 20*60) engine.setMeterColor(GameEngine.METER_COLOR_ORANGE);
+			if(remainRollTime <= 10*60) engine.setMeterColor(GameEngine.METER_COLOR_RED);
 
 			// Player has survived the roll
 			if(rolltime >= rollTimeLimit) {
@@ -927,7 +927,7 @@ public class FinalMode extends DummyMode {
 
 		// Updates leaderboard and best section time records
 		if((owner.replayMode == false) && (startlevel == 0) && (big == false) && (engine.ai == null)) {
-			updateRanking(grade, engine.statistics.level, engine.statistics.time, rollclear);
+			updateRanking(grade, engine.statistics.level, engine.statistics.getTime(), rollclear);
 			if(medalST == 3) updateBestSectionTime();
 
 			if((rankingRank != -1) || (medalST == 3)) {

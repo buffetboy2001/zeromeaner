@@ -305,7 +305,7 @@ public class PhysicianMode extends DummyMode {
 			receiver.drawScoreFont(engine, playerID, 0, 11, SPEED_NAME[speed], SPEED_COLOR[speed]);
 
 			receiver.drawScoreFont(engine, playerID, 0, 13, "TIME", EventReceiver.COLOR_BLUE);
-			receiver.drawScoreFont(engine, playerID, 0, 14, GeneralUtil.getTime(engine.statistics.time));
+			receiver.drawScoreFont(engine, playerID, 0, 14, GeneralUtil.getTime(engine.statistics.getTime()));
 		}
 	}
 
@@ -338,11 +338,11 @@ public class PhysicianMode extends DummyMode {
 			return;
 
 		int rest = engine.field.getHowManyGems();
-		engine.meterValue = (rest * receiver.getMeterMax(engine)) / hoverBlocks;
-		if (rest <= 3) engine.meterColor = GameEngine.METER_COLOR_GREEN;
-		else if (rest < (hoverBlocks >> 2)) engine.meterColor = GameEngine.METER_COLOR_YELLOW;
-		else if (rest < (hoverBlocks >> 1)) engine.meterColor = GameEngine.METER_COLOR_ORANGE;
-		else engine.meterColor = GameEngine.METER_COLOR_RED;
+		engine.setMeterValue((rest * receiver.getMeterMax(engine)) / hoverBlocks);
+		if (rest <= 3) engine.setMeterColor(GameEngine.METER_COLOR_GREEN);
+		else if (rest < (hoverBlocks >> 2)) engine.setMeterColor(GameEngine.METER_COLOR_YELLOW);
+		else if (rest < (hoverBlocks >> 1)) engine.setMeterColor(GameEngine.METER_COLOR_ORANGE);
+		else engine.setMeterColor(GameEngine.METER_COLOR_RED);
 
 		if(rest == 0 && engine.timerActive) {
 			engine.gameEnded();
@@ -395,7 +395,7 @@ public class PhysicianMode extends DummyMode {
 		drawResult(engine, playerID, receiver, 3, EventReceiver.COLOR_BLUE,
 				"SCORE", String.format("%10d", engine.statistics.score),
 				"CLEARED", String.format("%10d", engine.statistics.lines),
-				"TIME", String.format("%10s", GeneralUtil.getTime(engine.statistics.time)));
+				"TIME", String.format("%10s", GeneralUtil.getTime(engine.statistics.getTime())));
 		drawResultRank(engine, playerID, receiver, 9, EventReceiver.COLOR_BLUE, rankingRank);
 	}
 
@@ -408,7 +408,7 @@ public class PhysicianMode extends DummyMode {
 
 		// Update rankings
 		if((owner.replayMode == false) && (engine.ai == null)) {
-			updateRanking(engine.statistics.score, engine.statistics.time);
+			updateRanking(engine.statistics.score, engine.statistics.getTime());
 
 			if(rankingRank != -1) {
 				saveRanking(owner.modeConfig, engine.ruleopt.strRuleName);

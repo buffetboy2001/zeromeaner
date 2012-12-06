@@ -104,7 +104,7 @@ public class StateConfigAISelect extends BaseGameState {
 			aiPathList = loadAIList(in);
 			aiNameList = loadAINames(aiPathList);
 			in.close();
-		} catch (IOException e) {
+		} catch (Exception e) {
 			log.error("Failed to load AI list", e);
 		}
 	}

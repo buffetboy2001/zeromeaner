@@ -581,7 +581,7 @@ public class PhantomManiaMode extends DummyMode {
 			receiver.drawScoreFont(engine, playerID, 0, 12, String.format("%3d", nextseclv));
 
 			receiver.drawScoreFont(engine, playerID, 0, 14, "TIME", EventReceiver.COLOR_BLUE);
-			receiver.drawScoreFont(engine, playerID, 0, 15, GeneralUtil.getTime(engine.statistics.time));
+			receiver.drawScoreFont(engine, playerID, 0, 15, GeneralUtil.getTime(engine.statistics.getTime()));
 
 			if((engine.gameActive) && (engine.ending == 2)) {
 				int time = ROLLTIMELIMIT - rolltime;
@@ -687,11 +687,11 @@ public class PhantomManiaMode extends DummyMode {
 	 * Levelup
 	 */
 	private void levelUp(GameEngine engine) {
-		engine.meterValue = ((engine.statistics.level % 100) * receiver.getMeterMax(engine)) / 99;
-		engine.meterColor = GameEngine.METER_COLOR_GREEN;
-		if(engine.statistics.level % 100 >= 50) engine.meterColor = GameEngine.METER_COLOR_YELLOW;
-		if(engine.statistics.level % 100 >= 80) engine.meterColor = GameEngine.METER_COLOR_ORANGE;
-		if(engine.statistics.level >= nextseclv - 1) engine.meterColor = GameEngine.METER_COLOR_RED;
+		engine.setMeterValue(((engine.statistics.level % 100) * receiver.getMeterMax(engine)) / 99);
+		engine.setMeterColor(GameEngine.METER_COLOR_GREEN);
+		if(engine.statistics.level % 100 >= 50) engine.setMeterColor(GameEngine.METER_COLOR_YELLOW);
+		if(engine.statistics.level % 100 >= 80) engine.setMeterColor(GameEngine.METER_COLOR_ORANGE);
+		if(engine.statistics.level >= nextseclv - 1) engine.setMeterColor(GameEngine.METER_COLOR_RED);
 
 		setSpeed(engine);
 
@@ -793,7 +793,7 @@ public class PhantomManiaMode extends DummyMode {
 				{
 					grade = 6; gradeflash = 180;
 				}
-			} else if((nextseclv == 300) && (engine.statistics.level >= 300) && (engine.statistics.time > LV300TORIKAN)) {
+			} else if((nextseclv == 300) && (engine.statistics.level >= 300) && (engine.statistics.getTime() > LV300TORIKAN)) {
 				if (engine.timerActive)
 				{
 					sectionscomp++;
@@ -814,7 +814,7 @@ public class PhantomManiaMode extends DummyMode {
 				sectionlasttime = sectiontime[levelb / 100];
 
 				stMedalCheck(engine, levelb / 100);
-			} else if((nextseclv == 500) && (engine.statistics.level >= 500) && (engine.statistics.time > LV500TORIKAN)) {
+			} else if((nextseclv == 500) && (engine.statistics.level >= 500) && (engine.statistics.getTime() > LV500TORIKAN)) {
 				if (engine.timerActive)
 				{
 					sectionscomp++;
@@ -835,7 +835,7 @@ public class PhantomManiaMode extends DummyMode {
 				sectionlasttime = sectiontime[levelb / 100];
 
 				stMedalCheck(engine, levelb / 100);
-			} else if((nextseclv == 800) && (engine.statistics.level >= 800) && (engine.statistics.time > LV800TORIKAN)) {
+			} else if((nextseclv == 800) && (engine.statistics.level >= 800) && (engine.statistics.getTime() > LV800TORIKAN)) {
 				if (engine.timerActive)
 				{
 					sectionscomp++;
@@ -939,11 +939,11 @@ public class PhantomManiaMode extends DummyMode {
 				rolltime += 1;
 
 			int remainRollTime = ROLLTIMELIMIT - rolltime;
-			engine.meterValue = (remainRollTime * receiver.getMeterMax(engine)) / ROLLTIMELIMIT;
-			engine.meterColor = GameEngine.METER_COLOR_GREEN;
-			if(remainRollTime <= 30*60) engine.meterColor = GameEngine.METER_COLOR_YELLOW;
-			if(remainRollTime <= 20*60) engine.meterColor = GameEngine.METER_COLOR_ORANGE;
-			if(remainRollTime <= 10*60) engine.meterColor = GameEngine.METER_COLOR_RED;
+			engine.setMeterValue((remainRollTime * receiver.getMeterMax(engine)) / ROLLTIMELIMIT);
+			engine.setMeterColor(GameEngine.METER_COLOR_GREEN);
+			if(remainRollTime <= 30*60) engine.setMeterColor(GameEngine.METER_COLOR_YELLOW);
+			if(remainRollTime <= 20*60) engine.setMeterColor(GameEngine.METER_COLOR_ORANGE);
+			if(remainRollTime <= 10*60) engine.setMeterColor(GameEngine.METER_COLOR_RED);
 
 			if(rolltime >= ROLLTIMELIMIT) {
 				if (engine.statistics.level >= 999) rollclear = 2;
@@ -1049,7 +1049,7 @@ public class PhantomManiaMode extends DummyMode {
 		owner.replayProp.setProperty("phantommania.version", version);
 
 		if((owner.replayMode == false) && (startlevel == 0) && (big == false) && (engine.ai == null)) {
-			updateRanking(grade, engine.statistics.level, engine.statistics.time, rollclear);
+			updateRanking(grade, engine.statistics.level, engine.statistics.getTime(), rollclear);
 			if(medalST == 3) updateBestSectionTime();
 
 			if((rankingRank != -1) || (medalST == 3)) {

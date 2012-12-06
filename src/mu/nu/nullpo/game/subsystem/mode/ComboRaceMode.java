@@ -477,8 +477,8 @@ public class ComboRaceMode extends NetDummyMode {
 	public boolean onReady(GameEngine engine, int playerID) {
 		if(engine.statc[0] == 0) {
 			engine.createFieldIfNeeded();
-			engine.meterColor = GameEngine.METER_COLOR_GREEN;
-			engine.meterValue = (GOAL_TABLE[goaltype] == -1) ? 0 : receiver.getMeterMax(engine);
+			engine.setMeterColor(GameEngine.METER_COLOR_GREEN);
+			engine.setMeterValue((GOAL_TABLE[goaltype] == -1) ? 0 : receiver.getMeterMax(engine));
 
 			if(!netIsWatch) {
 				fillStack(engine, goaltype);
@@ -590,10 +590,10 @@ public class ComboRaceMode extends NetDummyMode {
 			receiver.drawScoreFont(engine, playerID, 0, 10, String.valueOf(engine.statistics.lpm));
 
 			receiver.drawScoreFont(engine, playerID, 0, 12, "PIECE/SEC", EventReceiver.COLOR_BLUE);
-			receiver.drawScoreFont(engine, playerID, 0, 13, String.valueOf(engine.statistics.pps));
+			receiver.drawScoreFont(engine, playerID, 0, 13, String.valueOf(engine.statistics.getPps()));
 
 			receiver.drawScoreFont(engine, playerID, 0, 15, "TIME", EventReceiver.COLOR_BLUE);
-			receiver.drawScoreFont(engine, playerID, 0, 16, GeneralUtil.getTime(engine.statistics.time));
+			receiver.drawScoreFont(engine, playerID, 0, 16, GeneralUtil.getTime(engine.statistics.getTime()));
 
 			if((lastevent != EVENT_NONE) && (scgettime < 120)) {
 				String strPieceName = Piece.getPieceName(lastpiece);
@@ -724,18 +724,18 @@ public class ComboRaceMode extends NetDummyMode {
 			}
 
 			if (GOAL_TABLE[goaltype] == -1) {
-				engine.meterValue = Math.min(engine.statistics.maxCombo, receiver.getMeterMax(engine));
-				if(engine.statistics.maxCombo <= 10) engine.meterColor = GameEngine.METER_COLOR_RED;
-				else if(engine.statistics.maxCombo <= 20) engine.meterColor = GameEngine.METER_COLOR_ORANGE;
-				else if(engine.statistics.maxCombo <= 40) engine.meterColor = GameEngine.METER_COLOR_YELLOW;
-				else engine.meterColor = GameEngine.METER_COLOR_GREEN;
+				engine.setMeterValue(Math.min(engine.statistics.maxCombo, receiver.getMeterMax(engine)));
+				if(engine.statistics.maxCombo <= 10) engine.setMeterColor(GameEngine.METER_COLOR_RED);
+				else if(engine.statistics.maxCombo <= 20) engine.setMeterColor(GameEngine.METER_COLOR_ORANGE);
+				else if(engine.statistics.maxCombo <= 40) engine.setMeterColor(GameEngine.METER_COLOR_YELLOW);
+				else engine.setMeterColor(GameEngine.METER_COLOR_GREEN);
 			} else {
 				int remainLines = GOAL_TABLE[goaltype] - engine.statistics.lines;
-				engine.meterValue = (remainLines * receiver.getMeterMax(engine)) / GOAL_TABLE[goaltype];
+				engine.setMeterValue((remainLines * receiver.getMeterMax(engine)) / GOAL_TABLE[goaltype]);
 
-				if(remainLines <= 30) engine.meterColor = GameEngine.METER_COLOR_YELLOW;
-				if(remainLines <= 20) engine.meterColor = GameEngine.METER_COLOR_ORANGE;
-				if(remainLines <= 10) engine.meterColor = GameEngine.METER_COLOR_RED;
+				if(remainLines <= 30) engine.setMeterColor(GameEngine.METER_COLOR_YELLOW);
+				if(remainLines <= 20) engine.setMeterColor(GameEngine.METER_COLOR_ORANGE);
+				if(remainLines <= 10) engine.setMeterColor(GameEngine.METER_COLOR_RED);
 
 				// ゴール
 				if(engine.statistics.lines >= GOAL_TABLE[goaltype]) {
@@ -808,7 +808,7 @@ public class ComboRaceMode extends NetDummyMode {
 		// Update rankings
 		if((owner.replayMode == false) && (!big) && (engine.ai == null)) {
 			updateRanking(engine.statistics.maxCombo - 1,
-					(engine.ending == 0) ? -1 : engine.statistics.time);
+					(engine.ending == 0) ? -1 : engine.statistics.getTime());
 
 			if(rankingRank != -1) {
 				saveRanking(owner.modeConfig, engine.ruleopt.strRuleName);
@@ -886,10 +886,10 @@ public class ComboRaceMode extends NetDummyMode {
 		int bg = owner.backgroundStatus.fadesw ? owner.backgroundStatus.fadebg : owner.backgroundStatus.bg;
 		String msg = "game\tstats\t";
 		msg += engine.statistics.lines + "\t" + engine.statistics.totalPieceLocked + "\t";
-		msg += engine.statistics.time + "\t" + engine.statistics.lpm + "\t";
-		msg += engine.statistics.pps + "\t" + goaltype + "\t";
+		msg += engine.statistics.getTime() + "\t" + engine.statistics.lpm + "\t";
+		msg += engine.statistics.getPps() + "\t" + goaltype + "\t";
 		msg += engine.gameActive + "\t" + engine.timerActive + "\t";
-		msg += engine.meterColor + "\t" + engine.meterValue + "\t";
+		msg += engine.getMeterColor() + "\t" + engine.getMeterValue() + "\t";
 		msg += bg + "\t";
 		msg += scgettime + "\t" + lastevent + "\t" + lastb2b + "\t" + lastcombo + "\t" + lastpiece + "\t";
 		msg += engine.statistics.maxCombo + "\t" + engine.combo + "\n";
@@ -903,14 +903,14 @@ public class ComboRaceMode extends NetDummyMode {
 	protected void netRecvStats(GameEngine engine, String[] message) {
 		engine.statistics.lines = Integer.parseInt(message[4]);
 		engine.statistics.totalPieceLocked = Integer.parseInt(message[5]);
-		engine.statistics.time = Integer.parseInt(message[6]);
+		engine.statistics.setTime(Integer.parseInt(message[6]));
 		engine.statistics.lpm = Float.parseFloat(message[7]);
-		engine.statistics.pps = Float.parseFloat(message[8]);
+		engine.statistics.setPps(Float.parseFloat(message[8]));
 		goaltype = Integer.parseInt(message[9]);
 		engine.gameActive = Boolean.parseBoolean(message[10]);
 		engine.timerActive = Boolean.parseBoolean(message[11]);
-		engine.meterColor = Integer.parseInt(message[12]);
-		engine.meterValue = Integer.parseInt(message[13]);
+		engine.setMeterColor(Integer.parseInt(message[12]));
+		engine.setMeterValue(Integer.parseInt(message[13]));
 		owner.backgroundStatus.bg = Integer.parseInt(message[14]);
 		scgettime = Integer.parseInt(message[15]);
 		lastevent = Integer.parseInt(message[16]);
@@ -929,11 +929,11 @@ public class ComboRaceMode extends NetDummyMode {
 	protected void netSendEndGameStats(GameEngine engine) {
 		String subMsg = "";
 		subMsg += "MAX COMBO;" + (engine.statistics.maxCombo - 1) + "\t";
-		subMsg += "TIME;" + GeneralUtil.getTime(engine.statistics.time) + "\t";
+		subMsg += "TIME;" + GeneralUtil.getTime(engine.statistics.getTime()) + "\t";
 		subMsg += "LINE;" + engine.statistics.lines + "\t";
 		subMsg += "PIECE;" + engine.statistics.totalPieceLocked + "\t";
 		subMsg += "LINE/MIN;" + engine.statistics.lpm + "\t";
-		subMsg += "PIECE/SEC;" + engine.statistics.pps + "\t";
+		subMsg += "PIECE/SEC;" + engine.statistics.getPps() + "\t";
 		String msg = "gstat1p\t" + NetUtil.urlEncode(subMsg) + "\n";
 		netLobby.netPlayerClient.send(msg);
 	}

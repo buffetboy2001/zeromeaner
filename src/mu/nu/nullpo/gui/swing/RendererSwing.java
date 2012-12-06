@@ -980,7 +980,7 @@ public class RendererSwing extends EventReceiver {
 
 			// 右Meter
 			int maxHeight = height * size * 4;
-			if((engine != null) && (engine.meterValue > 0)) maxHeight = (height * size * 4) - engine.meterValue;
+			if((engine != null) && (engine.getMeterValue() > 0)) maxHeight = (height * size * 4) - engine.getMeterValue();
 
 			tmpX = x + (width * size * 4) + 8;
 			tmpY = y + 4;
@@ -991,8 +991,8 @@ public class RendererSwing extends EventReceiver {
 				graphics.setColor(Color.white);
 			}
 
-			if((engine != null) && (engine.meterValue > 0)) {
-				int value = engine.meterValue;
+			if((engine != null) && (engine.getMeterValue() > 0)) {
+				int value = engine.getMeterValue();
 				if(value > height * size * 4) value = height * size * 4;
 
 				if(value > 0) {
@@ -1000,7 +1000,7 @@ public class RendererSwing extends EventReceiver {
 					tmpY = y + (height * size * 4) + 3 - (value - 1);
 
 					Color color = Color.white;
-					switch(engine.meterColor) {
+					switch(engine.getMeterColor()) {
 					case GameEngine.METER_COLOR_GREEN:
 						color = Color.green;
 						break;

@@ -51,7 +51,7 @@ public class BackgroundStatus implements Serializable {
 
 	/** Background after fade */
 	public int fadebg;
-
+	
 	/**
 	 * Default constructor
 	 */

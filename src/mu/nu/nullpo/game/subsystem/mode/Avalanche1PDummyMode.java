@@ -454,7 +454,7 @@ public abstract class Avalanche1PDummyMode extends DummyMode {
 		receiver.drawMenuFont(engine, playerID,  0, 12, strScore, EventReceiver.COLOR_RED);
 
 		receiver.drawMenuFont(engine, playerID,  0, 13, "TIME", EventReceiver.COLOR_BLUE);
-		String strTime = String.format("%10s", GeneralUtil.getTime(engine.statistics.time));
+		String strTime = String.format("%10s", GeneralUtil.getTime(engine.statistics.getTime()));
 		receiver.drawMenuFont(engine, playerID,  0, 14, strTime);
 	}
 }

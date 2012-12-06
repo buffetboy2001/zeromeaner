@@ -83,7 +83,7 @@ public class StateInGame extends BasicGameState {
 	protected boolean ssflag = false;
 
 	/** AppGameContainer (これを使ってタイトルバーを変える) */
-	protected AppGameContainer appContainer = null;
+	protected GameContainer appContainer = null;
 
 	/*
 	 * Fetch this state's ID
@@ -97,7 +97,7 @@ public class StateInGame extends BasicGameState {
 	 * State initialization
 	 */
 	public void init(GameContainer container, StateBasedGame game) throws SlickException {
-		appContainer = (AppGameContainer)container;
+		appContainer = container;
 	}
 
 	/*
@@ -136,7 +136,9 @@ public class StateInGame extends BasicGameState {
 		if(modeObj == null) {
 			log.error("Couldn't find mode:" + modeName);
 		} else {
-			appContainer.setTitle("NullpoMino - " + modeName);
+			if (appContainer instanceof AppGameContainer){
+				((AppGameContainer) appContainer).setTitle("NullpoMino - " + modeName);
+			}
 			gameManager.mode = modeObj;
 		}
 
@@ -219,7 +221,9 @@ public class StateInGame extends BasicGameState {
 		if(modeObj == null) {
 			log.error("Couldn't find mode:" + modeName);
 		} else {
-			appContainer.setTitle("NullpoMino - " + modeName + " (Replay)");
+			if (appContainer instanceof AppGameContainer){
+				((AppGameContainer) appContainer).setTitle("NullpoMino - " + modeName + " (Replay)");
+			}
 			gameManager.mode = modeObj;
 		}
 

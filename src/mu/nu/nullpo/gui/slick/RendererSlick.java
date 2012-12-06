@@ -38,6 +38,9 @@ import mu.nu.nullpo.game.play.GameEngine;
 import mu.nu.nullpo.game.play.GameManager;
 import mu.nu.nullpo.gui.EffectObject;
 import mu.nu.nullpo.util.CustomProperties;
+import mu.nu.nullpo.util.fumen.FumenTransformer;
+import mu.nu.nullpo.util.fumen.FumenPiece;
+import mu.nu.nullpo.util.fumen.FumenUtil;
 
 //import org.apache.log4j.Logger;
 import org.newdawn.slick.Color;
@@ -74,6 +77,8 @@ public class RendererSlick extends EventReceiver {
 
 	/** Line clear effect speed */
 	protected int lineeffectspeed;
+	
+	boolean drawFrame = true;
 
 	/**
 	 * Block colorIDに応じてSlick用Colorオブジェクトを作成・取得
@@ -790,7 +795,8 @@ public class RendererSlick extends EventReceiver {
 					}
 
 					if(blk.getAttribute(Block.BLOCK_ATTRIBUTE_OUTLINE) && !blk.getAttribute(Block.BLOCK_ATTRIBUTE_BONE)) {
-						Color filter = new Color(Color.white);
+						//Color filter = new Color(Color.white);
+						Color filter = new Color(0xC0C0C0);
 						filter.a = blk.alpha;
 						graphics.setColor(filter);
 						int ls = (blksize-1);
@@ -856,7 +862,16 @@ public class RendererSlick extends EventReceiver {
 			offsetX = engine.framecolor * 16;
 		}
 
-		// Field Background
+		drawBackground(x, y, displaysize, size, width, height);
+		
+		//belz 
+		
+		//drawPlayFieldFrame(x, y, size, width, height, offsetX);
+		//drawMeter(x, y, engine, size, width, height, offsetX);
+	}
+
+	private void drawBackground(int x, int y, int displaysize, int size,
+			int width, int height) {
 		if(fieldbgbright > 0) {
 			if((width <= 10) && (height <= 20)) {
 				Color filter = new Color(Color.white);
@@ -875,43 +890,18 @@ public class RendererSlick extends EventReceiver {
 				graphics.setColor(Color.white);
 			}
 		}
+	}
 
-		// Upと下
-		int maxWidth = (width * size * 4);
-		if(showmeter) maxWidth = (width * size * 4) + (2 * 4);
-
-		int tmpX = 0;
-		int tmpY = 0;
-
-		tmpX = x + 4;
-		tmpY = y;
-		graphics.drawImage(ResourceHolder.imgFrame, tmpX, tmpY, tmpX + maxWidth, tmpY + 4, offsetX + 4, 0, (offsetX + 4) + 4, 4);
-		tmpY = y + (height * size * 4) + 4;
-		graphics.drawImage(ResourceHolder.imgFrame, tmpX, tmpY, tmpX + maxWidth, tmpY + 4, offsetX + 4, 8, (offsetX + 4) + 4, 8 + 4);
-
-		// 左と右
-		tmpX = x;
-		tmpY = y + 4;
-		graphics.drawImage(ResourceHolder.imgFrame, tmpX, tmpY, tmpX + 4, tmpY + (height * size*4), offsetX, 4, offsetX + 4, 4 + 4);
-
+	private void drawMeter(int x, int y, GameEngine engine, int size,
+			int width, int height, int offsetX) {
+		int tmpX;
+		int tmpY;
+		//belz
+		showmeter = false;
 		if(showmeter) {
-			tmpX = x + (width * size * 4) + 12;
-		} else {
-			tmpX = x + (width * size * 4) + 4;
-		}
-		graphics.drawImage(ResourceHolder.imgFrame, tmpX, tmpY, tmpX + 4, tmpY + (height * size*4), offsetX + 8, 4, offsetX + 8 + 4, 4 + 4);
-
-		// 左上
-		tmpX = x;
-		tmpY = y;
-		graphics.drawImage(ResourceHolder.imgFrame, tmpX, tmpY, tmpX + 4, tmpY + 4, offsetX, 0, offsetX + 4, 4);
-
-		// 左下
-		tmpX = x;
-		tmpY = y + (height * size * 4) + 4;
-		graphics.drawImage(ResourceHolder.imgFrame, tmpX, tmpY, tmpX + 4, tmpY + 4, offsetX, 8, offsetX + 4, 8 + 4);
-
-		if(showmeter) {
+			
+			graphics.setColor(Color.black);
+			
 			// MeterONのときの右上
 			tmpX = x + (width * size * 4) + 12;
 			tmpY = y;
@@ -937,7 +927,7 @@ public class RendererSlick extends EventReceiver {
 
 			// 右Meter
 			int maxHeight = height * size * 4;
-			if((engine != null) && (engine.meterValue > 0)) maxHeight = (height * size * 4) - engine.meterValue;
+			if((engine != null) && (engine.getMeterValue() > 0)) maxHeight = (height * size * 4) - engine.getMeterValue();
 
 			tmpX = x + (width * size * 4) + 8;
 			tmpY = y + 4;
@@ -948,8 +938,8 @@ public class RendererSlick extends EventReceiver {
 				graphics.setColor(Color.white);
 			}
 
-			if((engine != null) && (engine.meterValue > 0)) {
-				int value = engine.meterValue;
+			if((engine != null) && (engine.getMeterValue() > 0)) {
+				int value = engine.getMeterValue();
 				if(value > height * size * 4) value = height * size * 4;
 
 				if(value > 0) {
@@ -957,7 +947,7 @@ public class RendererSlick extends EventReceiver {
 					tmpY = y + (height * size * 4) + 3 - (value - 1);
 
 					Color color = Color.white;
-					switch(engine.meterColor) {
+					switch(engine.getMeterColor()) {
 					case GameEngine.METER_COLOR_GREEN:
 						color = Color.green;
 						break;
@@ -987,6 +977,55 @@ public class RendererSlick extends EventReceiver {
 			tmpY = y + (height * size * 4) + 4;
 			graphics.drawImage(ResourceHolder.imgFrame, tmpX, tmpY, tmpX + 4, tmpY + 4, offsetX + 8, 8, (offsetX + 8) + 4, 8 + 4);
 		}
+	}
+
+	private void drawPlayFieldFrame(int x, int y, int size, int width, int height, int offsetX) {
+		
+		// Upと下
+		int maxWidth = (width * size * 4);
+		if(showmeter) maxWidth = (width * size * 4) + (2 * 4);
+
+		int tmpX = 0;
+		int tmpY = 0;
+
+		tmpX = x + 4;
+		tmpY = y;
+		
+		if (drawFrame) drawBorderTop(offsetX, maxWidth, tmpX, tmpY);
+		
+		tmpY = y + (height * size * 4) + 4;
+		 
+		drawBorderBottom(offsetX, maxWidth, tmpX, tmpY);
+
+		// 左と右
+		tmpX = x;
+		tmpY = y + 4;
+		if (drawFrame) graphics.drawImage(ResourceHolder.imgFrame, tmpX, tmpY, tmpX + 4, tmpY + (height * size*4), offsetX, 4, offsetX + 4, 4 + 4);
+
+		if(showmeter) {
+			tmpX = x + (width * size * 4) + 12;
+		} else {
+			tmpX = x + (width * size * 4) + 4;
+		}
+		if (drawFrame) graphics.drawImage(ResourceHolder.imgFrame, tmpX, tmpY, tmpX + 4, tmpY + (height * size*4), offsetX + 8, 4, offsetX + 8 + 4, 4 + 4);
+
+		// 左上
+		tmpX = x;
+		tmpY = y;
+		if (drawFrame) graphics.drawImage(ResourceHolder.imgFrame, tmpX, tmpY, tmpX + 4, tmpY + 4, offsetX, 0, offsetX + 4, 4);
+
+		// 左下
+		tmpX = x;
+		tmpY = y + (height * size * 4) + 4;
+		if (drawFrame) graphics.drawImage(ResourceHolder.imgFrame, tmpX, tmpY, tmpX + 4, tmpY + 4, offsetX, 8, offsetX + 4, 8 + 4);
+	}
+
+	private void drawBorderTop(int offsetX, int maxWidth, int tmpX, int tmpY) {
+		graphics.drawImage(ResourceHolder.imgFrame, tmpX, tmpY, tmpX + maxWidth, tmpY + 4, offsetX + 4, 0, (offsetX + 4) + 4, 4);
+	}
+
+	private void drawBorderBottom(int offsetX, int maxWidth, int tmpX, int tmpY) {
+		graphics.drawImage(ResourceHolder.imgFrame, tmpX, tmpY, tmpX + maxWidth, tmpY + 4, offsetX + 4, 8, (offsetX + 4) + 4, 8 + 4);
 	}
 
 	/**
@@ -1321,6 +1360,17 @@ public class RendererSlick extends EventReceiver {
 	 */
 	@Override
 	public void renderReady(GameEngine engine, int playerID) {
+		
+		boolean fumenrecording = NullpoMinoSlick.propConfig.getProperty("option.fumenrecording", false);
+		boolean fullframefumenrecording = NullpoMinoSlick.propConfig.getProperty("option.fullframefumenrecording", false);
+
+		if (fumenrecording){
+			FumenUtil.getFumenUtil(engine).start();
+			if (fullframefumenrecording){
+				FumenUtil.getFullFrameFumenUtil(engine).start();
+			}
+		}
+		
 		if(graphics == null) return;
 		if(engine.allowTextRenderByReceiver == false) return;
 		//if(engine.isVisible == false) return;
@@ -1350,6 +1400,7 @@ public class RendererSlick extends EventReceiver {
 	 */
 	@Override
 	public void renderMove(GameEngine engine, int playerID) {
+		updateFumen(engine);
 		if(engine.isVisible == false) return;
 
 		int offsetX = getFieldDisplayPositionX(engine, playerID);
@@ -1372,6 +1423,18 @@ public class RendererSlick extends EventReceiver {
 				drawCurrentPiece(offsetX + 4, offsetY + 4, engine, 0.5f);
 			}
 		}
+	}
+
+	private void updateFumen(GameEngine engine) {
+	  if (NullpoMinoSlick.propConfig.getProperty("option.fullframefumenrecording", false)){
+		Piece piece = engine.nowPieceObject;
+		if (piece != null){
+			FumenUtil fumenUtil = FumenUtil.getFullFrameFumenUtil(engine);
+			int[] activePiece = FumenTransformer.transformPiece(engine.nowPieceObject, engine.nowPieceY, engine.nowPieceX);
+			int[] fumenField = FumenTransformer.transform(engine.field);
+			fumenUtil.addFrameAndActivePiece(fumenField, activePiece);
+		}
+	  }
 	}
 
 	/*
@@ -1434,6 +1497,17 @@ public class RendererSlick extends EventReceiver {
 	 */
 	@Override
 	public void renderGameOver(GameEngine engine, int playerID) {
+		
+		boolean fumenrecording = NullpoMinoSlick.propConfig.getProperty("option.fumenrecording", false);
+		boolean fullframefumenrecording = NullpoMinoSlick.propConfig.getProperty("option.fullframefumenrecording", false);
+		
+		if (fumenrecording){
+			FumenUtil.getFumenUtil(engine).end();
+			if (fullframefumenrecording){
+				FumenUtil.getFullFrameFumenUtil(engine).end();
+			}
+		}
+		
 		if(graphics == null) return;
 		if(engine.allowTextRenderByReceiver == false) return;
 		if(engine.isVisible == false) return;
@@ -1482,6 +1556,8 @@ public class RendererSlick extends EventReceiver {
 		else
 			tempColor = COLOR_WHITE;
 		NormalFont.printFont(getFieldDisplayPositionX(engine, playerID) + 108, getFieldDisplayPositionY(engine, playerID) + 340, "END", tempColor, 1.0f);
+
+		NormalFont.printFont(getFieldDisplayPositionX(engine, playerID) + 10, getFieldDisplayPositionY(engine, playerID) + 300, "F->REPORT", COLOR_WHITE, 1.0f);
 	}
 
 	/*

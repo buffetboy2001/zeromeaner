@@ -954,7 +954,7 @@ public class SPFMode extends DummyMode {
 
 		// Timer
 		if(playerID == 0) {
-			receiver.drawDirectFont(engine, playerID, 224, 0, GeneralUtil.getTime(engine.statistics.time));
+			receiver.drawDirectFont(engine, playerID, 224, 0, GeneralUtil.getTime(engine.statistics.getTime()));
 		}
 
 		// Ojama Counter
@@ -1160,8 +1160,8 @@ public class SPFMode extends DummyMode {
 		scgettime[playerID] = 120;
 		score[playerID] += lastscore[playerID];
 
-		if (hurryupSeconds[playerID] > 0 && engine.statistics.time > hurryupSeconds[playerID])
-			ojamaNew *= 1 << (engine.statistics.time / (hurryupSeconds[playerID] * 60));
+		if (hurryupSeconds[playerID] > 0 && engine.statistics.getTime() > hurryupSeconds[playerID])
+			ojamaNew *= 1 << (engine.statistics.getTime() / (hurryupSeconds[playerID] * 60));
 
 		if (ojama[playerID] > 0 && ojamaNew > 0.0)
 		{
@@ -1214,9 +1214,9 @@ public class SPFMode extends DummyMode {
 	{
 		if (engine.field == null)
 			return;
-		if (engine.statistics.time == lastSquareCheck[playerID] && !forceRecheck)
+		if (engine.statistics.getTime() == lastSquareCheck[playerID] && !forceRecheck)
 			return;
-		lastSquareCheck[playerID] = engine.statistics.time;
+		lastSquareCheck[playerID] = engine.statistics.getTime();
 
 		//log.debug("Checking squares.");
 
@@ -1514,14 +1514,14 @@ public class SPFMode extends DummyMode {
 			width = engine.field.getWidth();
 		int blockHeight = receiver.getBlockGraphicsHeight(engine, playerID);
 		// せり上がりMeter
-		if(ojama[playerID] * blockHeight / width > engine.meterValue) {
-			engine.meterValue++;
-		} else if(ojama[playerID] * blockHeight / width < engine.meterValue) {
-			engine.meterValue--;
+		if(ojama[playerID] * blockHeight / width > engine.getMeterValue()) {
+			engine.setMeterValue(engine.getMeterValue() + 1);
+		} else if(ojama[playerID] * blockHeight / width < engine.getMeterValue()) {
+			engine.setMeterValue(engine.getMeterValue() - 1);
 		}
-		if(ojama[playerID] > 30) engine.meterColor = GameEngine.METER_COLOR_RED;
-		else if(ojama[playerID] > 10) engine.meterColor = GameEngine.METER_COLOR_YELLOW;
-		else engine.meterColor = GameEngine.METER_COLOR_GREEN;
+		if(ojama[playerID] > 30) engine.setMeterColor(GameEngine.METER_COLOR_RED);
+		else if(ojama[playerID] > 10) engine.setMeterColor(GameEngine.METER_COLOR_YELLOW);
+		else engine.setMeterColor(GameEngine.METER_COLOR_GREEN);
 
 		// 決着
 		if((playerID == 1) && (owner.engine[0].gameActive)) {
@@ -1567,7 +1567,7 @@ public class SPFMode extends DummyMode {
 			receiver.drawMenuFont(engine, playerID, 6, 2, "LOSE", EventReceiver.COLOR_WHITE);
 		}
 
-		float apm = (float)(ojamaSent[playerID] * 3600) / (float)(engine.statistics.time);
+		float apm = (float)(ojamaSent[playerID] * 3600) / (float)(engine.statistics.getTime());
 		drawResult(engine, playerID, receiver, 3, EventReceiver.COLOR_ORANGE,
 				"ATTACK", String.format("%10d", ojamaSent[playerID]));
 		drawResultStats(engine, playerID, receiver, 5, EventReceiver.COLOR_ORANGE,

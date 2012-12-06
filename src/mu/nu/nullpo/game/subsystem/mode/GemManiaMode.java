@@ -1023,10 +1023,10 @@ public class GemManiaMode extends DummyMode {
 
 				if(receiver.getNextDisplayType() == 2) {
 					receiver.drawScoreFont(engine, playerID, 11, 19, "TOTAL", EventReceiver.COLOR_PINK);
-					receiver.drawScoreFont(engine, playerID, 11, 20, GeneralUtil.getTime(engine.statistics.time));
+					receiver.drawScoreFont(engine, playerID, 11, 20, GeneralUtil.getTime(engine.statistics.getTime()));
 				} else {
 					receiver.drawScoreFont(engine, playerID, 12, 19, "TOTAL TIME", EventReceiver.COLOR_PINK);
-					receiver.drawScoreFont(engine, playerID, 12, 20, GeneralUtil.getTime(engine.statistics.time));
+					receiver.drawScoreFont(engine, playerID, 12, 20, GeneralUtil.getTime(engine.statistics.getTime()));
 				}
 			}
 		}
@@ -1065,14 +1065,14 @@ public class GemManiaMode extends DummyMode {
 
 			// Time meter
 			if(limittimeNow >= limittimeStart) {
-				engine.meterValue = receiver.getMeterMax(engine);
+				engine.setMeterValue(receiver.getMeterMax(engine));
 			} else {
-				engine.meterValue = (limittimeNow * receiver.getMeterMax(engine)) / limittimeStart;
+				engine.setMeterValue((limittimeNow * receiver.getMeterMax(engine)) / limittimeStart);
 			}
-			engine.meterColor = GameEngine.METER_COLOR_GREEN;
-			if(limittimeNow <= 60*60) engine.meterColor = GameEngine.METER_COLOR_YELLOW;
-			if(limittimeNow <= 30*60) engine.meterColor = GameEngine.METER_COLOR_ORANGE;
-			if(limittimeNow <= 10*60) engine.meterColor = GameEngine.METER_COLOR_RED;
+			engine.setMeterColor(GameEngine.METER_COLOR_GREEN);
+			if(limittimeNow <= 60*60) engine.setMeterColor(GameEngine.METER_COLOR_YELLOW);
+			if(limittimeNow <= 30*60) engine.setMeterColor(GameEngine.METER_COLOR_ORANGE);
+			if(limittimeNow <= 10*60) engine.setMeterColor(GameEngine.METER_COLOR_RED);
 
 			if((limittimeNow > 0) && (limittimeNow <= 10 * 60) && (limittimeNow % 60 == 0)) {
 				// 10秒前からのカウントダウン
@@ -1266,7 +1266,7 @@ public class GemManiaMode extends DummyMode {
 					laststage = 19;	// クリア率が90%に満たない場合は stage 20で終了
 				else if(clearper < 100)
 					laststage = 22;	// クリア率が90～99%はEX3まで
-				else if(engine.statistics.time > 5 * 3600)
+				else if(engine.statistics.getTime() > 5 * 3600)
 					laststage = 24;	// クリア率が100%で5分超えている場合はEX5
 				else
 					laststage = MAX_STAGE_TOTAL - 1;	// クリア率が100%で5分以内ならEX7
@@ -1314,14 +1314,14 @@ public class GemManiaMode extends DummyMode {
 			if(skipflag) limittimeTemp = limittimeNow - engine.statc[1];
 
 			if(limittimeTemp >= limittimeStart) {
-				engine.meterValue = receiver.getMeterMax(engine);
+				engine.setMeterValue(receiver.getMeterMax(engine));
 			} else {
-				engine.meterValue = (limittimeTemp * receiver.getMeterMax(engine)) / limittimeStart;
+				engine.setMeterValue((limittimeTemp * receiver.getMeterMax(engine)) / limittimeStart);
 			}
-			engine.meterColor = GameEngine.METER_COLOR_GREEN;
-			if(limittimeTemp <= 60*60) engine.meterColor = GameEngine.METER_COLOR_YELLOW;
-			if(limittimeTemp <= 30*60) engine.meterColor = GameEngine.METER_COLOR_ORANGE;
-			if(limittimeTemp <= 10*60) engine.meterColor = GameEngine.METER_COLOR_RED;
+			engine.setMeterColor(GameEngine.METER_COLOR_GREEN);
+			if(limittimeTemp <= 60*60) engine.setMeterColor(GameEngine.METER_COLOR_YELLOW);
+			if(limittimeTemp <= 30*60) engine.setMeterColor(GameEngine.METER_COLOR_ORANGE);
+			if(limittimeTemp <= 10*60) engine.setMeterColor(GameEngine.METER_COLOR_RED);
 		}
 
 		// Next 画面へ
@@ -1386,7 +1386,7 @@ public class GemManiaMode extends DummyMode {
 			receiver.drawMenuFont(engine, playerID, 1, 14, GeneralUtil.getTime(cleartime));
 
 			receiver.drawMenuFont(engine, playerID, 0, 16, "TOTAL TIME", EventReceiver.COLOR_PINK);
-			receiver.drawMenuFont(engine, playerID, 1, 17, GeneralUtil.getTime(engine.statistics.time));
+			receiver.drawMenuFont(engine, playerID, 1, 17, GeneralUtil.getTime(engine.statistics.getTime()));
 		} else if(skipflag) {
 			// スキップ
 			receiver.drawMenuFont(engine, playerID, 1, 4, "SKIPPED");
@@ -1403,7 +1403,7 @@ public class GemManiaMode extends DummyMode {
 			}
 
 			receiver.drawMenuFont(engine, playerID, 0, 16, "TOTAL TIME", EventReceiver.COLOR_PINK);
-			receiver.drawMenuFont(engine, playerID, 1, 17, GeneralUtil.getTime(engine.statistics.time));
+			receiver.drawMenuFont(engine, playerID, 1, 17, GeneralUtil.getTime(engine.statistics.getTime()));
 		} else if((stagetimeNow <= 0) && (stagetimeStart > 0)) {
 			// Timeアップ
 			receiver.drawMenuFont(engine, playerID, 1, 4, "TIME UP!");
@@ -1418,7 +1418,7 @@ public class GemManiaMode extends DummyMode {
 			}
 
 			receiver.drawMenuFont(engine, playerID, 0, 16, "TOTAL TIME", EventReceiver.COLOR_PINK);
-			receiver.drawMenuFont(engine, playerID, 1, 17, GeneralUtil.getTime(engine.statistics.time));
+			receiver.drawMenuFont(engine, playerID, 1, 17, GeneralUtil.getTime(engine.statistics.getTime()));
 		}
 	}
 
@@ -1471,7 +1471,8 @@ public class GemManiaMode extends DummyMode {
 						// YES
 						limittimeNow = limittimeStart;
 						engine.nextPieceCount = continueNextPieceCount;
-						if(trainingType == 0) engine.statistics.time += 60 * 60 * 2;
+						if(trainingType == 0) engine.statistics.setTime(engine.statistics.getTime()
+								+ (60 * 60 * 2));
 						engine.allowTextRenderByReceiver = true;
 						engine.stat = GameEngine.STAT_READY;
 						engine.resetStatc();
@@ -1513,7 +1514,7 @@ public class GemManiaMode extends DummyMode {
 				receiver.drawMenuFont(engine, playerID, 2, 13, "TIME " + ((t-1) / 60), EventReceiver.COLOR_GREEN);
 
 				receiver.drawMenuFont(engine, playerID, 0, 16, "TOTAL TIME", EventReceiver.COLOR_PINK);
-				receiver.drawMenuFont(engine, playerID, 1, 17, GeneralUtil.getTime(engine.statistics.time));
+				receiver.drawMenuFont(engine, playerID, 1, 17, GeneralUtil.getTime(engine.statistics.getTime()));
 
 				if(trainingType == 0) receiver.drawMenuFont(engine, playerID, 0, 18, "+2 MINUTES", EventReceiver.COLOR_RED);
 			}
@@ -1605,7 +1606,7 @@ public class GemManiaMode extends DummyMode {
 		if((owner.replayMode == false) && (startstage == 0) && (trainingType == 0) &&
 		   (startnextc == 0) && (stageset < 0) && (always20g == false) && (engine.ai == null))
 		{
-			updateRanking(randomnext ? 1 : 0, stage, clearper, engine.statistics.time, allclear);
+			updateRanking(randomnext ? 1 : 0, stage, clearper, engine.statistics.getTime(), allclear);
 
 			if(rankingRank != -1) {
 				saveRanking(owner.modeConfig, engine.ruleopt.strRuleName);

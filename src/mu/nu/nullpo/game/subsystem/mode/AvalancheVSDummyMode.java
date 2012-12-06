@@ -696,8 +696,8 @@ public abstract class AvalancheVSDummyMode extends DummyMode {
 			ojamaNew += 30;
 		//Add ojama
 		int rate = ojamaRate[playerID];
-		if (hurryupSeconds[playerID] > 0 && engine.statistics.time > hurryupSeconds[playerID])
-			rate >>= engine.statistics.time / (hurryupSeconds[playerID] * 60);
+		if (hurryupSeconds[playerID] > 0 && engine.statistics.getTime() > hurryupSeconds[playerID])
+			rate >>= engine.statistics.getTime() / (hurryupSeconds[playerID] * 60);
 		if (rate <= 0)
 			rate = 1;
 		ojamaNew += ptsToOjama(engine, playerID, pts, rate);
@@ -820,14 +820,14 @@ public abstract class AvalancheVSDummyMode extends DummyMode {
 		int blockHeight = receiver.getBlockGraphicsHeight(engine, playerID);
 		// せり上がりMeter
 		int value = ojama[playerID] * blockHeight / width;
-		if(ojama[playerID] >= 5*width) engine.meterColor = GameEngine.METER_COLOR_RED;
-		else if(ojama[playerID] >= width) engine.meterColor = GameEngine.METER_COLOR_ORANGE;
-		else if(ojama[playerID] >= 1) engine.meterColor = GameEngine.METER_COLOR_YELLOW;
-		else engine.meterColor = GameEngine.METER_COLOR_GREEN;
-		if (value > engine.meterValue)
-			engine.meterValue++;
-		else if (value < engine.meterValue)
-			engine.meterValue--;
+		if(ojama[playerID] >= 5*width) engine.setMeterColor(GameEngine.METER_COLOR_RED);
+		else if(ojama[playerID] >= width) engine.setMeterColor(GameEngine.METER_COLOR_ORANGE);
+		else if(ojama[playerID] >= 1) engine.setMeterColor(GameEngine.METER_COLOR_YELLOW);
+		else engine.setMeterColor(GameEngine.METER_COLOR_GREEN);
+		if (value > engine.getMeterValue())
+			engine.setMeterValue(engine.getMeterValue() + 1);
+		else if (value < engine.getMeterValue())
+			engine.setMeterValue(engine.getMeterValue() - 1);
 	}
 
 	@Override
@@ -944,14 +944,14 @@ public abstract class AvalancheVSDummyMode extends DummyMode {
 			receiver.drawMenuFont(engine, playerID, 6, 2, "LOSE", EventReceiver.COLOR_WHITE);
 		}
 
-		float apm = (float)(ojamaSent[playerID] * 3600) / (float)(engine.statistics.time);
+		float apm = (float)(ojamaSent[playerID] * 3600) / (float)(engine.statistics.getTime());
 		drawResult(engine, playerID, receiver, 3, EventReceiver.COLOR_ORANGE,
 				"ATTACK", String.format("%10d", ojamaSent[playerID]),
 				"CLEARED", String.format("%10d", engine.statistics.lines),
 				"MAX CHAIN", String.format("%10d", engine.statistics.maxChain),
 				"PIECE", String.format("%10d", engine.statistics.totalPieceLocked),
 				"ATTACK/MIN", String.format("%10g", apm),
-				"PIECE/SEC", String.format("%10g", engine.statistics.pps),
-				"TIME", String.format("%10s", GeneralUtil.getTime(owner.engine[0].statistics.time)));
+				"PIECE/SEC", String.format("%10g", engine.statistics.getPps()),
+				"TIME", String.format("%10s", GeneralUtil.getTime(owner.engine[0].statistics.getTime())));
 	}
 }

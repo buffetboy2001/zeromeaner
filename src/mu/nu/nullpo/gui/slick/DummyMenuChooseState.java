@@ -52,7 +52,7 @@ public abstract class DummyMenuChooseState extends BaseGameState {
 	public DummyMenuChooseState () {
 		maxCursor = -1;
 		minChoiceY = 3;
-		mouseEnabled = true;
+		mouseEnabled = false;
 	}
 
 	@Override

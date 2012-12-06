@@ -264,7 +264,7 @@ public class BasicAI extends DummyAI implements Runnable {
 		Piece pieceNow = engine.nowPieceObject;
 		int nowX = engine.nowPieceX;
 		int nowY = engine.nowPieceY;
-		boolean holdOK = engine.isHoldOK();
+		boolean holdOK = false; // --> it was : engine.isHoldOK();
 		boolean holdEmpty = false;
 		Piece pieceHold = engine.holdPieceObject;
 		Piece pieceNext = engine.getNextObject(engine.nextPieceCount);
@@ -283,7 +283,7 @@ public class BasicAI extends DummyAI implements Runnable {
 					fld.copy(engine.field);
 					int y = pieceNow.getBottom(x, nowY, rt, fld);
 
-					if(!pieceNow.checkCollision(x, y, rt, fld)) {
+					if(!pieceNow.checkCollision(x, y, rt, fld) && isAnAllowedPosition(x, y, rt, pieceNow) ) {
 						// そのまま
 						int pts = thinkMain(engine, x, y, rt, -1, fld, pieceNow, pieceNext, pieceHold, depth);
 
@@ -480,6 +480,24 @@ public class BasicAI extends DummyAI implements Runnable {
 		thinkLastPieceNo++;
 
 		//System.out.println("X:" + bestX + " Y:" + bestY + " R:" + bestRt + " H:" + bestHold + " Pts:" + bestPts);
+	}
+
+	private boolean isAnAllowedPosition(int x, int y, int rt, Piece pieceNow) {
+//		
+//		if (pieceNow.id == Piece.PIECE_I){
+//			if (rt == 0){ //if rt is 0 the piece is in the flat position
+//				if (x == 0) return true;  //to the side is ok
+//				else return false;
+//			}
+//			e
+//		}
+//		
+//		if (pieceNow.id == Piece.PIECE_T){
+//			//same as above
+//		}
+//		
+//		return true;
+		return true;
 	}
 
 	/**

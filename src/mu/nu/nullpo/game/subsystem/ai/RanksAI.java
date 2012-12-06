@@ -282,7 +282,7 @@ public class RanksAI extends DummyAI implements Runnable {
 				(!engine.aiUseThread || (threadRunning && !thinking && (thinkCurrentPieceNo <= thinkLastPieceNo))) )
 		{
 			int totalPieceLocked=engine.statistics.totalPieceLocked+1;
-			int tpm=(int)(totalPieceLocked*3600f)/(int)engine.statistics.time;
+			int tpm=(int)(totalPieceLocked*3600f)/(int)engine.statistics.getTime();
 			if ((tpm<=speedLimit)||(speedLimit<=0)){
 				int input = 0;
 				Piece pieceNow = engine.nowPieceObject;

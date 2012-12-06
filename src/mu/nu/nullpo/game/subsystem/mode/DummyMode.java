@@ -335,7 +335,7 @@ public class DummyMode implements GameMode {
 					break;
 				case STAT_TIME:
 					receiver.drawMenuFont(engine, playerID, 0, y, "TIME", color);
-					receiver.drawMenuFont(engine, playerID, 0, y+1, String.format("%10s", GeneralUtil.getTime(engine.statistics.time)));
+					receiver.drawMenuFont(engine, playerID, 0, y+1, String.format("%10s", GeneralUtil.getTime(engine.statistics.getTime())));
 					break;
 				case STAT_LEVEL:
 					receiver.drawMenuFont(engine, playerID, 0, y, "LEVEL", color);
@@ -379,7 +379,7 @@ public class DummyMode implements GameMode {
 					break;
 				case STAT_PPS:
 					receiver.drawMenuFont(engine, playerID, 0, y, "PIECE/SEC", color);
-					receiver.drawMenuFont(engine, playerID, 0, y+1, String.format("%10g", engine.statistics.pps));
+					receiver.drawMenuFont(engine, playerID, 0, y+1, String.format("%10g", engine.statistics.getPps()));
 					break;
 				case STAT_MAXCHAIN:
 					receiver.drawMenuFont(engine, playerID, 0, y, "MAX CHAIN", color);

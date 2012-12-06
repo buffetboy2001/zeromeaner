@@ -45,32 +45,32 @@ public class StateConfigGeneral extends BaseGameState {
 
 	/** UI Text identifier Strings */
 	protected static final String[] UI_TEXT = {
-		"ConfigGeneral_SE",
-		"ConfigGeneral_BGM",
-		"ConfigGeneral_BGMPreload",
+//		"ConfigGeneral_SE",
+//		"ConfigGeneral_BGM",
+//		"ConfigGeneral_BGMPreload",
 		"ConfigGeneral_SEVolume",
 		"ConfigGeneral_BGMVolume",
 		"ConfigGeneral_Background",
-		"ConfigGeneral_UseBackgroundFade",
-		"ConfigGeneral_ShowLineEffect",
-		"ConfigGeneral_LineEffectSpeed",
-		"ConfigGeneral_ShowMeter",
-		"ConfigGeneral_DarkNextArea",
-		"ConfigGeneral_NextShadow",
+//		"ConfigGeneral_UseBackgroundFade",
+//		"ConfigGeneral_ShowLineEffect",
+//		"ConfigGeneral_LineEffectSpeed",
+//		"ConfigGeneral_ShowMeter",
+//		"ConfigGeneral_DarkNextArea",
+//		"ConfigGeneral_NextShadow",
 		"ConfigGeneral_NextType",
-		"ConfigGeneral_OutlineGhost",
-		"ConfigGeneral_FieldBGBright",
+//		"ConfigGeneral_OutlineGhost",
+//		"ConfigGeneral_FieldBGBright",
 		"ConfigGeneral_Fullscreen",
-		"ConfigGeneral_ShowFPS",
-		"ConfigGeneral_MaxFPS",
-		"ConfigGeneral_FrameStep",
-		"ConfigGeneral_AlternateFPSPerfectMode",
-		"ConfigGeneral_AlternateFPSPerfectYield",
-		"ConfigGeneral_BGMStreaming",
-		"ConfigGeneral_VSync",
-		"ConfigGeneral_AlternateFPSTiming",
-		"ConfigGeneral_AlternateFPSDynamicAdjust",
-		"ConfigGeneral_ScreenSizeType",
+//		"ConfigGeneral_ShowFPS",
+//		"ConfigGeneral_MaxFPS",
+//		"ConfigGeneral_FrameStep",
+//		"ConfigGeneral_AlternateFPSPerfectMode",
+//		"ConfigGeneral_AlternateFPSPerfectYield",
+//		"ConfigGeneral_BGMStreaming",
+//		"ConfigGeneral_VSync",
+//		"ConfigGeneral_AlternateFPSTiming",
+//		"ConfigGeneral_AlternateFPSDynamicAdjust",
+//		"ConfigGeneral_ScreenSizeType",
 	};
 
 	/** Piece preview type options */
@@ -138,6 +138,12 @@ public class StateConfigGeneral extends BaseGameState {
 
 	/** 垂直同期を待つ */
 	protected boolean vsync;
+
+	protected boolean forcereplaysave;
+	protected boolean fumenrecording;
+	protected boolean fullframefumenrecording;
+	
+	protected boolean finesseCoach;
 
 	/** ghost ピースの上にNEXT表示 */
 	protected boolean nextshadow;
@@ -229,6 +235,10 @@ public class StateConfigGeneral extends BaseGameState {
 				break;
 			}
 		}
+		forcereplaysave = prop.getProperty("option.forcereplaysave", false);
+		fumenrecording = prop.getProperty("option.fumenrecording", false);
+		fullframefumenrecording = prop.getProperty("option.fullframefumenrecording", false);
+		finesseCoach = prop.getProperty("option.finesseCoach", false);
 	}
 
 	/**
@@ -275,6 +285,10 @@ public class StateConfigGeneral extends BaseGameState {
 			prop.setProperty("option.screenwidth", SCREENSIZE_TABLE[screenSizeType][0]);
 			prop.setProperty("option.screenheight", SCREENSIZE_TABLE[screenSizeType][1]);
 		}
+		prop.setProperty("option.forcereplaysave", forcereplaysave);
+		prop.setProperty("option.fumenrecording", fumenrecording);
+		prop.setProperty("option.fullframefumenrecording", fullframefumenrecording);
+		prop.setProperty("option.finesseCoach", finesseCoach);		
 	}
 
 	/*
@@ -286,50 +300,53 @@ public class StateConfigGeneral extends BaseGameState {
 		g.drawImage(ResourceHolder.imgMenu, 0, 0);
 
 		// Basic Options
-		if(cursor < 15) {
-			NormalFont.printFontGrid(1, 1, "GENERAL OPTIONS: BASIC (1/3)", NormalFont.COLOR_ORANGE);
+//		if(cursor < 15) {
+			NormalFont.printFontGrid(1, 1, "GENERAL OPTIONS", NormalFont.COLOR_ORANGE);
 			NormalFont.printFontGrid(1, 3 + cursor, "b", NormalFont.COLOR_RED);
 
-			NormalFont.printFontGrid(2,  3, "SE:" + GeneralUtil.getOorX(se), (cursor == 0));
-			NormalFont.printFontGrid(2,  4, "BGM:" + GeneralUtil.getOorX(bgm), (cursor == 1));
-			NormalFont.printFontGrid(2,  5, "BGM PRELOAD:" + GeneralUtil.getOorX(bgmpreload), (cursor == 2));
-			NormalFont.printFontGrid(2,  6, "SE VOLUME:" + sevolume + "("+ (sevolume * 100 / 128) + "%)", (cursor == 3));
-			NormalFont.printFontGrid(2,  7, "BGM VOLUME:" + bgmvolume + "(" + (bgmvolume * 100 / 128) + "%)", (cursor == 4));
-			NormalFont.printFontGrid(2,  8, "SHOW BACKGROUND:" + GeneralUtil.getOorX(showbg), (cursor == 5));
-			NormalFont.printFontGrid(2,  9, "USE BACKGROUND FADE:" + GeneralUtil.getOorX(heavyeffect), (cursor == 6));
-			NormalFont.printFontGrid(2, 10, "SHOW LINE EFFECT:" + GeneralUtil.getOorX(showlineeffect), (cursor == 7));
-			NormalFont.printFontGrid(2, 11, "LINE EFFECT SPEED:" + "X " + (lineeffectspeed+1), (cursor == 8));
-			NormalFont.printFontGrid(2, 12, "SHOW METER:" + GeneralUtil.getOorX(showmeter), (cursor == 9));
-			NormalFont.printFontGrid(2, 13, "DARK NEXT AREA:" + GeneralUtil.getOorX(darknextarea), (cursor == 10));
-			NormalFont.printFontGrid(2, 14, "SHOW NEXT ABOVE SHADOW:" + GeneralUtil.getOorX(nextshadow), (cursor == 11));
-			NormalFont.printFontGrid(2, 15, "NEXT DISPLAY TYPE:" + NEXTTYPE_OPTIONS[nexttype], (cursor == 12));
-			NormalFont.printFontGrid(2, 16, "OUTLINE GHOST PIECE:" + GeneralUtil.getOorX(outlineghost), (cursor == 13));
-			NormalFont.printFontGrid(2, 17, "FIELD BG BRIGHT:" + fieldbgbright + "(" + (fieldbgbright * 100 / 255) + "%)", (cursor == 14));
-		}
-		// Advanced Options
-		else if(cursor < 21) {
-			NormalFont.printFontGrid(1, 1, "GENERAL OPTIONS: ADVANCED (2/3)", NormalFont.COLOR_ORANGE);
-			NormalFont.printFontGrid(1, 3 + (cursor - 15), "b", NormalFont.COLOR_RED);
+			//NormalFont.printFontGrid(2,  3, "SE:" + GeneralUtil.getOorX(se), (cursor == 0));
+			//NormalFont.printFontGrid(2,  4, "BGM:" + GeneralUtil.getOorX(bgm), (cursor == 1));
+			//NormalFont.printFontGrid(2,  5, "BGM PRELOAD:" + GeneralUtil.getOorX(bgmpreload), (cursor == 2));
+			NormalFont.printFontGrid(2,  3, "VOLUME SOUND EFFECTS   " + (sevolume * 100 / 128) + "%", (cursor == 0));
+			NormalFont.printFontGrid(2,  4, "VOLUME MUSIC           " + (bgmvolume * 100 / 128) + "%", (cursor == 1));
+			NormalFont.printFontGrid(2,  5, "SHOW BACKGROUND        " + GeneralUtil.getOorX(showbg), (cursor == 2));
+			//NormalFont.printFontGrid(2,  9, "USE BACKGROUND FADE:" + GeneralUtil.getOorX(heavyeffect), (cursor == 6));
+			//NormalFont.printFontGrid(2, 10, "SHOW LINE EFFECT:" + GeneralUtil.getOorX(showlineeffect), (cursor == 7));
+			//NormalFont.printFontGrid(2, 11, "LINE EFFECT SPEED:" + "X " + (lineeffectspeed+1), (cursor == 8));
+			//NormalFont.printFontGrid(2, 12, "SHOW METER:" + GeneralUtil.getOorX(showmeter), (cursor == 9));
+			//NormalFont.printFontGrid(2, 13, "DARK NEXT AREA:" + GeneralUtil.getOorX(darknextarea), (cursor == 10));
+			//NormalFont.printFontGrid(2, 14, "SHOW NEXT ABOVE SHADOW:" + GeneralUtil.getOorX(nextshadow), (cursor == 11));
+			NormalFont.printFontGrid(2, 6, "NEXT PIECES            " + NEXTTYPE_OPTIONS[nexttype], (cursor == 3));
+			//NormalFont.printFontGrid(2, 16, "GHOST PIECE  :" + GeneralUtil.getOorX(outlineghost), (cursor == 13));
+			//NormalFont.printFontGrid(2, 17, "FIELD BG BRIGHT:" + fieldbgbright + "(" + (fieldbgbright * 100 / 255) + "%)", (cursor == 14));
+//		}
+//		// Advanced Options
+//		else if(cursor < 21) {
+//			NormalFont.printFontGrid(1, 1, "GENERAL OPTIONS: ADVANCED (2/3)", NormalFont.COLOR_ORANGE);
+//			NormalFont.printFontGrid(1, 3 + (cursor - 15), "b", NormalFont.COLOR_RED);
 
-			NormalFont.printFontGrid(2,  3, "FULLSCREEN:" + GeneralUtil.getOorX(fullscreen), (cursor == 15));
-			NormalFont.printFontGrid(2,  4, "SHOW FPS:" + GeneralUtil.getOorX(showfps), (cursor == 16));
-			NormalFont.printFontGrid(2,  5, "MAX FPS:" + maxfps, (cursor == 17));
-			NormalFont.printFontGrid(2,  6, "FRAME STEP:" + GeneralUtil.getOorX(enableframestep), (cursor == 18));
-			NormalFont.printFontGrid(2,  7, "FPS PERFECT MODE:" + GeneralUtil.getOorX(alternateFPSPerfectMode), (cursor == 19));
-			NormalFont.printFontGrid(2,  8, "FPS PERFECT YIELD:" + GeneralUtil.getOorX(alternateFPSPerfectYield), (cursor == 20));
-		}
+//			NormalFont.printFontGrid(2,  7, "FULLSCREEN             " + GeneralUtil.getOorX(fullscreen), (cursor == 4));
+//			NormalFont.printFontGrid(2,  4, "SHOW FPS:" + GeneralUtil.getOorX(showfps), (cursor == 16));
+//			NormalFont.printFontGrid(2,  5, "MAX FPS:" + maxfps, (cursor == 17));
+//			NormalFont.printFontGrid(2,  6, "FRAME STEP:" + GeneralUtil.getOorX(enableframestep), (cursor == 18));
+//			NormalFont.printFontGrid(2,  7, "FPS PERFECT MODE:" + GeneralUtil.getOorX(alternateFPSPerfectMode), (cursor == 19));
+//			NormalFont.printFontGrid(2,  8, "FPS PERFECT YIELD:" + GeneralUtil.getOorX(alternateFPSPerfectYield), (cursor == 20));
+//		}
 		// Slick Options
-		else {
-			NormalFont.printFontGrid(1, 1, "GENERAL OPTIONS: SLICK (3/3)", NormalFont.COLOR_ORANGE);
-			NormalFont.printFontGrid(1, 3 + (cursor - 21), "b", NormalFont.COLOR_RED);
-
-			NormalFont.printFontGrid(2,  3, "BGM STREAMING:" + GeneralUtil.getOorX(bgmstreaming), (cursor == 21));
-			NormalFont.printFontGrid(2,  4, "VSYNC:" + GeneralUtil.getOorX(vsync), (cursor == 22));
-			NormalFont.printFontGrid(2,  5, "FPS SLEEP TIMING:" + (alternateFPSTiming ? "UPDATE" : "RENDER"), (cursor == 23));
-			NormalFont.printFontGrid(2,  6, "FPS DYNAMIC ADJUST:" + GeneralUtil.getOorX(alternateFPSDynamicAdjust), (cursor == 24));
-			NormalFont.printFontGrid(2,  7, "SCREEN SIZE:" + SCREENSIZE_TABLE[screenSizeType][0] + "e" + SCREENSIZE_TABLE[screenSizeType][1],
-									 (cursor == 25));
-		}
+//		else {
+//			NormalFont.printFontGrid(1, 1, "GENERAL OPTIONS: SLICK (3/3)", NormalFont.COLOR_ORANGE);
+//			NormalFont.printFontGrid(1, 3 + (cursor - 21), "b", NormalFont.COLOR_RED);
+//
+//			NormalFont.printFontGrid(2,  3, "BGM STREAMING:" + GeneralUtil.getOorX(bgmstreaming), (cursor == 21));
+//			NormalFont.printFontGrid(2,  4, "VSYNC:" + GeneralUtil.getOorX(vsync), (cursor == 22));
+//			NormalFont.printFontGrid(2,  5, "FPS SLEEP TIMING:" + (alternateFPSTiming ? "UPDATE" : "RENDER"), (cursor == 23));
+//			NormalFont.printFontGrid(2,  6, "FPS DYNAMIC ADJUST:" + GeneralUtil.getOorX(alternateFPSDynamicAdjust), (cursor == 24));
+//			NormalFont.printFontGrid(2,  7, "SCREEN SIZE            " + SCREENSIZE_TABLE[screenSizeType][0] + "e" + SCREENSIZE_TABLE[screenSizeType][1], (cursor == 4));
+			NormalFont.printFontGrid(2,  7, "FORCE RE-SAVE REPLAY   " + GeneralUtil.getOorX(forcereplaysave), (cursor == 4));
+			NormalFont.printFontGrid(2,  8, "FUMEN RECORDING        " + GeneralUtil.getOorX(fumenrecording), (cursor == 5));
+			NormalFont.printFontGrid(2,  9, "EVERY FRAME IN FUMENS  " + GeneralUtil.getOorX(fullframefumenrecording), (cursor == 6));
+			NormalFont.printFontGrid(2,  10, "FINESSE COACH          " + GeneralUtil.getOorX(finesseCoach), (cursor == 7));
+//		}
 
 		if((cursor >= 0) && (cursor < UI_TEXT.length)) NormalFont.printTTFFont(16, 432, NullpoMinoSlick.getUIText(UI_TEXT[cursor]));
 	}
@@ -348,12 +365,12 @@ public class StateConfigGeneral extends BaseGameState {
 		// Cursor movement
 		if(GameKey.gamekey[0].isMenuRepeatKey(GameKey.BUTTON_UP)) {
 		    cursor--;
-			if(cursor < 0) cursor = 25;
+			if(cursor < 0) cursor = 8;
 			ResourceHolder.soundManager.play("cursor");
 		}
 		if(GameKey.gamekey[0].isMenuRepeatKey(GameKey.BUTTON_DOWN)) {
 			cursor++;
-			if(cursor > 25) cursor = 0;
+			if(cursor > 8) cursor = 0;
 			ResourceHolder.soundManager.play("cursor");
 		}
 
@@ -366,97 +383,109 @@ public class StateConfigGeneral extends BaseGameState {
 			ResourceHolder.soundManager.play("change");
 
 			switch(cursor) {
+//			case 0:
+//				se = !se;
+//				break;
+//			case 1:
+//				bgm = !bgm;
+//				break;
+//			case 2:
+//				bgmpreload = !bgmpreload;
+//				break;
 			case 0:
-				se = !se;
+				sevolume += change;
+				if(sevolume < 0) sevolume = 0;
+				if(sevolume > 128) sevolume = 128;
 				break;
 			case 1:
-				bgm = !bgm;
-				break;
-			case 2:
-				bgmpreload = !bgmpreload;
-				break;
-			case 3:
-				sevolume += change;
-				if(sevolume < 0) sevolume = 128;
-				if(sevolume > 128) sevolume = 0;
-				break;
-			case 4:
 				bgmvolume += change;
 				if(bgmvolume < 0) bgmvolume = 128;
 				if(bgmvolume > 128) bgmvolume = 0;
 				break;
-			case 5:
+			case 2:
 				showbg = !showbg;
 				break;
-			case 6:
-				heavyeffect = !heavyeffect;
-				break;
-			case 7:
-				showlineeffect = !showlineeffect;
-				break;
-			case 8:
-				lineeffectspeed += change;
-				if(lineeffectspeed < 0) lineeffectspeed = 9;
-				if(lineeffectspeed > 9) lineeffectspeed = 0;
-				break;
-			case 9:
-				showmeter = !showmeter;
-				break;
-			case 10:
-				darknextarea = !darknextarea;
-				break;
-			case 11:
-				nextshadow = !nextshadow;
-				break;
-			case 12:
+//			case 6:
+//				heavyeffect = !heavyeffect;
+//				break;
+//			case 7:
+//				showlineeffect = !showlineeffect;
+//				break;
+//			case 8:
+//				lineeffectspeed += change;
+//				if(lineeffectspeed < 0) lineeffectspeed = 9;
+//				if(lineeffectspeed > 9) lineeffectspeed = 0;
+//				break;
+//			case 9:
+//				showmeter = !showmeter;
+//				break;
+//			case 10:
+//				darknextarea = !darknextarea;
+//				break;
+//			case 11:
+//				nextshadow = !nextshadow;
+//				break;
+			case 3:
 				nexttype += change;
 				if(nexttype < 0) nexttype = 2;
 				if(nexttype > 2) nexttype = 0;
 				break;
-			case 13:
-				outlineghost = !outlineghost;
+//			case 13:
+//				outlineghost = !outlineghost;
+//				break;
+//			case 14:
+//				fieldbgbright += change;
+//				if(fieldbgbright < 0) fieldbgbright = 255;
+//				if(fieldbgbright > 255) fieldbgbright = 0;
+//				break;
+//			case 4:
+//				fullscreen = !fullscreen;
+//				break;
+//			case 16:
+//				showfps = !showfps;
+//				break;
+//			case 17:
+//				maxfps += change;
+//				if(maxfps < 0) maxfps = 99;
+//				if(maxfps > 99) maxfps = 0;
+//				break;
+//			case 18:
+//				enableframestep = !enableframestep;
+//				break;
+//			case 19:
+//				alternateFPSPerfectMode = !alternateFPSPerfectMode;
+//				break;
+//			case 20:
+//				alternateFPSPerfectYield = !alternateFPSPerfectYield;
+//				break;
+//			case 21:
+//				bgmstreaming = !bgmstreaming;
+//				break;
+//			case 22:
+//				vsync = !vsync;
+//				break;
+//			case 23:
+//				alternateFPSTiming = !alternateFPSTiming;
+//				break;
+//			case 24:
+//				alternateFPSDynamicAdjust = !alternateFPSDynamicAdjust;
+//				break;
+//			case 4:
+//				screenSizeType += change;
+//				if(screenSizeType < 0) screenSizeType = SCREENSIZE_TABLE.length - 1;
+//				if(screenSizeType > SCREENSIZE_TABLE.length - 1) screenSizeType = 0;
+//				break;
+			case 4:
+				forcereplaysave = !forcereplaysave;
 				break;
-			case 14:
-				fieldbgbright += change;
-				if(fieldbgbright < 0) fieldbgbright = 255;
-				if(fieldbgbright > 255) fieldbgbright = 0;
+			case 5:
+				fumenrecording = !fumenrecording;
 				break;
-			case 15:
-				fullscreen = !fullscreen;
+			case 6:
+				fullframefumenrecording = !fullframefumenrecording;
 				break;
-			case 16:
-				showfps = !showfps;
-				break;
-			case 17:
-				maxfps += change;
-				if(maxfps < 0) maxfps = 99;
-				if(maxfps > 99) maxfps = 0;
-				break;
-			case 18:
-				enableframestep = !enableframestep;
-				break;
-			case 19:
-				alternateFPSPerfectMode = !alternateFPSPerfectMode;
-				break;
-			case 20:
-				alternateFPSPerfectYield = !alternateFPSPerfectYield;
-				break;
-			case 21:
-				bgmstreaming = !bgmstreaming;
-				break;
-			case 22:
-				vsync = !vsync;
-				break;
-			case 23:
-				alternateFPSTiming = !alternateFPSTiming;
-				break;
-			case 24:
-				alternateFPSDynamicAdjust = !alternateFPSDynamicAdjust;
-				break;
-			case 25:
-				screenSizeType += change;
-				if(screenSizeType < 0) screenSizeType = SCREENSIZE_TABLE.length - 1;
-				if(screenSizeType > SCREENSIZE_TABLE.length - 1) screenSizeType = 0;
+			case 7:
+				finesseCoach = !finesseCoach;
 				break;
 			}
 		}

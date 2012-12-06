@@ -28,6 +28,9 @@
 */
 package mu.nu.nullpo.gui.slick;
 
+import java.awt.Dimension;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.File;
@@ -41,22 +44,25 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Locale;
 
+import javax.swing.JFrame;
 import javax.swing.JOptionPane;
+import javax.swing.SpringLayout;
+import javax.swing.UIManager;
 
 import mu.nu.nullpo.game.net.NetObserverClient;
 import mu.nu.nullpo.game.play.GameEngine;
+import mu.nu.nullpo.gui.net.NetLobbyFrame;
 import mu.nu.nullpo.util.CustomProperties;
 import mu.nu.nullpo.util.ModeManager;
 
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 import org.lwjgl.opengl.Display;
-import org.newdawn.slick.AppGameContainer;
+import org.newdawn.slick.CanvasGameContainer;
 import org.newdawn.slick.Color;
 import org.newdawn.slick.GameContainer;
 import org.newdawn.slick.Graphics;
 import org.newdawn.slick.Image;
-import org.newdawn.slick.ScalableGame;
 import org.newdawn.slick.SlickException;
 import org.newdawn.slick.state.StateBasedGame;
 import org.newdawn.slick.util.Log;
@@ -72,13 +78,13 @@ public class NullpoMinoSlick extends StateBasedGame {
 	public static String[] programArgs;
 
 	/** Save settings用Property file */
-	public static CustomProperties propConfig;
+	public static CustomProperties propConfig = new CustomProperties();;
 
 	/** Save settings用Property file (全Version共通) */
-	public static CustomProperties propGlobal;
+	public static CustomProperties propGlobal = new CustomProperties();;
 
 	/** 音楽リストProperty file */
-	public static CustomProperties propMusic;
+	public static CustomProperties propMusic = new CustomProperties();;
 
 	/** Observer機能用Property file */
 	public static CustomProperties propObserver;
@@ -101,8 +107,8 @@ public class NullpoMinoSlick extends StateBasedGame {
 	/** Mode 管理 */
 	public static ModeManager modeManager;
 
-	/** AppGameContainer */
-	public static AppGameContainer appGameContainer;
+//	/** AppGameContainer */
+//	public static AppGameContainer appGameContainer;
 
 	/** ロード画面のステート */
 	public static StateLoading stateLoading;
@@ -163,6 +169,9 @@ public class NullpoMinoSlick extends StateBasedGame {
 
 	/** Mode folder select */
 	public static StateSelectModeFolder stateSelectModeFolder;
+	
+	/** Username select */
+	public static StateEnterUserName stateEnterUserName;
 
 	/** Timing of alternate FPS sleep (false=render true=update) */
 	public static boolean alternateFPSTiming;
@@ -203,6 +212,9 @@ public class NullpoMinoSlick extends StateBasedGame {
 	/**  frame count */
 	protected static long frameCount = 0;
 
+	/**  total frame count */
+	protected static long totalframeCount = 0;
+
 	/** 実際のFPS */
 	public static double actualFPS = 0.0;
 
@@ -217,6 +229,15 @@ public class NullpoMinoSlick extends StateBasedGame {
 
 	/** true if read keyboard input from JInput */
 	public static boolean useJInputKeyboard;
+	
+	public static CanvasGameContainer canvasGameContainer;
+	public static GameContainer gameContainer;
+
+	public static JFrame mainFrame;
+	
+	public void init(GameContainer container, StateBasedGame game) throws SlickException {
+		 loadPropertiesFiles();
+	}
 
 	/**
 	 * メイン関count
@@ -224,17 +245,159 @@ public class NullpoMinoSlick extends StateBasedGame {
 	 */
 	public static void main(String[] args) {
 		programArgs = args;
+		initialize(args);
+		startGame();
+		shutDownGame();
+	}
 
-		PropertyConfigurator.configure("config/etc/log_slick.cfg");
-		Log.setLogSystem(new LogSystemLog4j());
-		log.info("NullpoMinoSlick Start");
+	private static void startGame() {
+		// ゲーム画面などの初期化
+		try {
+			int sWidth  = propConfig.getProperty("option.screenwidth", 640);
+			int sHeight = propConfig.getProperty("option.screenheight", 480);
 
+			NullpoMinoSlick nullpoMinoGame = new NullpoMinoSlick();
+
+//			if((sWidth != 640) || (sHeight != 480)) {
+//				ScalableGame sObj = new ScalableGame(nullpoMinoGame, 640, 480, true);
+//				appGameContainer = new AppGameContainer(sObj);
+//			} else {
+//				appGameContainer = new AppGameContainer(nullpoMinoGame);
+//			}
+//			appGameContainer.setShowFPS(false);
+//			appGameContainer.setClearEachFrame(false);
+//			appGameContainer.setMinimumLogicUpdateInterval(0);
+//			appGameContainer.setMaximumLogicUpdateInterval(0);
+//			appGameContainer.setUpdateOnlyWhenVisible(false);
+//			appGameContainer.setForceExit(false);
+//			appGameContainer.setDisplayMode(sWidth, sHeight, propConfig.getProperty("option.fullscreen", false));
+//			appGameContainer.start();
+			
+			 CanvasGameContainer container = new CanvasGameContainer(nullpoMinoGame);
+			 canvasGameContainer = container;
+			 gameContainer = container.getContainer();
+			 gameContainer.setShowFPS(false);
+			 gameContainer.setClearEachFrame(false);
+			 gameContainer.setMinimumLogicUpdateInterval(0);
+			 gameContainer.setMaximumLogicUpdateInterval(0);
+			 gameContainer.setUpdateOnlyWhenVisible(false);
+			 gameContainer.setForceExit(false);
+			 container.setSize(640,480);
+		      
+		     mainFrame = new JFrame("Nullpomino League Edition");
+		     //mainFrame.setSize(640 + 450,500);
+		     setWindowToSizeWithoutMultiplayer();
+		     mainFrame.setResizable(false);
+		     mainFrame.addWindowListener(new WindowAdapter() {
+		        public void windowClosing(WindowEvent e) {
+		          System.exit(0);
+		        }
+		      });
+		     SpringLayout layout = new SpringLayout();
+		     mainFrame.setLayout(layout);
+		     mainFrame.add(container);
+		     NetLobbyFrame netLobbyFrame = NetLobbyFrame.getNetLobbyFrame();
+		     netLobbyFrame.init();
+		     netLobbyFrame.setVisible(true);
+		     netLobbyFrame.setSize(450, 480);
+		     netLobbyFrame.setPreferredSize(new Dimension(450, 480));
+		     mainFrame.add(netLobbyFrame);
+		     layout.putConstraint(SpringLayout.WEST, netLobbyFrame,0,SpringLayout.EAST, container);
+		     mainFrame.setVisible(true);
+		     container.start();
+		} catch (SlickException e) {
+			handleSlickException(e);
+		} catch (Throwable e) {
+			handleGeneralException(e);
+		}
+	}
+
+	private static void shutDownGame() {
+		stopObserverClient();
+
+		if(stateNetGame.netLobby != null) {
+			log.debug("Calling netLobby shutdown routine");
+			stateNetGame.netLobby.shutdown();
+		}
+
+		System.exit(0);
+	}
+
+	private static void handleGeneralException(Throwable e) {
+		log.fatal("Game initialize failed (NON-SlickException)", e);
+		System.exit(-2);
+	}
+
+	private static void handleSlickException(SlickException e) {
+		log.fatal("Game initialize failed (SlickException)", e);
+
+		// Get driver name and version
+		String strDriverName = null;
+		String strDriverVersion = null;
+		try {
+			strDriverName = Display.getAdapter();
+			strDriverVersion = Display.getVersion();
+		} catch (Throwable e2) {
+			log.warn("Cannot get driver informations", e2);
+		}
+		if(strDriverName == null) strDriverName = "(Unknown)";
+		if(strDriverVersion == null) strDriverVersion = "(Unknown)";
+
+		// Display an error dialog
+		String strErrorTitle = getUIText("InitFailedMessage_Title");
+		String strErrorMessage = String.format(getUIText("InitFailedMessage_Body"), strDriverName, strDriverVersion, e.toString());
+		JOptionPane.showMessageDialog(null, strErrorMessage, strErrorTitle, JOptionPane.ERROR_MESSAGE);
+
+		// Exit
+		System.exit(-1);
+	}
+
+	private static void initialize(String[] args) {
+		setLookAndFeel();
+		initializeLogSystem();
+		logDriverAdapter();
+		loadPropertiesFiles();
+		initializeJInput(args);
+		initializePerfectFPSDelay();
+	}
+
+	private static void initializePerfectFPSDelay() {
+		perfectFPSDelay = System.nanoTime();
+	}
+
+	private static void initializeJInput(String[] args) {
+		// Use JInput option
+		useJInputKeyboard = false;
+		//log.debug("args.length:" + args.length);
+		if( (args.length > 0) && (args[0].equals("-j") || args[0].equals("/j")) ) {
+			useJInputKeyboard = true;
+			log.info("-j option is used. Use JInput to read keyboard input.");
+		}
+	}
+
+	private static void logDriverAdapter() {
 		try {
 			log.info("Driver adapter:" + Display.getAdapter() + ", Driver version:" + Display.getVersion());
 		} catch (Throwable e) {
 			log.warn("Cannot get driver informations", e);
 		}
+	}
 
+	private static void initializeLogSystem() {
+		PropertyConfigurator.configure("config/etc/log_slick.cfg");
+		Log.setLogSystem(new LogSystemLog4j());
+		log.info("NullpoMinoSlick Start");
+	}
+
+	private static void setLookAndFeel() {
+		try {
+			UIManager.setLookAndFeel("com.sun.java.swing.plaf.nimbus.NimbusLookAndFeel");
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	private static void loadPropertiesFiles() {
 		propConfig = new CustomProperties();
 		propGlobal = new CustomProperties();
 		propMusic = new CustomProperties();
@@ -323,73 +486,6 @@ public class NullpoMinoSlick extends StateBasedGame {
 					}
 				}
 		} catch (Exception e) {}
-
-		// Use JInput option
-		useJInputKeyboard = false;
-		//log.debug("args.length:" + args.length);
-		if( (args.length > 0) && (args[0].equals("-j") || args[0].equals("/j")) ) {
-			useJInputKeyboard = true;
-			log.info("-j option is used. Use JInput to read keyboard input.");
-		}
-
-		perfectFPSDelay = System.nanoTime();
-
-		// ゲーム画面などの初期化
-		try {
-			int sWidth = propConfig.getProperty("option.screenwidth", 640);
-			int sHeight = propConfig.getProperty("option.screenheight", 480);
-
-			NullpoMinoSlick obj = new NullpoMinoSlick();
-
-			if((sWidth != 640) || (sHeight != 480)) {
-				ScalableGame sObj = new ScalableGame(obj, 640, 480, true);
-				appGameContainer = new AppGameContainer(sObj);
-			} else {
-				appGameContainer = new AppGameContainer(obj);
-			}
-			appGameContainer.setShowFPS(false);
-			appGameContainer.setClearEachFrame(false);
-			appGameContainer.setMinimumLogicUpdateInterval(0);
-			appGameContainer.setMaximumLogicUpdateInterval(0);
-			appGameContainer.setUpdateOnlyWhenVisible(false);
-			appGameContainer.setForceExit(false);
-			appGameContainer.setDisplayMode(sWidth, sHeight, propConfig.getProperty("option.fullscreen", false));
-			appGameContainer.start();
-		} catch (SlickException e) {
-			log.fatal("Game initialize failed (SlickException)", e);
-
-			// Get driver name and version
-			String strDriverName = null;
-			String strDriverVersion = null;
-			try {
-				strDriverName = Display.getAdapter();
-				strDriverVersion = Display.getVersion();
-			} catch (Throwable e2) {
-				log.warn("Cannot get driver informations", e2);
-			}
-			if(strDriverName == null) strDriverName = "(Unknown)";
-			if(strDriverVersion == null) strDriverVersion = "(Unknown)";
-
-			// Display an error dialog
-			String strErrorTitle = getUIText("InitFailedMessage_Title");
-			String strErrorMessage = String.format(getUIText("InitFailedMessage_Body"), strDriverName, strDriverVersion, e.toString());
-			JOptionPane.showMessageDialog(null, strErrorMessage, strErrorTitle, JOptionPane.ERROR_MESSAGE);
-
-			// Exit
-			System.exit(-1);
-		} catch (Throwable e) {
-			log.fatal("Game initialize failed (NON-SlickException)", e);
-			System.exit(-2);
-		}
-
-		stopObserverClient();
-
-		if(stateNetGame.netLobby != null) {
-			log.debug("Calling netLobby shutdown routine");
-			stateNetGame.netLobby.shutdown();
-		}
-
-		System.exit(0);
 	}
 
 	/**
@@ -428,7 +524,7 @@ public class NullpoMinoSlick extends StateBasedGame {
 	 * いろいろな設定を反映させる
 	 */
 	public static void setGeneralConfig() {
-		appGameContainer.setTargetFrameRate(-1);
+		//appGameContainer.setTargetFrameRate(-1);
 		beforeTime = System.nanoTime();
 		overSleepTime = 0L;
 		noDelays = 0;
@@ -441,11 +537,11 @@ public class NullpoMinoSlick extends StateBasedGame {
 		altMaxFPSCurrent = altMaxFPS;
 		periodCurrent = (long) (1.0 / altMaxFPSCurrent * 1000000000);
 
-		appGameContainer.setVSync(propConfig.getProperty("option.vsync", false));
-		appGameContainer.setAlwaysRender(!alternateFPSTiming);
+		//appGameContainer.setVSync(propConfig.getProperty("option.vsync", false));
+		//appGameContainer.setAlwaysRender(!alternateFPSTiming);
 
 		int sevolume = propConfig.getProperty("option.sevolume", 128);
-		appGameContainer.setSoundVolume(sevolume / (float)128);
+		//appGameContainer.setSoundVolume(sevolume / (float)128);
 
 		ControllerManager.method = propConfig.getProperty("option.joymethod", ControllerManager.CONTROLLER_METHOD_SLICK_DEFAULT);
 		ControllerManager.controllerID[0] = propConfig.getProperty("joyUseNumber.p0", -1);
@@ -565,7 +661,7 @@ public class NullpoMinoSlick extends StateBasedGame {
 				}
 				// sleep() oversleep
 				overSleepTime = (System.nanoTime() - afterTime) - sleepTime;
-				perfectFPSDelay = System.nanoTime();
+				initializePerfectFPSDelay();
 				sleepFlag = true;
 			} else if((alternateFPSPerfectMode && ingame) || (sleepTime > 0)) {
 				// Perfect FPS
@@ -587,7 +683,7 @@ public class NullpoMinoSlick extends StateBasedGame {
 					Thread.yield();
 					noDelays = 0;
 				}
-				perfectFPSDelay = System.nanoTime();
+				initializePerfectFPSDelay();
 			}
 
 			beforeTime = System.nanoTime();
@@ -604,6 +700,7 @@ public class NullpoMinoSlick extends StateBasedGame {
 	 */
 	protected static void calcFPS(boolean ingame, long period) {
 		frameCount++;
+		totalframeCount++;
 		calcInterval += period;
 
 		// 1秒おきにFPSを再計算する
@@ -676,7 +773,8 @@ public class NullpoMinoSlick extends StateBasedGame {
 		stateConfigKeyboardReset = new StateConfigKeyboardReset();
 		stateSelectRuleFromList = new StateSelectRuleFromList();
 		stateSelectModeFolder = new StateSelectModeFolder();
-
+		stateEnterUserName = new StateEnterUserName();
+		
 		addState(stateLoading);
 		addState(stateTitle);
 		addState(stateInGame);
@@ -697,6 +795,7 @@ public class NullpoMinoSlick extends StateBasedGame {
 		addState(stateConfigKeyboardReset);
 		addState(stateSelectRuleFromList);
 		addState(stateSelectModeFolder);
+		addState(stateEnterUserName);
 	}
 
 	/**
@@ -712,12 +811,18 @@ public class NullpoMinoSlick extends StateBasedGame {
 	 * @param container GameContainer
 	 */
 	public static void drawFPS(GameContainer container, boolean ingame) {
-		if(propConfig.getProperty("option.showfps", true) == true) {
-			if(!alternateFPSDynamicAdjust || alternateFPSPerfectMode || !ingame)
-				NormalFont.printFont(0, 480 - 16, df.format(actualFPS), NormalFont.COLOR_BLUE);
-			else
-				NormalFont.printFont(0, 480 - 16, df.format(actualFPS) + "/" + altMaxFPSCurrent, NormalFont.COLOR_BLUE);
-		}
+		//print out frame rate
+		
+//		if(propConfig.getProperty("option.showfps", true) == true) {
+//			if(!alternateFPSDynamicAdjust || alternateFPSPerfectMode || !ingame)
+//				if (actualFPS != 60){
+//					NormalFont.printFont(0, 480 - 16, df.format(actualFPS), NormalFont.COLOR_BLUE);
+//				}
+//			else
+//				NormalFont.printFont(0, 480 - 16, df.format(actualFPS) + "/" + altMaxFPSCurrent, NormalFont.COLOR_BLUE);
+//		}
+		
+		//NormalFont.printFont(200, 480-16, " - " + totalframeCount, NormalFont.COLOR_BLUE);
 	}
 
 	/**
@@ -774,5 +879,29 @@ public class NullpoMinoSlick extends StateBasedGame {
 			String strObserverString = String.format("%40s", strObserverInfo);
 			NormalFont.printFont(0, 480 - 16, strObserverString, fontcolor);
 		}
+	}
+	
+	public static void setWindowToSizeWithoutMultiplayer(){
+		mainFrame.setSize(new Dimension(640, 500));
+	}
+	
+	public static void setWindowToSizeWithMultiplayer(){
+		mainFrame.setSize(new Dimension(640+450, 500));
+	}
+
+	public static CanvasGameContainer getCanvasGameContainer() {
+		return canvasGameContainer;
+	}
+
+	public static void setCanvasGameContainer(CanvasGameContainer canvasGameContainer) {
+		NullpoMinoSlick.canvasGameContainer = canvasGameContainer;
+	}
+
+	public static GameContainer getGameContainer() {
+		return gameContainer;
+	}
+
+	public static void setGameContainer(GameContainer gameContainer) {
+		NullpoMinoSlick.gameContainer = gameContainer;
 	}
 }

@@ -468,7 +468,7 @@ public class AvalancheVSBombBattleMode extends AvalancheVSDummyMode {
 
 		// Timer
 		if(playerID == 0) {
-			receiver.drawDirectFont(engine, playerID, 224, 8, GeneralUtil.getTime(engine.statistics.time));
+			receiver.drawDirectFont(engine, playerID, 224, 8, GeneralUtil.getTime(engine.statistics.getTime()));
 		}
 
 		// Ojama Counter
@@ -627,14 +627,14 @@ public class AvalancheVSBombBattleMode extends AvalancheVSDummyMode {
 		int blockHeight = receiver.getBlockGraphicsHeight(engine, playerID);
 		// せり上がりMeter
 		int value = ojama[playerID] * blockHeight / width;
-		if(ojama[playerID] >= 5*width) engine.meterColor = GameEngine.METER_COLOR_RED;
-		else if(ojama[playerID] >= width) engine.meterColor = GameEngine.METER_COLOR_ORANGE;
-		else if(ojama[playerID] >= 1) engine.meterColor = GameEngine.METER_COLOR_YELLOW;
-		else engine.meterColor = GameEngine.METER_COLOR_GREEN;
-		if (value > engine.meterValue)
-			engine.meterValue++;
-		else if (value < engine.meterValue)
-			engine.meterValue--;
+		if(ojama[playerID] >= 5*width) engine.setMeterColor(GameEngine.METER_COLOR_RED);
+		else if(ojama[playerID] >= width) engine.setMeterColor(GameEngine.METER_COLOR_ORANGE);
+		else if(ojama[playerID] >= 1) engine.setMeterColor(GameEngine.METER_COLOR_YELLOW);
+		else engine.setMeterColor(GameEngine.METER_COLOR_GREEN);
+		if (value > engine.getMeterValue())
+			engine.setMeterValue(engine.getMeterValue() + 1);
+		else if (value < engine.getMeterValue())
+			engine.setMeterValue(engine.getMeterValue() - 1);
 	}
 
 	/*
