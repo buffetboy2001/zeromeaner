@@ -79,7 +79,8 @@ public class SoundManager {
 		}
 
 		try {
-			Sound clip = new Sound(filename);
+//			Sound clip = new Sound(filename);
+			Sound clip = new Sound(ResourceHolderSlick.createTempFile(filename).getPath());
 			clipMap.put(name, clip);
 		} catch(Throwable e) {
 			log.error("Failed to load wav file", e);

@@ -30,6 +30,8 @@ package org.zeromeaner.gui.slick;
 
 import java.awt.Color;
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.LinkedList;
 
 import org.apache.log4j.Logger;
@@ -42,6 +44,7 @@ import org.newdawn.slick.font.effects.ColorEffect;
 import org.newdawn.slick.font.effects.ShadowEffect;
 import org.newdawn.slick.openal.SoundStore;
 import org.zeromeaner.game.component.BGMStatus;
+import org.zeromeaner.util.ResourceInputStream;
 
 /**
  * 画像や音声の管理をするクラス
@@ -167,7 +170,7 @@ public class ResourceHolderSlick {
 
 		// Font
 		try {
-			ttfFont = new UnicodeFont(skindir + "/font/font.ttf", 16, false, false);
+			ttfFont = new UnicodeFont(createTempFile(skindir + "/font/font.ttf").getPath(), 16, false, false);
 			ttfFont.getEffects().add(new ShadowEffect(Color.black, 1, 1, 1));
 			ttfFont.getEffects().add(new ColorEffect(java.awt.Color.white));
 		} catch (Throwable e) {
@@ -325,7 +328,7 @@ public class ResourceHolderSlick {
 
 		Image img = null;
 		try {
-			img = new Image(filename);
+			img = new Image(createTempFile(filename).getPath());
 		} catch (Throwable e) {
 			//log.error("Failed to load image from " + filename, e);
 			try {
@@ -346,7 +349,7 @@ public class ResourceHolderSlick {
 
 		BigImage bigImg = null;
 		try {
-			bigImg = new BigImage(filename);
+			bigImg = new BigImage(createTempFile(filename).getPath());
 		} catch (Throwable e) {
 			log.error("Failed to load big image from " + filename, e);
 		}
@@ -374,7 +377,7 @@ public class ResourceHolderSlick {
 
 				boolean streaming = NullpoMinoSlick.propConfig.getProperty("option.bgmstreaming", true);
 
-				bgm[no] = new Music(filename, streaming);
+				bgm[no] = new Music(createTempFile(filename).getPath(), streaming);
 
 				if(!showerr) log.info("Loaded BGM" + no);
 			} catch(Throwable e) {
@@ -478,6 +481,23 @@ public class ResourceHolderSlick {
 				if(NullpoMinoSlick.propConfig.getProperty("option.bgmpreload", false) == false)
 					bgm[i] = null;
 			}
+		}
+	}
+	
+	public static File createTempFile(String resource) {
+		try {
+			File f = File.createTempFile("tmp", resource.substring(resource.lastIndexOf("/") + 1));
+			f.deleteOnExit();
+			FileOutputStream fout = new FileOutputStream(f);
+			ResourceInputStream rin = new ResourceInputStream(resource);
+			byte[] b = new byte[2048];
+			for(int r = rin.read(b); r != -1; r = rin.read(b))
+				fout.write(b, 0, r);
+			rin.close();
+			fout.close();
+			return f;
+		} catch(IOException ioe) {
+			throw new RuntimeException(ioe);
 		}
 	}
 }

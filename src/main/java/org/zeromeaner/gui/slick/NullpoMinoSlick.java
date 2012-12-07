@@ -388,9 +388,13 @@ public class NullpoMinoSlick extends StateBasedGame {
 	}
 
 	private static void initializeLogSystem() {
-		PropertyConfigurator.configure("config/etc/log_slick.cfg");
-		Log.setLogSystem(new LogSystemLog4j());
-		log.info("NullpoMinoSlick Start");
+		try {
+			PropertyConfigurator.configure(new ResourceInputStream("config/etc/log_slick.cfg"));
+			Log.setLogSystem(new LogSystemLog4j());
+			log.info("NullpoMinoSlick Start");
+		} catch(Exception e) {
+			e.printStackTrace();
+		}
 	}
 
 	private static void setLookAndFeel() {

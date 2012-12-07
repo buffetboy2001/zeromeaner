@@ -43,6 +43,11 @@
 	</build>
 	<dependencies>
 		<dependency>
+			<groupId>org.lwjgl.lwjgl</groupId>
+			<artifactId>lwjgl</artifactId>
+			<version>2.8.5</version>
+		</dependency>
+		<dependency>
 			<groupId>org.swinglabs</groupId>
 			<artifactId>swing-worker</artifactId>
 			<version>1.1</version>
@@ -51,6 +56,16 @@
 			<groupId>slick</groupId>
 			<artifactId>slick</artifactId>
 			<version>274</version>
+			<exclusions>
+				<exclusion>
+					<artifactId>lwjgl</artifactId>
+					<groupId>org.lwjgl</groupId>
+				</exclusion>
+				<exclusion>
+					<artifactId>lwjgl-native</artifactId>
+					<groupId>org.lwjgl</groupId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>log4j</groupId>
