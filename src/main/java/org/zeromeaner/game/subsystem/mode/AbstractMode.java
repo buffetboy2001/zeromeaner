@@ -423,8 +423,8 @@ public abstract class AbstractMode implements GameMode {
 					receiver.drawMenuFont(engine, playerID, 0, y+1, String.format("%10d", engine.statistics.lines), scale);
 					break;
 				case STAT_TIME:
-					receiver.drawMenuFont(engine, playerID, 0, y, "TIME", color, scale);
-					receiver.drawMenuFont(engine, playerID, 0, y+1, String.format("%10s", GeneralUtil.getTime(engine.statistics.time)), scale);
+					receiver.drawMenuFont(engine, playerID, 0, y, "TIME", color);
+					receiver.drawMenuFont(engine, playerID, 0, y+1, String.format("%10s", GeneralUtil.getTime(engine.statistics.getTime())));
 					break;
 				case STAT_LEVEL:
 					receiver.drawMenuFont(engine, playerID, 0, y, "LEVEL", color, scale);
@@ -467,8 +467,8 @@ public abstract class AbstractMode implements GameMode {
 					receiver.drawMenuFont(engine, playerID, 0, y+1, String.format("%10g", engine.statistics.ppm), scale);
 					break;
 				case STAT_PPS:
-					receiver.drawMenuFont(engine, playerID, 0, y, "PIECE/SEC", color, scale);
-					receiver.drawMenuFont(engine, playerID, 0, y+1, String.format("%10g", engine.statistics.pps), scale);
+					receiver.drawMenuFont(engine, playerID, 0, y, "PIECE/SEC", color);
+					receiver.drawMenuFont(engine, playerID, 0, y+1, String.format("%10g", engine.statistics.getPps()));
 					break;
 				case STAT_MAXCHAIN:
 					receiver.drawMenuFont(engine, playerID, 0, y, "MAX CHAIN", color, scale);

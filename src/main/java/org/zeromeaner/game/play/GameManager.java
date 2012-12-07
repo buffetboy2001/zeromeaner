@@ -321,4 +321,20 @@ public class GameManager {
 		}
 		receiver.saveReplay(this, replayProp);
 	}
+
+//	/**
+//	 * Report save routine
+//	 */
+//	public void saveReport() {
+//		for(int i = 0; i < engine.length; i++) {
+//			System.out.println("saving report for engine " + engine.toString());
+//			engine[i].saveReport();
+//		}
+//	}
+
+	public void updateFumens() {
+		for(int i = 0; i < engine.length; i++) {
+			engine[i].updateFumen();
+		}
+	}
 }

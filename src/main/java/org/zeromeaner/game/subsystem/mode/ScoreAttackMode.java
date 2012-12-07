@@ -456,7 +456,7 @@ public class ScoreAttackMode extends AbstractMode {
 			receiver.drawScoreFont(engine, playerID, 0, 12, "300");
 
 			receiver.drawScoreFont(engine, playerID, 0, 14, "TIME", EventReceiver.COLOR_BLUE);
-			receiver.drawScoreFont(engine, playerID, 0, 15, GeneralUtil.getTime(engine.statistics.time));
+			receiver.drawScoreFont(engine, playerID, 0, 15, GeneralUtil.getTime(engine.statistics.getTime()));
 
 			if((engine.gameActive) && (engine.ending == 2)) {
 				int time = ROLLTIMELIMIT - rolltime;
@@ -530,11 +530,11 @@ public class ScoreAttackMode extends AbstractMode {
 	 * Levelup
 	 */
 	private void levelUp(GameEngine engine) {
-		engine.meterValue = ((engine.statistics.level % 100) * receiver.getMeterMax(engine)) / 99;
-		engine.meterColor = GameEngine.METER_COLOR_GREEN;
-		if(engine.statistics.level % 100 >= 50) engine.meterColor = GameEngine.METER_COLOR_YELLOW;
-		if(engine.statistics.level % 100 >= 80) engine.meterColor = GameEngine.METER_COLOR_ORANGE;
-		if(engine.statistics.level >= nextseclv - 1) engine.meterColor = GameEngine.METER_COLOR_RED;
+		engine.setMeterValue(((engine.statistics.level % 100) * receiver.getMeterMax(engine)) / 99);
+		engine.setMeterColor(GameEngine.METER_COLOR_GREEN);
+		if(engine.statistics.level % 100 >= 50) engine.setMeterColor(GameEngine.METER_COLOR_YELLOW);
+		if(engine.statistics.level % 100 >= 80) engine.setMeterColor(GameEngine.METER_COLOR_ORANGE);
+		if(engine.statistics.level >= nextseclv - 1) engine.setMeterColor(GameEngine.METER_COLOR_RED);
 
 		if(engine.statistics.level >= nextseclv) {
 			nextseclv += 100;
@@ -582,7 +582,7 @@ public class ScoreAttackMode extends AbstractMode {
 					//sectionscomp++;
 					//setAverageSectionTime();
 					//stNewRecordCheck(sectionscomp - 1);
-					engine.statistics.score += 1253*Math.ceil(Math.max(18000-engine.statistics.time,0)/60D);
+					engine.statistics.score += 1253*Math.ceil(Math.max(18000-engine.statistics.getTime(),0)/60D);
 				}
 
 				bgmlv++;
@@ -652,11 +652,11 @@ public class ScoreAttackMode extends AbstractMode {
 				rolltime += 1;
 
 			int remainRollTime = ROLLTIMELIMIT - rolltime;
-			engine.meterValue = (remainRollTime * receiver.getMeterMax(engine)) / ROLLTIMELIMIT;
-			engine.meterColor = GameEngine.METER_COLOR_GREEN;
-			if(remainRollTime <= 30*60) engine.meterColor = GameEngine.METER_COLOR_YELLOW;
-			if(remainRollTime <= 20*60) engine.meterColor = GameEngine.METER_COLOR_ORANGE;
-			if(remainRollTime <= 10*60) engine.meterColor = GameEngine.METER_COLOR_RED;
+			engine.setMeterValue((remainRollTime * receiver.getMeterMax(engine)) / ROLLTIMELIMIT);
+			engine.setMeterColor(GameEngine.METER_COLOR_GREEN);
+			if(remainRollTime <= 30*60) engine.setMeterColor(GameEngine.METER_COLOR_YELLOW);
+			if(remainRollTime <= 20*60) engine.setMeterColor(GameEngine.METER_COLOR_ORANGE);
+			if(remainRollTime <= 10*60) engine.setMeterColor(GameEngine.METER_COLOR_RED);
 
 			if(rolltime >= ROLLTIMELIMIT) {
 				engine.gameEnded();
@@ -744,7 +744,7 @@ public class ScoreAttackMode extends AbstractMode {
 		saveSetting(prop);
 
 		if((owner.replayMode == false) && (startlevel == 0) && (always20g == false) && (big == false) && (engine.ai == null)) {
-			updateRanking(engine.statistics.score, engine.statistics.level, engine.statistics.time);
+			updateRanking(engine.statistics.score, engine.statistics.level, engine.statistics.getTime());
 			if(sectionAnyNewRecord) updateBestSectionTime();
 
 			if((rankingRank != -1) || (sectionAnyNewRecord)) {

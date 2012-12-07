@@ -141,16 +141,17 @@ public class StateConfigKeyboard extends BasicGameState {
 			NormalFontSlick.printFontGrid(1, 2, "JINPUT MODE", NormalFontSlick.COLOR_PINK);
 		}
 
-		NormalFontSlick.printFontGrid(2,  4, "UP          : " + getKeyName(keymap[GameKeySlick.BUTTON_UP]), (keynum == 0));
-		NormalFontSlick.printFontGrid(2,  5, "DOWN        : " + getKeyName(keymap[GameKeySlick.BUTTON_DOWN]), (keynum == 1));
+		NormalFontSlick.printFontGrid(2,  4, "HARD DROP   : " + getKeyName(keymap[GameKeySlick.BUTTON_UP]), (keynum == 0));
+		NormalFontSlick.printFontGrid(2,  5, "SOFT DROP   : " + getKeyName(keymap[GameKeySlick.BUTTON_DOWN]), (keynum == 1));
 		NormalFontSlick.printFontGrid(2,  6, "LEFT        : " + getKeyName(keymap[GameKeySlick.BUTTON_LEFT]), (keynum == 2));
 		NormalFontSlick.printFontGrid(2,  7, "RIGHT       : " + getKeyName(keymap[GameKeySlick.BUTTON_RIGHT]), (keynum == 3));
+		
 		if(!isNavSetting) {
-			NormalFontSlick.printFontGrid(2,  8, "A (L/R-ROT) : " + getKeyName(keymap[GameKeySlick.BUTTON_A]), (keynum == 4));
-			NormalFontSlick.printFontGrid(2,  9, "B (R/L-ROT) : " + getKeyName(keymap[GameKeySlick.BUTTON_B]), (keynum == 5));
-			NormalFontSlick.printFontGrid(2, 10, "C (L/R-ROT) : " + getKeyName(keymap[GameKeySlick.BUTTON_C]), (keynum == 6));
-			NormalFontSlick.printFontGrid(2, 11, "D (HOLD)    : " + getKeyName(keymap[GameKeySlick.BUTTON_D]), (keynum == 7));
-			NormalFontSlick.printFontGrid(2, 12, "E (180-ROT) : " + getKeyName(keymap[GameKeySlick.BUTTON_E]), (keynum == 8));
+			NormalFontSlick.printFontGrid(2,  8, "ROTATE LEFT : " + getKeyName(keymap[GameKeySlick.BUTTON_A]), (keynum == 4));
+			NormalFontSlick.printFontGrid(2,  9, "ROTATE RIGHT: " + getKeyName(keymap[GameKeySlick.BUTTON_B]), (keynum == 5));
+			NormalFontSlick.printFontGrid(2, 10, "ROTATE LEFT : " + getKeyName(keymap[GameKeySlick.BUTTON_C]), (keynum == 6));
+			NormalFontSlick.printFontGrid(2, 11, "HOLD        : " + getKeyName(keymap[GameKeySlick.BUTTON_D]), (keynum == 7));
+			NormalFontSlick.printFontGrid(2, 12, "ROTATE 180  : " + getKeyName(keymap[GameKeySlick.BUTTON_E]), (keynum == 8));
 		} else {
 			NormalFontSlick.printFontGrid(2,  8, "A (SELECT)  : " + getKeyName(keymap[GameKeySlick.BUTTON_A]), (keynum == 4));
 			NormalFontSlick.printFontGrid(2,  9, "B (CANCEL)  : " + getKeyName(keymap[GameKeySlick.BUTTON_B]), (keynum == 5));
@@ -158,29 +159,30 @@ public class StateConfigKeyboard extends BasicGameState {
 			NormalFontSlick.printFontGrid(2, 11, "D           : " + getKeyName(keymap[GameKeySlick.BUTTON_D]), (keynum == 7));
 			NormalFontSlick.printFontGrid(2, 12, "E           : " + getKeyName(keymap[GameKeySlick.BUTTON_E]), (keynum == 8));
 		}
-		NormalFontSlick.printFontGrid(2, 13, "F           : " + getKeyName(keymap[GameKeySlick.BUTTON_F]), (keynum == 9));
+		
+		NormalFontSlick.printFontGrid(2, 13, "ACTION      : " + getKeyName(keymap[GameKeySlick.BUTTON_F]), (keynum == 9));
 		NormalFontSlick.printFontGrid(2, 14, "QUIT        : " + getKeyName(keymap[GameKeySlick.BUTTON_QUIT]), (keynum == 10));
 		NormalFontSlick.printFontGrid(2, 15, "PAUSE       : " + getKeyName(keymap[GameKeySlick.BUTTON_PAUSE]), (keynum == 11));
 		NormalFontSlick.printFontGrid(2, 16, "GIVEUP      : " + getKeyName(keymap[GameKeySlick.BUTTON_GIVEUP]), (keynum == 12));
 		NormalFontSlick.printFontGrid(2, 17, "RETRY       : " + getKeyName(keymap[GameKeySlick.BUTTON_RETRY]), (keynum == 13));
 		NormalFontSlick.printFontGrid(2, 18, "FRAME STEP  : " + getKeyName(keymap[GameKeySlick.BUTTON_FRAMESTEP]), (keynum == 14));
 		NormalFontSlick.printFontGrid(2, 19, "SCREEN SHOT : " + getKeyName(keymap[GameKeySlick.BUTTON_SCREENSHOT]), (keynum == 15));
-		NormalFontSlick.printFontGrid(2, 20, "[SAVE & EXIT]", (keynum == 16));
+		NormalFontSlick.printFontGrid(2, 20, "[ SAVE ]", (keynum == 16));
 
 		NormalFontSlick.printFontGrid(1, 4 + keynum, "b", NormalFontSlick.COLOR_RED);
 
 		if(frame >= KEYACCEPTFRAME) {
 			if(keyConfigRestFrame > 0) {
-				NormalFontSlick.printFontGrid(1, 22, "PUSH KEY... " + GeneralUtil.getTime(keyConfigRestFrame), NormalFontSlick.COLOR_PINK);
+				NormalFontSlick.printFontGrid(1, 23, "PUSH KEY... " + GeneralUtil.getTime(keyConfigRestFrame), NormalFontSlick.COLOR_PINK);
 			} else if(keynum < NUM_KEYS) {
-				NormalFontSlick.printFontGrid(1, 22, "UP/DOWN:   MOVE CURSOR", NormalFontSlick.COLOR_GREEN);
-				NormalFontSlick.printFontGrid(1, 23, "ENTER:     SET KEY", NormalFontSlick.COLOR_GREEN);
-				NormalFontSlick.printFontGrid(1, 24, "DELETE:    SET TO NONE", NormalFontSlick.COLOR_GREEN);
-				NormalFontSlick.printFontGrid(1, 25, "BACKSPACE: CANCEL", NormalFontSlick.COLOR_GREEN);
+				NormalFontSlick.printFontGrid(1, 25, "UP/DOWN:   MOVE CURSOR", NormalFontSlick.COLOR_GREEN);
+				NormalFontSlick.printFontGrid(1, 26, "ENTER:     SET KEY", NormalFontSlick.COLOR_GREEN);
+				NormalFontSlick.printFontGrid(1, 27, "DELETE:    SET TO NONE", NormalFontSlick.COLOR_GREEN);
+				NormalFontSlick.printFontGrid(1, 28, "BACKSPACE: CANCEL", NormalFontSlick.COLOR_GREEN);
 			} else {
-				NormalFontSlick.printFontGrid(1, 22, "UP/DOWN:   MOVE CURSOR", NormalFontSlick.COLOR_GREEN);
-				NormalFontSlick.printFontGrid(1, 23, "ENTER:     SAVE & EXIT", NormalFontSlick.COLOR_GREEN);
-				NormalFontSlick.printFontGrid(1, 24, "BACKSPACE: CANCEL", NormalFontSlick.COLOR_GREEN);
+				NormalFontSlick.printFontGrid(1, 29, "UP/DOWN:   MOVE CURSOR", NormalFontSlick.COLOR_GREEN);
+				NormalFontSlick.printFontGrid(1, 30, "ENTER:     SAVE & EXIT", NormalFontSlick.COLOR_GREEN);
+				NormalFontSlick.printFontGrid(1, 31, "BACKSPACE: CANCEL", NormalFontSlick.COLOR_GREEN);
 			}
 		}
 

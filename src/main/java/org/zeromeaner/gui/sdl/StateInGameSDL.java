@@ -38,7 +38,6 @@ import org.zeromeaner.game.subsystem.wallkick.Wallkick;
 import org.zeromeaner.util.CustomProperties;
 import org.zeromeaner.util.GeneralUtil;
 
-
 import sdljava.SDLException;
 import sdljava.mixer.SDLMixer;
 import sdljava.video.SDLSurface;

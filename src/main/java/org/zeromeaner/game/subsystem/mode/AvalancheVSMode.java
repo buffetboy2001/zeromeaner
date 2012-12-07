@@ -791,7 +791,7 @@ public class AvalancheVSMode extends AvalancheVSDummyMode {
 
 		// Timer
 		if(playerID == 0) {
-			receiver.drawDirectFont(engine, playerID, 224, 8, GeneralUtil.getTime(engine.statistics.time));
+			receiver.drawDirectFont(engine, playerID, 224, 8, GeneralUtil.getTime(engine.statistics.getTime()));
 		}
 
 		// Ojama Counter
@@ -861,7 +861,7 @@ public class AvalancheVSMode extends AvalancheVSDummyMode {
 			// Points
 			if(feverShowMeter[playerID] && (engine.displaysize == 1)) {
 				if(inFever[playerID]) {
-					int color = (engine.statistics.time >> 2) % FEVER_METER_COLORS.length;
+					int color = (engine.statistics.getTime() >> 2) % FEVER_METER_COLORS.length;
 					for(int i = 0; i < feverThreshold[playerID]; i++) {
 						if(color == 0) color = FEVER_METER_COLORS.length;
 						color--;
@@ -947,8 +947,8 @@ public class AvalancheVSMode extends AvalancheVSDummyMode {
 			ojamaNew += zenKeshiOjama[playerID];
 		//Add ojama
 		int rate = ojamaRate[playerID];
-		if (hurryupSeconds[playerID] > 0 && engine.statistics.time > hurryupSeconds[playerID])
-			rate >>= engine.statistics.time / (hurryupSeconds[playerID] * 60);
+		if (hurryupSeconds[playerID] > 0 && engine.statistics.getTime() > hurryupSeconds[playerID])
+			rate >>= engine.statistics.getTime() / (hurryupSeconds[playerID] * 60);
 		if (rate <= 0)
 			rate = 1;
 		if (inFever[playerID])
@@ -1080,8 +1080,8 @@ public class AvalancheVSMode extends AvalancheVSDummyMode {
 			feverPoints[playerID] = 0;
 			engine.field = feverBackupField[playerID];
 			if (engine.field != null && ojamaMeter[playerID])
-				engine.meterValue = ojama[playerID] * receiver.getBlockGraphicsHeight(engine, playerID) /
-					engine.field.getWidth();
+				engine.setMeterValue(ojama[playerID] * receiver.getBlockGraphicsHeight(engine, playerID) /
+					engine.field.getWidth());
 			ojama[playerID] += ojamaFever[playerID];
 			ojamaFever[playerID] = 0;
 			ojamaAddToFever[playerID] = false;
@@ -1112,7 +1112,7 @@ public class AvalancheVSMode extends AvalancheVSDummyMode {
 			engine.field = null;
 			loadFeverMap(engine, playerID, feverChain[playerID]);
 			if (!ojamaMeter[playerID])
-				engine.meterValue = 0;
+				engine.setMeterValue(0);
 		}
 		return false;
 	}
@@ -1146,21 +1146,21 @@ public class AvalancheVSMode extends AvalancheVSDummyMode {
 		{
 			if (!inFever[playerID])
 			{
-				engine.meterValue = (receiver.getMeterMax(engine) * feverPoints[playerID]) / feverThreshold[playerID];
+				engine.setMeterValue((receiver.getMeterMax(engine) * feverPoints[playerID]) / feverThreshold[playerID]);
 				if (feverPoints[playerID] == feverThreshold[playerID] - 1)
-					engine.meterColor = GameEngine.METER_COLOR_ORANGE;
+					engine.setMeterColor(GameEngine.METER_COLOR_ORANGE);
 				else if (feverPoints[playerID] < feverThreshold[playerID] - 1)
-					engine.meterColor = GameEngine.METER_COLOR_YELLOW;
+					engine.setMeterColor(GameEngine.METER_COLOR_YELLOW);
 				else if (feverPoints[playerID] == feverThreshold[playerID])
-					engine.meterColor = GameEngine.METER_COLOR_RED;
+					engine.setMeterColor(GameEngine.METER_COLOR_RED);
 			}
 			else
 			{
-				engine.meterValue = (feverTime[playerID] * receiver.getMeterMax(engine)) / (feverTimeMax[playerID] * 60);
-				engine.meterColor = GameEngine.METER_COLOR_GREEN;
-				if(feverTime[playerID] <= feverTimeMin[playerID]*15) engine.meterColor = GameEngine.METER_COLOR_RED;
-				else if(feverTime[playerID] <= feverTimeMin[playerID]*30) engine.meterColor = GameEngine.METER_COLOR_ORANGE;
-				else if(feverTime[playerID] <= feverTimeMin[playerID]*60) engine.meterColor = GameEngine.METER_COLOR_YELLOW;
+				engine.setMeterValue((feverTime[playerID] * receiver.getMeterMax(engine)) / (feverTimeMax[playerID] * 60));
+				engine.setMeterColor(GameEngine.METER_COLOR_GREEN);
+				if(feverTime[playerID] <= feverTimeMin[playerID]*15) engine.setMeterColor(GameEngine.METER_COLOR_RED);
+				else if(feverTime[playerID] <= feverTimeMin[playerID]*30) engine.setMeterColor(GameEngine.METER_COLOR_ORANGE);
+				else if(feverTime[playerID] <= feverTimeMin[playerID]*60) engine.setMeterColor(GameEngine.METER_COLOR_YELLOW);
 			}
 		}
 	}

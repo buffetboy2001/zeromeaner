@@ -1,8 +1,7 @@
 package org.zeromeaner.game.evil;
 
-import org.eviline.randomizer.ThreadedMaliciousRandomizer;
 import org.eviline.randomizer.MaliciousRandomizer.MaliciousRandomizerProperties;
-
+import org.eviline.randomizer.ThreadedMaliciousRandomizer;
 import org.zeromeaner.game.play.GameEngine;
 
 public class TNAggressiveRandomizer extends TNRandomizer {

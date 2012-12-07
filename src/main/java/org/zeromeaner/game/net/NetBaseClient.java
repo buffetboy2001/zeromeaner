@@ -135,6 +135,10 @@ public class NetBaseClient extends Thread {
 			socket = new Socket(host, port);
 			connectedFlag = true;
 			ip = socket.getInetAddress().getHostAddress();
+			
+			//netlag patch, disable Nagle's algorithm
+			
+			socket.setTcpNoDelay(true);
 
 			// ping打ちTimer準備
 			startPingTask();

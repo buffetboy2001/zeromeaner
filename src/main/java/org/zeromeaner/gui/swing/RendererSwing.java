@@ -1031,8 +1031,8 @@ public class RendererSwing extends EventReceiver {
 
 			// 右Meter
 			int maxHeight = height * size * 4;
-			if((engine != null) && (engine.meterValueSub > 0 || engine.meterValue > 0))
-				maxHeight -= Math.max(engine.meterValue, engine.meterValueSub);
+			if((engine != null) && (engine.meterValueSub > 0 || engine.getMeterValue() > 0))
+				maxHeight -= Math.max(engine.getMeterValue(), engine.meterValueSub);
 
 			tmpX = x + (width * size * 4) + 8;
 			tmpY = y + 4;
@@ -1044,7 +1044,7 @@ public class RendererSwing extends EventReceiver {
 			}
 
 			if(engine != null) {
-				if (engine.meterValueSub > Math.max(engine.meterValue, 0)) {
+				if (engine.meterValueSub > Math.max(engine.getMeterValue(), 0)) {
 					int value = engine.meterValueSub;
 					if(value > height * size * 4) value = height * size * 4;
 
@@ -1057,15 +1057,15 @@ public class RendererSwing extends EventReceiver {
 						graphics.setColor(Color.white);
 					}
 				}
-				if (engine.meterValue > 0) {
-					int value = engine.meterValue;
+				if (engine.getMeterValue() > 0) {
+					int value = engine.getMeterValue();
 					if(value > height * size * 4) value = height * size * 4;
 
 					if(value > 0) {
 						tmpX = x + (width * size * 4) + 8;
 						tmpY = y + (height * size * 4) + 3 - (value - 1);
 
-						graphics.setColor(getMeterColorAsColor(engine.meterColor));
+						graphics.setColor(getMeterColorAsColor(engine.getMeterColor()));
 						graphics.fillRect(tmpX, tmpY, 4, value);
 						graphics.setColor(Color.white);
 					}

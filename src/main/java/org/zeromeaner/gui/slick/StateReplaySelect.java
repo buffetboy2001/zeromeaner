@@ -33,7 +33,6 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.Arrays;
 
-
 import org.apache.log4j.Logger;
 import org.newdawn.slick.GameContainer;
 import org.newdawn.slick.Graphics;
@@ -41,8 +40,8 @@ import org.newdawn.slick.SlickException;
 import org.newdawn.slick.state.StateBasedGame;
 import org.zeromeaner.game.component.Statistics;
 import org.zeromeaner.util.CustomProperties;
-import org.zeromeaner.util.ResourceInputStream;
 import org.zeromeaner.util.GeneralUtil;
+import org.zeromeaner.util.ResourceInputStream;
 
 /**
  * リプレイ選択画面のステート
@@ -164,7 +163,7 @@ public class StateReplaySelect extends DummyMenuScrollState {
 									, NormalFontSlick.COLOR_CYAN);
 		NormalFontSlick.printFontGrid(1, 26,
 									"LEVEL:" + (statsList[cursor].level + statsList[cursor].levelDispAdd) +
-									" TIME:" + GeneralUtil.getTime(statsList[cursor].time)
+									" TIME:" + GeneralUtil.getTime(statsList[cursor].getTime())
 									, NormalFontSlick.COLOR_CYAN);
 		NormalFontSlick.printFontGrid(1, 27,
 									"GAME RATE:" + ( (statsList[cursor].gamerate == 0f) ? "UNKNOWN" : ((100*statsList[cursor].gamerate) + "%") )
@@ -185,6 +184,8 @@ public class StateReplaySelect extends DummyMenuScrollState {
 			log.error("Failed to load replay file from " + list[cursor], e);
 			return true;
 		}
+		
+		NullpoMinoSlick.propGlobal.setProperty("latest.replay.file", list[cursor]);
 
 		NullpoMinoSlick.stateInGame.startReplayGame(prop);
 

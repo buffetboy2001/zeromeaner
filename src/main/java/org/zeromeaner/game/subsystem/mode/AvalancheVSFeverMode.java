@@ -467,7 +467,7 @@ public class AvalancheVSFeverMode extends AvalancheVSDummyMode {
 
 		// Timer
 		if(playerID == 0) {
-			receiver.drawDirectFont(engine, playerID, 224, 8, GeneralUtil.getTime(engine.statistics.time));
+			receiver.drawDirectFont(engine, playerID, 224, 8, GeneralUtil.getTime(engine.statistics.getTime()));
 		}
 
 		// Ojama Counter
@@ -560,8 +560,8 @@ public class AvalancheVSFeverMode extends AvalancheVSDummyMode {
 			ojamaNew += 30;
 		//Add ojama
 		int rate = ojamaRate[playerID];
-		if (hurryupSeconds[playerID] > 0 && engine.statistics.time > hurryupSeconds[playerID])
-			rate >>= engine.statistics.time / (hurryupSeconds[playerID] * 60);
+		if (hurryupSeconds[playerID] > 0 && engine.statistics.getTime() > hurryupSeconds[playerID])
+			rate >>= engine.statistics.getTime() / (hurryupSeconds[playerID] * 60);
 		if (rate <= 0)
 			rate = 1;
 		ojamaNew += (pts+rate-1)/rate;

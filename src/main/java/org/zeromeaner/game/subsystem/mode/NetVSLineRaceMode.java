@@ -35,7 +35,7 @@ public class NetVSLineRaceMode extends NetDummyVSMode {
 	@Override
 	protected void netPlayerInit(GameEngine engine, int playerID) {
 		super.netPlayerInit(engine, playerID);
-		engine.meterColor = GameEngine.METER_COLOR_GREEN;
+		engine.setMeterColor(GameEngine.METER_COLOR_GREEN);
 	}
 
 	/**
@@ -60,8 +60,8 @@ public class NetVSLineRaceMode extends NetDummyVSMode {
 	@Override
 	public void startGame(GameEngine engine, int playerID) {
 		super.startGame(engine, playerID);
-		engine.meterColor = GameEngine.METER_COLOR_GREEN;
-		engine.meterValue = owner.receiver.getMeterMax(engine);
+		engine.setMeterColor(GameEngine.METER_COLOR_GREEN);
+		engine.setMeterValue(owner.receiver.getMeterMax(engine));
 	}
 
 	/**
@@ -82,9 +82,9 @@ public class NetVSLineRaceMode extends NetDummyVSMode {
 
 				if(myLines < enemyLines) {
 					place++;
-				} else if((myLines == enemyLines) && (engine.statistics.pps < owner.engine[i].statistics.pps)) {
+				} else if((myLines == enemyLines) && (engine.statistics.getPps() < owner.engine[i].statistics.getPps())) {
 					place++;
-				} else if((myLines == enemyLines) && (engine.statistics.pps == owner.engine[i].statistics.pps) &&
+				} else if((myLines == enemyLines) && (engine.statistics.getPps() == owner.engine[i].statistics.getPps()) &&
 				          (engine.statistics.lpm < owner.engine[i].statistics.lpm))
 				{
 					place++;
@@ -102,11 +102,11 @@ public class NetVSLineRaceMode extends NetDummyVSMode {
 	private void updateMeter(GameEngine engine) {
 		if(goalLines > 0) {
 			int remainLines = goalLines - engine.statistics.lines;
-			engine.meterValue = (remainLines * owner.receiver.getMeterMax(engine)) / goalLines;
-			engine.meterColor = GameEngine.METER_COLOR_GREEN;
-			if(remainLines <= 30) engine.meterColor = GameEngine.METER_COLOR_YELLOW;
-			if(remainLines <= 20) engine.meterColor = GameEngine.METER_COLOR_ORANGE;
-			if(remainLines <= 10) engine.meterColor = GameEngine.METER_COLOR_RED;
+			engine.setMeterValue((remainLines * owner.receiver.getMeterMax(engine)) / goalLines);
+			engine.setMeterColor(GameEngine.METER_COLOR_GREEN);
+			if(remainLines <= 30) engine.setMeterColor(GameEngine.METER_COLOR_YELLOW);
+			if(remainLines <= 20) engine.setMeterColor(GameEngine.METER_COLOR_ORANGE);
+			if(remainLines <= 10) engine.setMeterColor(GameEngine.METER_COLOR_RED);
 		}
 	}
 
@@ -261,8 +261,8 @@ public class NetVSLineRaceMode extends NetDummyVSMode {
 				"LINE", String.format("%10d", engine.statistics.lines),
 				"PIECE", String.format("%10d", engine.statistics.totalPieceLocked),
 				"LINE/MIN", String.format("%10g", engine.statistics.lpm),
-				"PIECE/SEC", String.format("%10g", engine.statistics.pps),
-				"TIME", String.format("%10s", GeneralUtil.getTime(engine.statistics.time)));
+				"PIECE/SEC", String.format("%10g", engine.statistics.getPps()),
+				"TIME", String.format("%10s", GeneralUtil.getTime(engine.statistics.getTime())));
 	}
 
 	/*
@@ -271,7 +271,7 @@ public class NetVSLineRaceMode extends NetDummyVSMode {
 	@Override
 	protected void netSendStats(GameEngine engine) {
 		if((engine.playerID == 0) && !netvsIsPractice && !netvsIsWatch()) {
-			String strMsg = "game\tstats\t" + engine.statistics.lines + "\t" + engine.statistics.pps + "\t" + engine.statistics.lpm + "\n";
+			String strMsg = "game\tstats\t" + engine.statistics.lines + "\t" + engine.statistics.getPps() + "\t" + engine.statistics.lpm + "\n";
 			netLobby.netPlayerClient.send(strMsg);
 		}
 	}
@@ -282,7 +282,7 @@ public class NetVSLineRaceMode extends NetDummyVSMode {
 	@Override
 	protected void netRecvStats(GameEngine engine, String[] message) {
 		if(message.length > 4) engine.statistics.lines = Integer.parseInt(message[4]);
-		if(message.length > 5) engine.statistics.pps = Float.parseFloat(message[5]);
+		if(message.length > 5) engine.statistics.setPps(Float.parseFloat(message[5]));
 		if(message.length > 6) engine.statistics.lpm = Float.parseFloat(message[6]);
 		updateMeter(engine);
 	}
@@ -297,7 +297,7 @@ public class NetVSLineRaceMode extends NetDummyVSMode {
 		msg += netvsPlayerPlace[playerID] + "\t";
 		msg += 0 + "\t" + 0 + "\t" + 0 + "\t";
 		msg += engine.statistics.lines + "\t" + engine.statistics.lpm + "\t";
-		msg += engine.statistics.totalPieceLocked + "\t" + engine.statistics.pps + "\t";
+		msg += engine.statistics.totalPieceLocked + "\t" + engine.statistics.getPps() + "\t";
 		msg += netvsPlayTimer + "\t" + 0 + "\t" + netvsPlayerWinCount[playerID] + "\t" + netvsPlayerPlayCount[playerID];
 		msg += "\n";
 		netLobby.netPlayerClient.send(msg);
@@ -317,8 +317,8 @@ public class NetVSLineRaceMode extends NetDummyVSMode {
 			engine.statistics.lines = Integer.parseInt(message[8]);
 			engine.statistics.lpm = Float.parseFloat(message[9]);
 			engine.statistics.totalPieceLocked = Integer.parseInt(message[10]);
-			engine.statistics.pps = Float.parseFloat(message[11]);
-			engine.statistics.time = Integer.parseInt(message[12]);
+			engine.statistics.setPps(Float.parseFloat(message[11]));
+			engine.statistics.setTime(Integer.parseInt(message[12]));
 
 			netvsPlayerResultReceived[playerID] = true;
 		}

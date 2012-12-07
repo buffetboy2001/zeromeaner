@@ -919,7 +919,7 @@ public class NetDummyVSMode extends NetDummyMode {
 			owner.receiver.drawDirectFont(engine, 0, 256, 16, GeneralUtil.getTime(netvsPlayTimer));
 
 			if(netvsIsPractice) {
-				owner.receiver.drawDirectFont(engine, 0, 256, 32, GeneralUtil.getTime(engine.statistics.time), EventReceiver.COLOR_PURPLE);
+				owner.receiver.drawDirectFont(engine, 0, 256, 32, GeneralUtil.getTime(engine.statistics.getTime()), EventReceiver.COLOR_PURPLE);
 			}
 		}
 
@@ -1426,7 +1426,7 @@ public class NetDummyVSMode extends NetDummyMode {
 						owner.engine[i].gameEnded();
 						owner.engine[i].stat = GameEngine.STAT_EXCELLENT;
 						owner.engine[i].resetStatc();
-						owner.engine[i].statistics.time = netvsPlayTimer;
+						owner.engine[i].statistics.setTime(netvsPlayTimer);
 						netvsNumAlivePlayers--;
 
 						if((i == 0) && (!netvsIsWatch())) {
@@ -1444,7 +1444,7 @@ public class NetDummyVSMode extends NetDummyMode {
 						owner.engine[playerID].gameEnded();
 						owner.engine[playerID].stat = GameEngine.STAT_EXCELLENT;
 						owner.engine[playerID].resetStatc();
-						owner.engine[playerID].statistics.time = netvsPlayTimer;
+						owner.engine[playerID].statistics.setTime(netvsPlayTimer);
 						netvsNumAlivePlayers--;
 
 						if((seatID == netLobby.netPlayerClient.getYourPlayerInfo().seatID) && (!netvsIsWatch())) {

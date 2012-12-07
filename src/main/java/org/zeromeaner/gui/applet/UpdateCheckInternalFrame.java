@@ -45,7 +45,6 @@ import javax.swing.JTabbedPane;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 
-
 import org.apache.log4j.Logger;
 import org.zeromeaner.contrib.com.centerkey.utils.BareBonesBrowserLaunch;
 import org.zeromeaner.game.play.GameManager;

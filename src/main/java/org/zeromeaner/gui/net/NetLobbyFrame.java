@@ -33,7 +33,7 @@ import java.awt.CardLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
-import java.awt.Point;
+import java.awt.GridLayout;
 import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
@@ -43,32 +43,38 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
-import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
+import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
+import java.net.ProtocolException;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Random;
 import java.util.zip.Adler32;
 
 import javax.imageio.ImageIO;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
+import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.DefaultListModel;
@@ -86,6 +92,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
+import javax.swing.JSeparator;
 import javax.swing.JSpinner;
 import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
@@ -95,8 +102,10 @@ import javax.swing.JTextPane;
 import javax.swing.ListCellRenderer;
 import javax.swing.ListSelectionModel;
 import javax.swing.SpinnerNumberModel;
+import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
+import javax.swing.border.EmptyBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableModel;
@@ -105,7 +114,6 @@ import javax.swing.text.Document;
 import javax.swing.text.JTextComponent;
 import javax.swing.text.SimpleAttributeSet;
 import javax.swing.text.StyleConstants;
-
 
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
@@ -119,10 +127,11 @@ import org.zeromeaner.game.net.NetUtil;
 import org.zeromeaner.game.play.GameEngine;
 import org.zeromeaner.game.play.GameManager;
 import org.zeromeaner.game.subsystem.mode.NetDummyMode;
+import org.zeromeaner.gui.slick.NullpoMinoSlick;
 import org.zeromeaner.util.CustomProperties;
-import org.zeromeaner.util.ResourceOutputStream;
-import org.zeromeaner.util.ResourceInputStream;
 import org.zeromeaner.util.GeneralUtil;
+import org.zeromeaner.util.ResourceInputStream;
+import org.zeromeaner.util.ResourceOutputStream;
 
 /**
  * zeromeaner NetLobby
@@ -133,8 +142,7 @@ public class NetLobbyFrame extends JFrame implements ActionListener, NetMessageL
 
 	/** Room-table column names. These strings will be passed to getUIText(String) subroutine. */
 	public static final String[] ROOMTABLE_COLUMNNAMES = {
-		"RoomTable_ID","RoomTable_Name","RoomTable_Rated","RoomTable_RuleName","RoomTable_ModeName",
-		"RoomTable_Status","RoomTable_Players","RoomTable_Spectators"
+		"RoomTable_ID","RoomTable_Division","RoomTable_Name","RoomTable_Rated","RoomTable_RuleName","RoomTable_Status","RoomTable_Players","RoomTable_Spectators"
 	};
 
 	/** End-of-game statistics column names. These strings will be passed to getUIText(String) subroutine. */
@@ -185,11 +193,12 @@ public class NetLobbyFrame extends JFrame implements ActionListener, NetMessageL
 							SCREENCARD_CREATEROOM = 5,
 							SCREENCARD_CREATEROOM1P = 6,
 							SCREENCARD_MPRANKING = 7,
-							SCREENCARD_RULECHANGE = 8;
+							SCREENCARD_RULECHANGE = 8,
+							SCREENCARD_NOTHING = 9;
 
 	/** Names for each screen-card */
 	public static final String[] SCREENCARD_NAMES = {"ServerSelect","Lobby","ServerAdd",
-		"CreateRatedWaiting","CreateRated","CreateRoom","CreateRoom1P","MPRanking","RuleChange"};
+		"CreateRatedWaiting","CreateRated","CreateRoom","CreateRoom1P","MPRanking","RuleChange", "Nothing"};
 
 	/** Log */
 	static final Logger log = Logger.getLogger(NetLobbyFrame.class);
@@ -308,6 +317,10 @@ public class NetLobbyFrame extends JFrame implements ActionListener, NetMessageL
 	/** ルーム作成 button(Lobby screen) */
 	protected JButton btnRoomListRoomCreate;
 
+	protected JButton btnRoomLeagueMatchCreate;
+
+	protected JButton btnRoomTournamentMatchCreate;
+
 	/** Create Room 1P (Lobby screen) */
 	protected JButton btnRoomListRoomCreate1P;
 
@@ -326,8 +339,10 @@ public class NetLobbyFrame extends JFrame implements ActionListener, NetMessageL
 	/** Room list tableの data */
 	public DefaultTableModel tablemodelRoomList;
 
+	public List<Room> roomList = new ArrayList<Room>();
+
 	/** Chat logとPlayerリストの仕切り線(Lobby screen) */
-	protected JSplitPane splitLobbyChat;
+	protected JPanel splitLobbyChat;
 
 	/** Chat log(Lobby screen) */
 	protected JTextPane txtpaneLobbyChatLog;
@@ -383,6 +398,9 @@ public class NetLobbyFrame extends JFrame implements ActionListener, NetMessageL
 	/** Multiplayer game stats table data */
 	protected DefaultTableModel tablemodelGameStat;
 
+	/** Multiplayer game statistics */
+	public ArrayList<List<String>> gameStats = new ArrayList<List<String>>();
+	
 	/** Multiplayer game stats table */
 	protected JTable tableGameStat1P;
 
@@ -429,7 +447,7 @@ public class NetLobbyFrame extends JFrame implements ActionListener, NetMessageL
 
 	/** Presets box (Create rated screen) */
 	protected JComboBox comboboxCreateRatedPresets;
-
+	
 	/** 参加人count(Create rated screen) */
 	protected JSpinner spinnerCreateRatedMaxPlayers;
 
@@ -612,6 +630,20 @@ public class NetLobbyFrame extends JFrame implements ActionListener, NetMessageL
 
 	/** Rule entries (Rule change screen) */
 	protected LinkedList<RuleEntry> ruleEntries;
+	
+	protected RoomType roomTypeToCreate = RoomType.Practice;
+
+	private JPanel createNewRoomMainPanel;
+
+	private String division;
+
+	private String prefix;
+
+	private JPanel subpanelTournamentSelect;
+
+	private JComboBox comboboxTournaments;
+
+	private JButton btnRoomButtonsLeave;
 
 	/** Tuning: A button rotation Combobox */
 	protected JComboBox comboboxTuningRotateButtonDefaultRight;
@@ -634,17 +666,37 @@ public class NetLobbyFrame extends JFrame implements ActionListener, NetMessageL
 	/** Tuning: Checkbox to enable swapping the roles of up/down buttons in-game */
 	protected JCheckBox chkboxTuningReverseUpDown;
 
+	private JPanel roomListPanel;
+	
 	/**
 	 * Constructor
 	 */
 	public NetLobbyFrame() {
 		super();
 	}
+	
+	private static NetLobbyFrame instance = null;
+	public static NetLobbyFrame getNetLobbyFrame(){
+		if (instance == null){
+			instance = new NetLobbyFrame();
+		}
+		return instance;
+	}
+
+//	/**
+//	 * Constructor
+//	 */
+//	public NetLobbyFrame(String s) {
+//		super(s);
+//	}
 
 	/**
 	 * Initialization
 	 */
 	public void init() {
+		
+		//addComponentListener(new WindowSnapper(50));
+		
 		// 設定ファイル読み込み
 		propConfig = new CustomProperties();
 		try {
@@ -720,13 +772,13 @@ public class NetLobbyFrame extends JFrame implements ActionListener, NetMessageL
 			}
 		}
 
-		// WindowListener登録
-		addWindowListener(new WindowAdapter() {
-			@Override
-			public void windowClosing(WindowEvent e) {
-				shutdown();
-			}
-		});
+//		// WindowListener登録
+//		addWindowListener(new WindowAdapter() {
+//			@Override
+//			public void windowClosing(WindowEvent e) {
+//				shutdown();
+//			}
+//		});
 
 		// Rated-game rule name list
 		listRatedRuleName = new LinkedList[GameEngine.MAX_GAMESTYLE];
@@ -749,13 +801,13 @@ public class NetLobbyFrame extends JFrame implements ActionListener, NetMessageL
 		loadBlockSkins();
 
 		// GUI Init
-		setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
-		setTitle(getUIText("Title_NetLobby"));
+		//setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
+		//setTitle(getUIText("Title_NetLobby"));
 
 		initUI();
 
-		this.setSize(propConfig.getProperty("mainwindow.width", 500), propConfig.getProperty("mainwindow.height", 450));
-		this.setLocation(propConfig.getProperty("mainwindow.x", 0), propConfig.getProperty("mainwindow.y", 0));
+		//this.setSize(propConfig.getProperty("mainwindow.width", 500), propConfig.getProperty("mainwindow.height", 450));
+		//this.setLocation(propConfig.getProperty("mainwindow.x", 0), propConfig.getProperty("mainwindow.y", 0));
 
 		// Listener呼び出し
 		if(listeners != null) {
@@ -774,13 +826,15 @@ public class NetLobbyFrame extends JFrame implements ActionListener, NetMessageL
 	 */
 	protected void initUI() {
 		contentPaneCardLayout = new CardLayout();
-		this.getContentPane().setLayout(contentPaneCardLayout);
+		//this.getRootPane().
+		setLayout(contentPaneCardLayout);
 
 		menuBar = new JMenuBar[SCREENCARD_NAMES.length];
 		for (int i = 0; i < SCREENCARD_NAMES.length; i++) {
 			menuBar[i] = new JMenuBar();
 		}
 
+		initNothingUI();
 		initServerSelectUI();
 		initLobbyUI();
 		initServerAddUI();
@@ -791,7 +845,14 @@ public class NetLobbyFrame extends JFrame implements ActionListener, NetMessageL
 		initMPRankingUI();
 		initRuleChangeUI();
 
-		changeCurrentScreenCard(SCREENCARD_SERVERSELECT);
+		//changeCurrentScreenCard(SCREENCARD_SERVERSELECT);
+		changeCurrentScreenCard(SCREENCARD_NOTHING);
+	}
+
+	private void initNothingUI() {
+		JPanel somePanel = new JPanel();
+		somePanel.add(new JLabel("Multiplayer"));
+		add(somePanel, SCREENCARD_NAMES[SCREENCARD_NOTHING]);
 	}
 
 	/**
@@ -800,7 +861,8 @@ public class NetLobbyFrame extends JFrame implements ActionListener, NetMessageL
 	protected void initServerSelectUI() {
 		// サーバー選択とName input 画面
 		JPanel mainpanelServerSelect = new JPanel(new BorderLayout());
-		this.getContentPane().add(mainpanelServerSelect, SCREENCARD_NAMES[SCREENCARD_SERVERSELECT]);
+		//this.getRootPane().
+		add(mainpanelServerSelect, SCREENCARD_NAMES[SCREENCARD_SERVERSELECT]);
 
 		// * NameとTeam name input パネル
 		JPanel subpanelNames = new JPanel();
@@ -819,6 +881,8 @@ public class NetLobbyFrame extends JFrame implements ActionListener, NetMessageL
 		txtfldPlayerName = new JTextField();
 		txtfldPlayerName.setComponentPopupMenu(new TextComponentPopupMenu(txtfldPlayerName));
 		txtfldPlayerName.setText(propConfig.getProperty("serverselect.txtfldPlayerName.text", ""));
+		txtfldPlayerName.setText(propGlobal.getProperty("user.username", ""));
+		txtfldPlayerName.setEditable(false);
 		subpanelNameEntry.add(txtfldPlayerName, BorderLayout.CENTER);
 
 		// ** Team name input パネル
@@ -827,10 +891,12 @@ public class NetLobbyFrame extends JFrame implements ActionListener, NetMessageL
 
 		// *** 「Team name:」ラベル
 		JLabel labelTeamEntry = new JLabel(getUIText("ServerSelect_LabelTeam"));
+		labelTeamEntry.setVisible(false);
 		subpanelTeamEntry.add(labelTeamEntry, BorderLayout.WEST);
 
 		// *** Team name input 欄
 		txtfldPlayerTeam = new JTextField();
+		txtfldPlayerTeam.setVisible(false);
 		txtfldPlayerTeam.setComponentPopupMenu(new TextComponentPopupMenu(txtfldPlayerTeam));
 		txtfldPlayerTeam.setText(propConfig.getProperty("serverselect.txtfldPlayerTeam.text", ""));
 		subpanelTeamEntry.add(txtfldPlayerTeam, BorderLayout.CENTER);
@@ -853,15 +919,41 @@ public class NetLobbyFrame extends JFrame implements ActionListener, NetMessageL
 		listboxServerList.addMouseListener(new ServerSelectListBoxMouseAdapter());
 		listboxServerList.setSelectedValue(propConfig.getProperty("serverselect.listboxServerList.value", ""), true);
 		JScrollPane spListboxServerSelect = new JScrollPane(listboxServerList);
+		mainpanelServerSelect.add(new JLabel("   "), BorderLayout.WEST);
+		mainpanelServerSelect.add(new JLabel("<html><h3>&nbsp;&nbsp;Select game server</h3></html>"), BorderLayout.NORTH);
 		mainpanelServerSelect.add(spListboxServerSelect, BorderLayout.CENTER);
 
 		// * サーバー追加・削除パネル
 		JPanel subpanelServerAdd = new JPanel();
 		subpanelServerAdd.setLayout(new BoxLayout(subpanelServerAdd, BoxLayout.Y_AXIS));
 		mainpanelServerSelect.add(subpanelServerAdd, BorderLayout.EAST);
+		
+		// ** 接続 button
+		btnServerConnect = new JButton(getUIText("ServerSelect_Connect"), new ImageIcon("res/icons/link.png"));
+		btnServerConnect.setMaximumSize(new Dimension(Short.MAX_VALUE, btnServerConnect.getMaximumSize().height));
+		btnServerConnect.addActionListener(this);
+		btnServerConnect.setActionCommand("ServerSelect_Connect");
+		btnServerConnect.setMnemonic('C');
+		subpanelServerAdd.add(btnServerConnect);
+
+		// ** Exit button
+		JButton btnServerExit = new JButton(getUIText("ServerSelect_Exit"), new ImageIcon("res/icons/run.png"));
+		btnServerExit.setMaximumSize(new Dimension(Short.MAX_VALUE, btnServerExit.getMaximumSize().height));
+		btnServerExit.addActionListener(this);
+		btnServerExit.setActionCommand("ServerSelect_Exit");
+		btnServerExit.setMnemonic('X');
+		subpanelServerAdd.add(btnServerExit);
+				
+		subpanelServerAdd.add(Box.createVerticalStrut(5));
+		JSeparator seperator = new JSeparator(SwingConstants.HORIZONTAL);
+		Dimension d = seperator.getPreferredSize();
+		d.width = seperator.getMaximumSize().width;
+		seperator.setMaximumSize( d );
+		subpanelServerAdd.add(seperator);
+		subpanelServerAdd.add(Box.createVerticalStrut(5));
 
 		// ** サーバー追加 button
-		JButton btnServerAdd = new JButton(getUIText("ServerSelect_ServerAdd"));
+		JButton btnServerAdd = new JButton(getUIText("ServerSelect_ServerAdd"), new ImageIcon("res/icons/plus.png"));
 		btnServerAdd.setMaximumSize(new Dimension(Short.MAX_VALUE, btnServerAdd.getMaximumSize().height));
 		btnServerAdd.addActionListener(this);
 		btnServerAdd.setActionCommand("ServerSelect_ServerAdd");
@@ -869,7 +961,7 @@ public class NetLobbyFrame extends JFrame implements ActionListener, NetMessageL
 		subpanelServerAdd.add(btnServerAdd);
 
 		// ** サーバー削除 button
-		JButton btnServerDelete = new JButton(getUIText("ServerSelect_ServerDelete"));
+		JButton btnServerDelete = new JButton(getUIText("ServerSelect_ServerDelete"), new ImageIcon("res/icons/minus.png"));
 		btnServerDelete.setMaximumSize(new Dimension(Short.MAX_VALUE, btnServerDelete.getMaximumSize().height));
 		btnServerDelete.addActionListener(this);
 		btnServerDelete.setActionCommand("ServerSelect_ServerDelete");
@@ -877,7 +969,7 @@ public class NetLobbyFrame extends JFrame implements ActionListener, NetMessageL
 		subpanelServerAdd.add(btnServerDelete);
 
 		// ** 監視設定 button
-		JButton btnSetObserver = new JButton(getUIText("ServerSelect_SetObserver"));
+		JButton btnSetObserver = new JButton(getUIText("ServerSelect_SetObserver"), new ImageIcon("res/icons/watch.png"));
 		btnSetObserver.setMaximumSize(new Dimension(Short.MAX_VALUE, btnSetObserver.getMaximumSize().height));
 		btnSetObserver.addActionListener(this);
 		btnSetObserver.setActionCommand("ServerSelect_SetObserver");
@@ -885,7 +977,7 @@ public class NetLobbyFrame extends JFrame implements ActionListener, NetMessageL
 		subpanelServerAdd.add(btnSetObserver);
 
 		// ** 監視解除 button
-		JButton btnUnsetObserver = new JButton(getUIText("ServerSelect_UnsetObserver"));
+		JButton btnUnsetObserver = new JButton(getUIText("ServerSelect_UnsetObserver"), new ImageIcon("res/icons/unwatch.png"));
 		btnUnsetObserver.setMaximumSize(new Dimension(Short.MAX_VALUE, btnUnsetObserver.getMaximumSize().height));
 		btnUnsetObserver.addActionListener(this);
 		btnUnsetObserver.setActionCommand("ServerSelect_UnsetObserver");
@@ -893,25 +985,14 @@ public class NetLobbyFrame extends JFrame implements ActionListener, NetMessageL
 		subpanelServerAdd.add(btnUnsetObserver);
 
 		// * 接続 button・Exit button用パネル
-		JPanel subpanelServerSelectButtons = new JPanel();
-		subpanelServerSelectButtons.setLayout(new BoxLayout(subpanelServerSelectButtons, BoxLayout.X_AXIS));
-		mainpanelServerSelect.add(subpanelServerSelectButtons, BorderLayout.SOUTH);
+		//JPanel subpanelServerSelectButtons = new JPanel();
+		//subpanelServerSelectButtons.setLayout(new BoxLayout(subpanelServerSelectButtons, BoxLayout.X_AXIS));
+		//mainpanelServerSelect.add(subpanelServerSelectButtons, BorderLayout.SOUTH);
+		JPanel southPanel = new JPanel();
+		southPanel.add(new JLabel("   "));
+		mainpanelServerSelect.add(southPanel, BorderLayout.SOUTH);
 
-		// ** 接続 button
-		btnServerConnect = new JButton(getUIText("ServerSelect_Connect"));
-		btnServerConnect.setMaximumSize(new Dimension(Short.MAX_VALUE, btnServerConnect.getMaximumSize().height));
-		btnServerConnect.addActionListener(this);
-		btnServerConnect.setActionCommand("ServerSelect_Connect");
-		btnServerConnect.setMnemonic('C');
-		subpanelServerSelectButtons.add(btnServerConnect);
-
-		// ** Exit button
-		JButton btnServerExit = new JButton(getUIText("ServerSelect_Exit"));
-		btnServerExit.setMaximumSize(new Dimension(Short.MAX_VALUE, btnServerExit.getMaximumSize().height));
-		btnServerExit.addActionListener(this);
-		btnServerExit.setActionCommand("ServerSelect_Exit");
-		btnServerExit.setMnemonic('X');
-		subpanelServerSelectButtons.add(btnServerExit);
+		
 	}
 
 	/**
@@ -919,7 +1000,8 @@ public class NetLobbyFrame extends JFrame implements ActionListener, NetMessageL
 	 */
 	protected void initLobbyUI() {
 		tabLobbyAndRoom = new JTabbedPane();
-		this.getContentPane().add(tabLobbyAndRoom, SCREENCARD_NAMES[SCREENCARD_LOBBY]);
+		//this.getRootPane().
+		add(tabLobbyAndRoom, SCREENCARD_NAMES[SCREENCARD_LOBBY]);
 
 		// === Popup Menu ===
 
@@ -973,9 +1055,22 @@ public class NetLobbyFrame extends JFrame implements ActionListener, NetMessageL
 
 		// **** Room list button類
 		JPanel subpanelRoomListButtons = new JPanel();
+		subpanelRoomListButtons.setLayout(new GridLayout(1,0));
 		subpanelRoomListTopBar.add(subpanelRoomListButtons, "Buttons");
-		//subpanelRoomList.add(subpanelRoomListButtons, BorderLayout.NORTH);
+		//subpanelRoomList.add(subpanelRoomListButtons, BorderLayout.NORTH); // commented by belz
 
+		// ***** 切断 button
+		JButton btnRoomListDisconnect = new JButton(getUIText("Lobby_Disconnect"), new ImageIcon("res/icons/run.png"));
+		btnRoomListDisconnect.addActionListener(this);
+		btnRoomListDisconnect.setActionCommand("Lobby_Disconnect");
+		btnRoomListDisconnect.setMnemonic('L');
+		btnRoomListDisconnect.setToolTipText(getUIText("Lobby_Disconnect_Tip"));
+		//subpanelRoomListButtons.add(btnRoomListDisconnect);
+		mainpanelLobby.add(btnRoomListDisconnect, BorderLayout.SOUTH);
+		
+		//room label
+		//subpanelRoomListButtons.add(new JLabel("<html><h3>&nbsp;Start game:</h3></html>"));
+		
 		// ***** TODO:クイックスタート button
 		btnRoomListQuickStart = new JButton(getUIText("Lobby_QuickStart"));
 		btnRoomListQuickStart.addActionListener(this);
@@ -983,15 +1078,38 @@ public class NetLobbyFrame extends JFrame implements ActionListener, NetMessageL
 		btnRoomListQuickStart.setMnemonic('Q');
 		btnRoomListQuickStart.setToolTipText(getUIText("Lobby_QuickStart_Tip"));
 		btnRoomListQuickStart.setVisible(false);
-		subpanelRoomListButtons.add(btnRoomListQuickStart);
+		//subpanelRoomListButtons.add(btnRoomListQuickStart);
 
-		// ***** ルーム作成 button
-		btnRoomListRoomCreate = new JButton(getUIText("Lobby_RoomCreate"));
+		// ***** League play button
+		btnRoomLeagueMatchCreate = new JButton(getUIText("Lobby_LeagueStart"), new ImageIcon("res/icons/league.png"));
+		btnRoomLeagueMatchCreate.addActionListener(this);
+		btnRoomLeagueMatchCreate.setActionCommand("Lobby_LeagueStart");
+		btnRoomLeagueMatchCreate.setMnemonic('N');
+		btnRoomLeagueMatchCreate.setToolTipText(getUIText("Lobby_LeagueStart_Tip"));
+		subpanelRoomListButtons.add(btnRoomLeagueMatchCreate);
+		
+		// ***** ルーム作成 button -- practice room
+		btnRoomListRoomCreate = new JButton(getUIText("Lobby_RoomCreate"), new ImageIcon("res/icons/practice.png"));
 		btnRoomListRoomCreate.addActionListener(this);
 		btnRoomListRoomCreate.setActionCommand("Lobby_RoomCreate");
-		btnRoomListRoomCreate.setMnemonic('N');
+		//btnRoomListRoomCreate.setMnemonic('N');
 		btnRoomListRoomCreate.setToolTipText(getUIText("Lobby_RoomCreate_Tip"));
 		subpanelRoomListButtons.add(btnRoomListRoomCreate);
+		
+		// ***** Tournament play button
+		btnRoomTournamentMatchCreate = new JButton(getUIText("Lobby_TournamentStart"), new ImageIcon("res/icons/tournament.png"));
+		btnRoomTournamentMatchCreate.addActionListener(this);
+		btnRoomTournamentMatchCreate.setActionCommand("Lobby_TournamentStart");
+		btnRoomTournamentMatchCreate.setToolTipText(getUIText("Lobby_TournamentStart_Tip"));
+		subpanelRoomListButtons.add(btnRoomTournamentMatchCreate);
+		
+		btnRoomButtonsLeave = new JButton(getUIText("Room_Leave"), new ImageIcon("res/icons/exit.png"));
+		btnRoomButtonsLeave.addActionListener(this);
+		btnRoomButtonsLeave.setActionCommand("Room_Leave");
+		btnRoomButtonsLeave.setMnemonic('L');
+		btnRoomButtonsLeave.setEnabled(false);
+		btnRoomButtonsLeave.setToolTipText(getUIText("Room_Leave_Tip"));
+		subpanelRoomListButtons.add(btnRoomButtonsLeave);
 
 		// ***** Create Room (1P) button
 		btnRoomListRoomCreate1P = new JButton(getUIText("Lobby_RoomCreate1P"));
@@ -999,7 +1117,8 @@ public class NetLobbyFrame extends JFrame implements ActionListener, NetMessageL
 		btnRoomListRoomCreate1P.setActionCommand("Lobby_RoomCreate1P");
 		btnRoomListRoomCreate1P.setMnemonic('1');
 		btnRoomListRoomCreate1P.setToolTipText(getUIText("Lobby_RoomCreate1P_Tip"));
-		subpanelRoomListButtons.add(btnRoomListRoomCreate1P);
+		btnRoomListRoomCreate1P.setVisible(false);
+		//subpanelRoomListButtons.add(btnRoomListRoomCreate1P);
 
 		// ***** Options menu button
 		btnRoomListOptions = new JButton(getUIText("Lobby_Options"));
@@ -1007,15 +1126,10 @@ public class NetLobbyFrame extends JFrame implements ActionListener, NetMessageL
 		btnRoomListOptions.setActionCommand("Lobby_Options");
 		btnRoomListOptions.setMnemonic('O');
 		btnRoomListOptions.setToolTipText(getUIText("Lobby_Options_Tip"));
-		subpanelRoomListButtons.add(btnRoomListOptions);
+		btnRoomListOptions.setVisible(false);
+		//subpanelRoomListButtons.add(btnRoomListOptions);
 
-		// ***** 切断 button
-		JButton btnRoomListDisconnect = new JButton(getUIText("Lobby_Disconnect"));
-		btnRoomListDisconnect.addActionListener(this);
-		btnRoomListDisconnect.setActionCommand("Lobby_Disconnect");
-		btnRoomListDisconnect.setMnemonic('L');
-		btnRoomListDisconnect.setToolTipText(getUIText("Lobby_Disconnect_Tip"));
-		subpanelRoomListButtons.add(btnRoomListDisconnect);
+
 
 		// **** チーム変更パネル
 		JPanel subpanelRoomListTeam = new JPanel(new BorderLayout());
@@ -1048,37 +1162,94 @@ public class NetLobbyFrame extends JFrame implements ActionListener, NetMessageL
 		for(int i = 0; i < strTableColumnNames.length; i++) {
 			strTableColumnNames[i] = getUIText(ROOMTABLE_COLUMNNAMES[i]);
 		}
-		tablemodelRoomList = new DefaultTableModel(strTableColumnNames, 0);
-		tableRoomList = new JTable(tablemodelRoomList);
-		tableRoomList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-		tableRoomList.setDefaultEditor(Object.class, null);
-		tableRoomList.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
-		tableRoomList.getTableHeader().setReorderingAllowed(false);
-		tableRoomList.setComponentPopupMenu(new RoomTablePopupMenu());
-		tableRoomList.addMouseListener(new RoomTableMouseAdapter());
-		tableRoomList.addKeyListener(new RoomTableKeyAdapter());
-
-		TableColumnModel tm = tableRoomList.getColumnModel();
-		tm.getColumn(0).setPreferredWidth(propConfig.getProperty("tableRoomList.width.id", 35));			// ID
-		tm.getColumn(1).setPreferredWidth(propConfig.getProperty("tableRoomList.width.name", 155));			// Name
-		tm.getColumn(2).setPreferredWidth(propConfig.getProperty("tableRoomList.width.rated", 50));			// Rated
-		tm.getColumn(3).setPreferredWidth(propConfig.getProperty("tableRoomList.width.rulename", 105));		// Rule name
-		tm.getColumn(4).setPreferredWidth(propConfig.getProperty("tableRoomList.width.modename", 105));		// Mode name
-		tm.getColumn(5).setPreferredWidth(propConfig.getProperty("tableRoomList.width.status", 55));		// Status
-		tm.getColumn(6).setPreferredWidth(propConfig.getProperty("tableRoomList.width.players", 65));		// Players
-		tm.getColumn(7).setPreferredWidth(propConfig.getProperty("tableRoomList.width.spectators", 65));	// Spectators
-
-		JScrollPane spTableRoomList = new JScrollPane(tableRoomList);
-		subpanelRoomList.add(spTableRoomList, BorderLayout.CENTER);
+//<<<<<<< HEAD:src/main/java/org/zeromeaner/gui/net/NetLobbyFrame.java
+//		tablemodelRoomList = new DefaultTableModel(strTableColumnNames, 0);
+//		tableRoomList = new JTable(tablemodelRoomList);
+//		tableRoomList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+//		tableRoomList.setDefaultEditor(Object.class, null);
+//		tableRoomList.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+//		tableRoomList.getTableHeader().setReorderingAllowed(false);
+//		tableRoomList.setComponentPopupMenu(new RoomTablePopupMenu());
+//		tableRoomList.addMouseListener(new RoomTableMouseAdapter());
+//		tableRoomList.addKeyListener(new RoomTableKeyAdapter());
+//
+//		TableColumnModel tm = tableRoomList.getColumnModel();
+//		tm.getColumn(0).setPreferredWidth(propConfig.getProperty("tableRoomList.width.id", 35));			// ID
+//		tm.getColumn(1).setPreferredWidth(propConfig.getProperty("tableRoomList.width.name", 155));			// Name
+//		tm.getColumn(2).setPreferredWidth(propConfig.getProperty("tableRoomList.width.rated", 50));			// Rated
+//		tm.getColumn(3).setPreferredWidth(propConfig.getProperty("tableRoomList.width.rulename", 105));		// Rule name
+//		tm.getColumn(4).setPreferredWidth(propConfig.getProperty("tableRoomList.width.modename", 105));		// Mode name
+//		tm.getColumn(5).setPreferredWidth(propConfig.getProperty("tableRoomList.width.status", 55));		// Status
+//		tm.getColumn(6).setPreferredWidth(propConfig.getProperty("tableRoomList.width.players", 65));		// Players
+//		tm.getColumn(7).setPreferredWidth(propConfig.getProperty("tableRoomList.width.spectators", 65));	// Spectators
+//
+//		JScrollPane spTableRoomList = new JScrollPane(tableRoomList);
+//		subpanelRoomList.add(spTableRoomList, BorderLayout.CENTER);
+//=======
+		
+//		tablemodelRoomList = new DefaultTableModel(strTableColumnNames, 0);
+//		tableRoomList = new JTable(tablemodelRoomList);
+//		tableRoomList.getColumnModel().removeColumn(tableRoomList.getColumnModel().getColumn(0));
+//		tableRoomList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+//		tableRoomList.setDefaultEditor(Object.class, null);
+//		tableRoomList.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+//		tableRoomList.getTableHeader().setReorderingAllowed(false);
+//		tableRoomList.setComponentPopupMenu(new RoomTablePopupMenu());
+//		tableRoomList.addMouseListener(new RoomTableMouseAdapter());
+//		tableRoomList.addKeyListener(new RoomTableKeyAdapter());
+//
+//		TableColumnModel tm = tableRoomList.getColumnModel();
+//		//tm.getColumn(0).setPreferredWidth(propConfig.getProperty("tableRoomList.width.id", 35));			// ID
+//		tm.getColumn(0).setPreferredWidth(propConfig.getProperty("tableRoomList.width.division", 55));		// division
+//		tm.getColumn(1).setPreferredWidth(propConfig.getProperty("tableRoomList.width.name", 155));			// Name
+//		tm.getColumn(2).setPreferredWidth(propConfig.getProperty("tableRoomList.width.rated", 50));			// Rated
+//		tm.getColumn(3).setPreferredWidth(propConfig.getProperty("tableRoomList.width.rulename", 105));		// Rule name
+//		tm.getColumn(4).setPreferredWidth(propConfig.getProperty("tableRoomList.width.status", 55));		// Status
+//		tm.getColumn(5).setPreferredWidth(propConfig.getProperty("tableRoomList.width.players", 65));		// Players
+//		tm.getColumn(6).setPreferredWidth(propConfig.getProperty("tableRoomList.width.spectators", 65));	// Spectators
+//
+//		JScrollPane spTableRoomList = new JScrollPane(tableRoomList);
+		
+//		JPanel spTableRoomListWithTitle = new JPanel();
+//		spTableRoomListWithTitle.setLayout(new BorderLayout());
+//		spTableRoomListWithTitle.add(new JLabel("<html><h3>&nbsp;Live Games</h3></html>"), BorderLayout.NORTH);
+//		spTableRoomListWithTitle.add(spTableRoomList, BorderLayout.CENTER);
+		
+//		subpanelRoomList.add(spTableRoomListWithTitle, BorderLayout.CENTER);
+		
+		JPanel roomListAndTitlePanel = new JPanel(new BorderLayout());
+		
+		JLabel roomTitleLabel = new JLabel("<html><h3>&nbsp;&nbsp;Room List</h3></html>");
+		roomListAndTitlePanel.add(roomTitleLabel, BorderLayout.NORTH);
+		
+		roomListPanel = new JPanel();
+		roomListPanel.setLayout(new GridLayout(0, 1));
+//		roomListPanel.setLayout(new BoxLayout(roomListPanel, BoxLayout.Y_AXIS));
+		populateRoomListPanel();
+//		for (int i=0; i<10; i++){
+//			Room room = new Room();
+//			room.setName("Pizza Hut");
+//			room.setPlayers(1);
+//			room.setMaxNumberOfPlayers(2);
+//			room.setSpectators(1);
+//			RoomPanel roomPanel = new RoomPanel(room);
+//			roomListPanel.add(roomPanel);
+//		}
+		roomListAndTitlePanel.add(roomListPanel, BorderLayout.CENTER);
+		
+		JScrollPane roomListScrollPane = new JScrollPane(roomListAndTitlePanel);
+		subpanelRoomList.add(roomListScrollPane, BorderLayout.CENTER);
+//>>>>>>> nullpo/feature/league:src/mu/nu/nullpo/gui/net/NetLobbyFrame.java
 
 		// ** チャット(下)
 		JPanel subpanelLobbyChat = new JPanel(new BorderLayout());
 		subpanelLobbyChat.setMinimumSize(new Dimension(0,0));
-		splitLobby.setBottomComponent(subpanelLobbyChat);
+		//splitLobby.setBottomComponent(subpanelLobbyChat); //belzebub
 
 		// *** Chat logとPlayerリストの仕切り線
-		splitLobbyChat = new JSplitPane();
-		splitLobbyChat.setDividerLocation(propConfig.getProperty("lobby.splitLobbyChat.location", 350));
+		splitLobbyChat = new JPanel();
+		splitLobbyChat.setLayout(new BorderLayout());
+		//splitLobbyChat.setDividerLocation(propConfig.getProperty("lobby.splitLobbyChat.location", 350));
 		subpanelLobbyChat.add(splitLobbyChat, BorderLayout.CENTER);
 
 		// **** Chat log(Lobby screen)
@@ -1087,16 +1258,30 @@ public class NetLobbyFrame extends JFrame implements ActionListener, NetMessageL
 		txtpaneLobbyChatLog.addKeyListener(new LogKeyAdapter());
 		JScrollPane spTxtpaneLobbyChatLog = new JScrollPane(txtpaneLobbyChatLog);
 		spTxtpaneLobbyChatLog.setMinimumSize(new Dimension(0,0));
-		splitLobbyChat.setLeftComponent(spTxtpaneLobbyChatLog);
+		spTxtpaneLobbyChatLog.setVisible(true);
+		//splitLobbyChat.setLeftComponent(spTxtpaneLobbyChatLog);
+		splitLobbyChat.add(spTxtpaneLobbyChatLog);
+		splitLobbyChat.setVisible(true);
 
 		// **** Playerリスト(Lobby screen)
+		JPanel playerListContainer = new JPanel(new BorderLayout());
+		JScrollPane playerListContainerScrollPane = new JScrollPane(playerListContainer);
+
+		playerListContainer.add(new JLabel("<html><h3>&nbsp;&nbsp;Players</h3></html>"), BorderLayout.NORTH);
+
 		listmodelLobbyChatPlayerList = new DefaultListModel();
 		listboxLobbyChatPlayerList = new JList(listmodelLobbyChatPlayerList);
-		listboxLobbyChatPlayerList.setComponentPopupMenu(new ListBoxPopupMenu(listboxLobbyChatPlayerList));
-		JScrollPane spListboxLobbyChatPlayerList = new JScrollPane(listboxLobbyChatPlayerList);
-		spListboxLobbyChatPlayerList.setMinimumSize(new Dimension(0, 0));
-		splitLobbyChat.setRightComponent(spListboxLobbyChatPlayerList);
-
+		listboxLobbyChatPlayerList.setComponentPopupMenu(new PlayerListPopupMenu(listboxLobbyChatPlayerList));
+		
+		//JScrollPane spListboxLobbyChatPlayerList = new JScrollPane(listboxLobbyChatPlayerList);
+		//spListboxLobbyChatPlayerList.setMinimumSize(new Dimension(0, 0));
+		
+		//splitLobbyChat.setRightComponent(spListboxLobbyChatPlayerList);
+		//splitLobby.setBottomComponent(spListboxLobbyChatPlayerList); //belzebub
+		
+		playerListContainer.add(listboxLobbyChatPlayerList, BorderLayout.CENTER);
+		splitLobby.setBottomComponent(playerListContainerScrollPane); //belzebub
+		
 		// *** チャット input 欄パネル(Lobby screen)
 		JPanel subpanelLobbyChatInputArea = new JPanel(new BorderLayout());
 		subpanelLobbyChat.add(subpanelLobbyChatInputArea, BorderLayout.SOUTH);
@@ -1119,13 +1304,20 @@ public class NetLobbyFrame extends JFrame implements ActionListener, NetMessageL
 		btnLobbyChatSend.setActionCommand("Lobby_ChatSend");
 		btnLobbyChatSend.setMnemonic('S');
 		subpanelLobbyChatInputArea.add(btnLobbyChatSend, BorderLayout.EAST);
+		
+		// === Chat Tab ===
+		JPanel chatTab = new JPanel(new BorderLayout());
+		tabLobbyAndRoom.addTab(getUIText("Lobby_Tab_Chat"), chatTab);
+		tabLobbyAndRoom.setEnabledAt(1, true);
+		
+		chatTab.add(subpanelLobbyChat);
 
-		// === Room Tab ===
+		// === Room Tab === //belz
 		JPanel mainpanelRoom = new JPanel(new BorderLayout());
 		//this.getContentPane().add(mainpanelRoom, SCREENCARD_NAMES[SCREENCARD_ROOM]);
-		tabLobbyAndRoom.addTab(getUIText("Lobby_Tab_NoRoom"), mainpanelRoom);
-		tabLobbyAndRoom.setMnemonicAt(1, 'R');
-		tabLobbyAndRoom.setEnabledAt(1, false);
+		//tabLobbyAndRoom.addTab(getUIText("Lobby_Tab_NoRoom"), mainpanelRoom); //disabled room tab
+		//tabLobbyAndRoom.setMnemonicAt(1, 'R');
+		//tabLobbyAndRoom.setEnabledAt(1, false);
 
 		// * 上下を分ける仕切り線
 		splitRoom = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
@@ -1146,13 +1338,13 @@ public class NetLobbyFrame extends JFrame implements ActionListener, NetMessageL
 		JPanel subpanelRoomButtons = new JPanel();
 		subpanelRoomTopBar.add(subpanelRoomButtons, "Buttons");
 
-		// ***** 退出 button
-		JButton btnRoomButtonsLeave = new JButton(getUIText("Room_Leave"));
-		btnRoomButtonsLeave.addActionListener(this);
-		btnRoomButtonsLeave.setActionCommand("Room_Leave");
-		btnRoomButtonsLeave.setMnemonic('L');
-		btnRoomButtonsLeave.setToolTipText(getUIText("Room_Leave_Tip"));
-		subpanelRoomButtons.add(btnRoomButtonsLeave);
+//		// ***** 退出 button
+//		JButton btnRoomButtonsLeave = new JButton(getUIText("Room_Leave"));
+//		btnRoomButtonsLeave.addActionListener(this);
+//		btnRoomButtonsLeave.setActionCommand("Room_Leave");
+//		btnRoomButtonsLeave.setMnemonic('L');
+//		btnRoomButtonsLeave.setToolTipText(getUIText("Room_Leave_Tip"));
+//		subpanelRoomButtons.add(btnRoomButtonsLeave);
 
 		// ***** 参戦 button
 		btnRoomButtonsJoin = new JButton(getUIText("Room_Join"));
@@ -1170,7 +1362,7 @@ public class NetLobbyFrame extends JFrame implements ActionListener, NetMessageL
 		btnRoomButtonsSitOut.setMnemonic('W');
 		btnRoomButtonsSitOut.setToolTipText(getUIText("Room_SitOut_Tip"));
 		btnRoomButtonsSitOut.setVisible(false);
-		subpanelRoomButtons.add(btnRoomButtonsSitOut);
+		//subpanelRoomButtons.add(btnRoomButtonsSitOut);
 
 		// ***** チーム変更 button
 		btnRoomButtonsTeamChange = new JButton(getUIText("Room_TeamChange"));
@@ -1178,6 +1370,7 @@ public class NetLobbyFrame extends JFrame implements ActionListener, NetMessageL
 		btnRoomButtonsTeamChange.setActionCommand("Room_TeamChange");
 		btnRoomButtonsTeamChange.setMnemonic('T');
 		btnRoomButtonsTeamChange.setToolTipText(getUIText("Room_TeamChange_Tip"));
+		btnRoomButtonsTeamChange.setVisible(false);
 		subpanelRoomButtons.add(btnRoomButtonsTeamChange);
 
 		// **** チーム変更パネル
@@ -1212,6 +1405,7 @@ public class NetLobbyFrame extends JFrame implements ActionListener, NetMessageL
 		btnRoomButtonsViewSetting.setActionCommand("Room_ViewSetting");
 		btnRoomButtonsViewSetting.setMnemonic('V');
 		btnRoomButtonsViewSetting.setToolTipText(getUIText("Room_ViewSetting_Tip"));
+		btnRoomButtonsViewSetting.setVisible(false);
 		subpanelRoomButtons.add(btnRoomButtonsViewSetting);
 
 		// ***** Leaderboard button
@@ -1221,7 +1415,7 @@ public class NetLobbyFrame extends JFrame implements ActionListener, NetMessageL
 		btnRoomButtonsRanking.setMnemonic('K');
 		btnRoomButtonsRanking.setToolTipText(getUIText("Room_Ranking_Tip"));
 		btnRoomButtonsRanking.setVisible(false);
-		subpanelRoomButtons.add(btnRoomButtonsRanking);
+		//subpanelRoomButtons.add(btnRoomButtonsRanking);
 
 		// *** Game stats area
 		gameStatCardLayout = new CardLayout();
@@ -1330,6 +1524,24 @@ public class NetLobbyFrame extends JFrame implements ActionListener, NetMessageL
 		btnRoomChatSend.setActionCommand("Room_ChatSend");
 		btnRoomChatSend.setMnemonic('S');
 		subpanelRoomChatInputArea.add(btnRoomChatSend, BorderLayout.EAST);
+		
+
+	}
+
+	private void populateRoomListPanel() {
+		
+		roomListPanel.removeAll();
+		
+		for (Room room : roomList){
+			RoomPanel roomPanel = new RoomPanel(room, this);
+			roomListPanel.add(roomPanel);
+		}
+		//roomListPanel.add(Box.createVerticalGlue());
+		
+		roomListPanel.setBackground(Color.white);
+		roomListPanel.repaint();
+		roomListPanel.setVisible(true);
+		roomListPanel.revalidate();
 	}
 
 	/**
@@ -1338,7 +1550,8 @@ public class NetLobbyFrame extends JFrame implements ActionListener, NetMessageL
 	protected void initServerAddUI() {
 		// サーバー追加画面
 		JPanel mainpanelServerAdd = new JPanel(new BorderLayout());
-		this.getContentPane().add(mainpanelServerAdd, SCREENCARD_NAMES[SCREENCARD_SERVERADD]);
+		//this.getRootPane().
+		add(mainpanelServerAdd, SCREENCARD_NAMES[SCREENCARD_SERVERADD]);
 
 		// * サーバー追加画面パネル(そのまま追加すると縦に引き伸ばされてしまうのでパネルをもう1枚使う)
 		JPanel containerpanelServerAdd = new JPanel();
@@ -1386,7 +1599,8 @@ public class NetLobbyFrame extends JFrame implements ActionListener, NetMessageL
 	protected void initCreateRatedWaitingUI() {
 		// Main panel
 		JPanel mainpanelCreateRatedWaiting = new JPanel(new BorderLayout());
-		this.getContentPane().add(mainpanelCreateRatedWaiting, SCREENCARD_NAMES[SCREENCARD_CREATERATED_WAITING]);
+		//this.getRootPane().
+		add(mainpanelCreateRatedWaiting, SCREENCARD_NAMES[SCREENCARD_CREATERATED_WAITING]);
 
 		// * Container panel
 		JPanel containerpanelCreateRatedWaiting = new JPanel();
@@ -1416,14 +1630,15 @@ public class NetLobbyFrame extends JFrame implements ActionListener, NetMessageL
 	}
 
 	protected void initCreateRatedUI() {
-		// Main panel
-		JPanel mainpanelCreateRated = new JPanel(new BorderLayout());
-		this.getContentPane().add(mainpanelCreateRated, SCREENCARD_NAMES[SCREENCARD_CREATERATED_WAITING]);
+		createNewRoomMainPanel = new JPanel(new BorderLayout());
+		//this.getRootPane().
+		add(createNewRoomMainPanel, SCREENCARD_NAMES[SCREENCARD_CREATERATED_WAITING]);
 
 		// * Container panel
 		JPanel containerpanelCreateRated = new JPanel();
+		containerpanelCreateRated.setBorder(new EmptyBorder(10, 10, 10, 10) );
 		containerpanelCreateRated.setLayout(new BoxLayout(containerpanelCreateRated, BoxLayout.Y_AXIS));
-		mainpanelCreateRated.add(containerpanelCreateRated, BorderLayout.NORTH);
+		createNewRoomMainPanel.add(containerpanelCreateRated, BorderLayout.NORTH);
 
 		// ** Subpanel for preset selection
 		JPanel subpanelName = new JPanel(new BorderLayout());
@@ -1434,9 +1649,18 @@ public class NetLobbyFrame extends JFrame implements ActionListener, NetMessageL
 		subpanelName.add(labelName, BorderLayout.WEST);
 
 		// *** Room name textfield
+		
+		division = getDivisionForUsernameFromServer();
+		prefix = "BR";
+		if ("silver".equals(division)){ prefix = "SI"; }
+		if ("gold".equals(division))  { prefix = "GO"; }
+		
 		txtfldCreateRatedName = new JTextField();
 		txtfldCreateRatedName.setComponentPopupMenu(new TextComponentPopupMenu(txtfldCreateRatedName));
 		txtfldCreateRatedName.setToolTipText(getUIText("CreateRated_Name_Tip"));
+		txtfldCreateRatedName.setText(prefix + " - 1VS1 - " + roomTypeToCreate + " - "+ new Date());
+		txtfldCreateRatedName.setEnabled(false);
+		
 		subpanelName.add(txtfldCreateRatedName, BorderLayout.CENTER);
 
 		// ** Subpanel for preset selection
@@ -1452,7 +1676,29 @@ public class NetLobbyFrame extends JFrame implements ActionListener, NetMessageL
 		comboboxCreateRatedPresets.setSelectedIndex(propConfig.getProperty("createrated.defaultPreset", 0));
 		comboboxCreateRatedPresets.setPreferredSize(new Dimension(200, 20));
 		comboboxCreateRatedPresets.setToolTipText(getUIText("CreateRated_Preset_Tip"));
-		subpanelPresetSelect.add(comboboxCreateRatedPresets, BorderLayout.EAST);
+		comboboxCreateRatedPresets.setVisible(false);
+		//subpanelPresetSelect.add(comboboxCreateRatedPresets, BorderLayout.EAST);
+		
+		// -- belz
+		
+		subpanelTournamentSelect = new JPanel(new BorderLayout());
+		containerpanelCreateRated.add(subpanelTournamentSelect);
+
+		// *** "Preset:" label
+		JLabel labelTournament = new JLabel(getUIText("CreateRated_Tournament"));
+		subpanelTournamentSelect.add(labelTournament, BorderLayout.WEST);
+
+		// *** Presets
+		String tournaments = getTournamentsFromServer();
+		String[] tournamentNames = tournaments.split(",");
+		comboboxTournaments = new JComboBox(tournamentNames);
+		comboboxTournaments.setPreferredSize(new Dimension(200, 20));
+		comboboxTournaments.setToolTipText(getUIText("CreateRated_Tournament_Tip"));
+		comboboxTournaments.setVisible(true);
+		subpanelTournamentSelect.add(comboboxTournaments, BorderLayout.EAST);
+		
+		// --end belz
+		
 
 		// ** Number of players panel
 		JPanel subpanelMaxPlayers = new JPanel(new BorderLayout());
@@ -1467,11 +1713,13 @@ public class NetLobbyFrame extends JFrame implements ActionListener, NetMessageL
 		spinnerCreateRatedMaxPlayers = new JSpinner(new SpinnerNumberModel(defaultMaxPlayers, 2, 6, 1));
 		spinnerCreateRatedMaxPlayers.setPreferredSize(new Dimension(200, 20));
 		spinnerCreateRatedMaxPlayers.setToolTipText(getUIText("CreateRated_MaxPlayers_Tip"));
+		spinnerCreateRatedMaxPlayers.setVisible(false);
+		spinnerCreateRatedMaxPlayers.getModel().setValue(new Integer(2));
 		subpanelMaxPlayers.add(spinnerCreateRatedMaxPlayers, BorderLayout.EAST);
 
 		// ** Subpanel for buttons
 		JPanel subpanelButtons = new JPanel();
-		mainpanelCreateRated.add(subpanelButtons, BorderLayout.SOUTH);
+		createNewRoomMainPanel.add(subpanelButtons, BorderLayout.CENTER);
 
 		// *** OK button
 		btnCreateRatedOK = new JButton(getUIText("CreateRated_OK"));
@@ -1485,8 +1733,10 @@ public class NetLobbyFrame extends JFrame implements ActionListener, NetMessageL
 		btnCreateRatedCustom = new JButton(getUIText("CreateRated_Custom"));
 		btnCreateRatedCustom.addActionListener(this);
 		btnCreateRatedCustom.setActionCommand("CreateRated_Custom");
-		btnCreateRatedCustom.setMnemonic('U');
+		//btnCreateRatedCustom.setMnemonic('U');
 		btnCreateRatedCustom.setMaximumSize(new Dimension(Short.MAX_VALUE, btnCreateRatedCustom.getMaximumSize().height));
+		btnCreateRatedCustom.disable();
+		btnCreateRatedCustom.setVisible(false);
 		subpanelButtons.add(btnCreateRatedCustom);
 
 		// *** Cancel Button
@@ -1504,7 +1754,8 @@ public class NetLobbyFrame extends JFrame implements ActionListener, NetMessageL
 	protected void initCreateRoomUI() {
 		// ルーム作成画面
 		JPanel mainpanelCreateRoom = new JPanel(new BorderLayout());
-		this.getContentPane().add(mainpanelCreateRoom, SCREENCARD_NAMES[SCREENCARD_CREATEROOM]);
+		//this.getRootPane().
+		add(mainpanelCreateRoom, SCREENCARD_NAMES[SCREENCARD_CREATEROOM]);
 
 		// タブ
 		JTabbedPane tabbedPane = new JTabbedPane();
@@ -2073,7 +2324,8 @@ public class NetLobbyFrame extends JFrame implements ActionListener, NetMessageL
 		// Main panel for Create room 1P
 		JPanel mainpanelCreateRoom1P = new JPanel();
 		mainpanelCreateRoom1P.setLayout(new BoxLayout(mainpanelCreateRoom1P, BoxLayout.Y_AXIS));
-		this.getContentPane().add(mainpanelCreateRoom1P, SCREENCARD_NAMES[SCREENCARD_CREATEROOM1P]);
+		//this.getRootPane().
+		add(mainpanelCreateRoom1P, SCREENCARD_NAMES[SCREENCARD_CREATEROOM1P]);
 
 		// * Game mode panel
 		JPanel pModeList = new JPanel(new BorderLayout());
@@ -2139,7 +2391,8 @@ public class NetLobbyFrame extends JFrame implements ActionListener, NetMessageL
 	protected void initMPRankingUI() {
 		// Main panel for MPRanking
 		JPanel mainpanelMPRanking = new JPanel(new BorderLayout());
-		this.getContentPane().add(mainpanelMPRanking, SCREENCARD_NAMES[SCREENCARD_MPRANKING]);
+		//this.getRootPane().
+		add(mainpanelMPRanking, SCREENCARD_NAMES[SCREENCARD_MPRANKING]);
 
 		// * Tab
 		tabMPRanking = new JTabbedPane();
@@ -2193,7 +2446,8 @@ public class NetLobbyFrame extends JFrame implements ActionListener, NetMessageL
 	protected void initRuleChangeUI() {
 		// Main panel for RuleChange
 		JPanel mainpanelRuleChange = new JPanel(new BorderLayout());
-		this.getContentPane().add(mainpanelRuleChange, SCREENCARD_NAMES[SCREENCARD_RULECHANGE]);
+		//this.getRootPane().
+		add(mainpanelRuleChange, SCREENCARD_NAMES[SCREENCARD_RULECHANGE]);
 
 		// * Tab
 		tabRuleChange = new JTabbedPane();
@@ -2490,61 +2744,115 @@ public class NetLobbyFrame extends JFrame implements ActionListener, NetMessageL
 	 * @param cardNumber 切替先の画面カード number
 	 */
 	public void changeCurrentScreenCard(int cardNumber) {
-		try {
-			contentPaneCardLayout.show(this.getContentPane(), SCREENCARD_NAMES[cardNumber]);
-			currentScreenCardNumber = cardNumber;
+//<<<<<<< HEAD:src/main/java/org/zeromeaner/gui/net/NetLobbyFrame.java
+//		try {
+//			contentPaneCardLayout.show(this.getContentPane(), SCREENCARD_NAMES[cardNumber]);
+//			currentScreenCardNumber = cardNumber;
+//
+//			// Set menu bar
+//			setJMenuBar(menuBar[cardNumber]);
+//
+//			// Set default button
+//			JButton defaultButton = null;
+//			switch(currentScreenCardNumber) {
+//			case SCREENCARD_SERVERSELECT:
+//				defaultButton = btnServerConnect;
+//				break;
+//			case SCREENCARD_LOBBY:
+//				if(tabLobbyAndRoom.getSelectedIndex() == 0)
+//					defaultButton = btnLobbyChatSend;
+//				else
+//					defaultButton = btnRoomChatSend;
+//				break;
+//			case SCREENCARD_SERVERADD:
+//				defaultButton = btnServerAddOK;
+//				break;
+//			case SCREENCARD_CREATERATED_WAITING:
+//				defaultButton = btnCreateRatedWaitingCancel;
+//				break;
+//			case SCREENCARD_CREATERATED:
+//				defaultButton = btnCreateRatedOK;
+//				break;
+//			case SCREENCARD_CREATEROOM:
+//				if (btnCreateRoomOK.isVisible())
+//					defaultButton = btnCreateRoomOK;
+//				else
+//					defaultButton = btnCreateRoomCancel;
+//				break;
+//			case SCREENCARD_CREATEROOM1P:
+//				if(btnCreateRoom1POK.isVisible())
+//					defaultButton = btnCreateRoom1POK;
+//				else
+//					defaultButton = btnCreateRoom1PCancel;
+//				break;
+//			case SCREENCARD_MPRANKING:
+//				defaultButton = btnMPRankingOK;
+//				break;
+//			case SCREENCARD_RULECHANGE:
+//				defaultButton = btnRuleChangeOK;
+//				break;
+//			}
+//
+//			if(defaultButton != null) {
+//				this.getRootPane().setDefaultButton(defaultButton);
+//			}
+//		} catch (Exception e) {
+//			// TODO: There are several threading issue here
+//			log.debug("changeCurrentScreenCard failed; Possible threading issue", e);
+//		}
+//=======
+//		contentPaneCardLayout.show(this.getRootPane(), SCREENCARD_NAMES[cardNumber]);
+		contentPaneCardLayout.show(this, SCREENCARD_NAMES[cardNumber]);
+		currentScreenCardNumber = cardNumber;
 
-			// Set menu bar
-			setJMenuBar(menuBar[cardNumber]);
+		// Set menu bar
+		//setJMenuBar(menuBar[cardNumber]);
 
-			// Set default button
-			JButton defaultButton = null;
-			switch(currentScreenCardNumber) {
-			case SCREENCARD_SERVERSELECT:
-				defaultButton = btnServerConnect;
-				break;
-			case SCREENCARD_LOBBY:
-				if(tabLobbyAndRoom.getSelectedIndex() == 0)
-					defaultButton = btnLobbyChatSend;
-				else
-					defaultButton = btnRoomChatSend;
-				break;
-			case SCREENCARD_SERVERADD:
-				defaultButton = btnServerAddOK;
-				break;
-			case SCREENCARD_CREATERATED_WAITING:
-				defaultButton = btnCreateRatedWaitingCancel;
-				break;
-			case SCREENCARD_CREATERATED:
-				defaultButton = btnCreateRatedOK;
-				break;
-			case SCREENCARD_CREATEROOM:
-				if (btnCreateRoomOK.isVisible())
-					defaultButton = btnCreateRoomOK;
-				else
-					defaultButton = btnCreateRoomCancel;
-				break;
-			case SCREENCARD_CREATEROOM1P:
-				if(btnCreateRoom1POK.isVisible())
-					defaultButton = btnCreateRoom1POK;
-				else
-					defaultButton = btnCreateRoom1PCancel;
-				break;
-			case SCREENCARD_MPRANKING:
-				defaultButton = btnMPRankingOK;
-				break;
-			case SCREENCARD_RULECHANGE:
-				defaultButton = btnRuleChangeOK;
-				break;
-			}
-
-			if(defaultButton != null) {
-				this.getRootPane().setDefaultButton(defaultButton);
-			}
-		} catch (Exception e) {
-			// TODO: There are several threading issue here
-			log.debug("changeCurrentScreenCard failed; Possible threading issue", e);
+		// Set default button
+		JButton defaultButton = null;
+		switch(currentScreenCardNumber) {
+		case SCREENCARD_SERVERSELECT:
+			defaultButton = btnServerConnect;
+			break;
+		case SCREENCARD_LOBBY:
+			if(tabLobbyAndRoom.getSelectedIndex() == 0)
+				defaultButton = btnLobbyChatSend;
+			else
+				defaultButton = btnRoomChatSend;
+			break;
+		case SCREENCARD_SERVERADD:
+			defaultButton = btnServerAddOK;
+			break;
+		case SCREENCARD_CREATERATED_WAITING:
+			defaultButton = btnCreateRatedWaitingCancel;
+			break;
+		case SCREENCARD_CREATERATED:
+			defaultButton = btnCreateRatedOK;
+			break;
+		case SCREENCARD_CREATEROOM:
+			if (btnCreateRoomOK.isVisible())
+				defaultButton = btnCreateRoomOK;
+			else
+				defaultButton = btnCreateRoomCancel;
+			break;
+		case SCREENCARD_CREATEROOM1P:
+			if(btnCreateRoom1POK.isVisible())
+				defaultButton = btnCreateRoom1POK;
+			else
+				defaultButton = btnCreateRoom1PCancel;
+			break;
+		case SCREENCARD_MPRANKING:
+			defaultButton = btnMPRankingOK;
+			break;
+		case SCREENCARD_RULECHANGE:
+			defaultButton = btnRuleChangeOK;
+			break;
 		}
+
+//		if(defaultButton != null) {
+//			this.getRootPane().setDefaultButton(defaultButton);
+//		}
+//>>>>>>> nullpo/feature/league:src/mu/nu/nullpo/gui/net/NetLobbyFrame.java
 	}
 
 	/**
@@ -2584,7 +2892,8 @@ public class NetLobbyFrame extends JFrame implements ActionListener, NetMessageL
 	 */
 	public String getTimeAsString(Calendar cal, boolean showDate) {
 		if(cal == null) return showDate ? "????-??-?? ??:??:??" : "??:??:??";
-		String strFormat = showDate ? "yyyy-MM-dd HH:mm:ss" : "HH:mm:ss";
+		//String strFormat = showDate ? "yyyy-MM-dd HH:mm:ss" : "HH:mm:ss";
+		String strFormat = "HH:mm";
 		DateFormat dfm = new SimpleDateFormat(strFormat);
 		return dfm.format(cal.getTime());
 	}
@@ -2693,7 +3002,7 @@ public class NetLobbyFrame extends JFrame implements ActionListener, NetMessageL
 
 		SimpleAttributeSet sas = new SimpleAttributeSet();
 		StyleConstants.setBold(sas, true);
-		StyleConstants.setUnderline(sas, true);
+		//StyleConstants.setUnderline(sas, true);
 
 		try {
 			Document doc = txtpane.getDocument();
@@ -2899,7 +3208,11 @@ public class NetLobbyFrame extends JFrame implements ActionListener, NetMessageL
 	public void setLobbyButtonsEnabled(int mode) {
 		btnRoomListQuickStart.setEnabled(mode == 1);
 		btnRoomListRoomCreate.setEnabled(mode == 1);
+		btnRoomLeagueMatchCreate.setEnabled(mode == 1);
+		btnRoomTournamentMatchCreate.setEnabled(mode == 1);
 		btnRoomListRoomCreate1P.setEnabled(mode == 1);
+		
+		btnRoomButtonsLeave.setEnabled(mode > 1);
 
 		itemLobbyMenuRuleChange.setEnabled(mode == 1);
 		itemLobbyMenuTeamChange.setEnabled(mode >= 1);
@@ -2952,14 +3265,47 @@ public class NetLobbyFrame extends JFrame implements ActionListener, NetMessageL
 		return rowData;
 	}
 
+	private String getDivisionFromRoomName(String strName) {
+		if (strName.contains("1VS1") && strName.contains("BR"))
+			return "Bronze";
+		if (strName.contains("1VS1") && strName.contains("GO"))
+			return "Gold";
+		if (strName.contains("1VS1") && strName.contains("SI"))
+			return "Silver";
+		return "None";
+	}
+
+	/**
+	 * ルームリスト tableの行 dataを作成
+	 * @param r ルーム情報
+	 * @return 行 data
+	 */
+	public String[] createLeagueRoomListRowData(NetRoomInfo r) {
+		String[] rowData = new String[5];
+		rowData[0] = r.strName;
+		if(r.rated && r.customRated && !r.singleplayer) {
+			rowData[1] = getUIText("RoomTable_Rated_True_Custom");
+		} else if(r.rated && !r.customRated && !r.singleplayer) {
+			rowData[1] = getUIText("RoomTable_Rated_True");
+		} else if(r.rated && r.singleplayer) {
+			rowData[1] = getUIText("RoomTable_Rated_True_1P");
+		} else {
+			rowData[1] = getUIText("RoomTable_Rated_False");
+		}
+		rowData[2] = r.playing ? getUIText("RoomTable_Status_Playing") : getUIText("RoomTable_Status_Waiting");
+		rowData[3] = r.playerSeatedCount + "/" + r.maxPlayers;
+		rowData[4] = Integer.toString(r.spectatorCount);
+		return rowData;
+	}
+	
 	/**
 	 * 指定したルームに入る
 	 * @param roomID ルームID
 	 * @param watch When true,観戦のみ
 	 */
 	public void joinRoom(int roomID, boolean watch) {
-		tabLobbyAndRoom.setEnabledAt(1, true);
-		tabLobbyAndRoom.setSelectedIndex(1);
+		//tabLobbyAndRoom.setEnabledAt(1, true);
+		//tabLobbyAndRoom.setSelectedIndex(1);
 
 		if(netPlayerClient.getYourPlayerInfo().roomID != roomID) {
 			txtpaneRoomChatLog.setText("");
@@ -2968,6 +3314,174 @@ public class NetLobbyFrame extends JFrame implements ActionListener, NetMessageL
 		}
 
 		changeCurrentScreenCard(SCREENCARD_LOBBY);
+		
+		String foundRoomName = getRoomNameForRoomId(roomID);
+		
+		if (!foundRoomName.isEmpty()){
+			postConfirmationToServer(foundRoomName);
+		}
+		
+	}
+
+	public String getRoomNameForRoomId(int roomID) {
+		
+		for (Room room : roomList){
+			if (room.getId() == roomID){
+				return room.getName();
+			}
+		}
+		
+		return "";
+		
+//		String foundRoomName = "";
+//		
+//		for(int i = 0; i < tablemodelRoomList.getRowCount(); i++) {
+//			String roomId   = (String) tablemodelRoomList.getValueAt(i, 0);
+//			String roomName = (String) tablemodelRoomList.getValueAt(i, 2);
+//			if (roomId.equals(""+roomID)){
+//				foundRoomName = roomName;
+//			}
+//		}
+//		return foundRoomName;
+	}
+
+	private void postConfirmationToServer(String roomName) {
+		
+		CustomProperties propGlobal = new CustomProperties();
+		try {
+			ResourceInputStream in = new ResourceInputStream("config/setting/global.cfg");
+			propGlobal.load(in);
+			in.close();
+		} catch(IOException e) {}
+		
+		URL url;
+		try {
+			url = new URL("http://tetris.vanderhoven.be/upload/confirm.php");
+			HttpURLConnection connection = (HttpURLConnection)url.openConnection();
+			connection.setDoOutput(true);
+			connection.setRequestProperty("Content-type","application/x-www-form-urlencoded");
+			connection.setRequestMethod("POST");
+			OutputStreamWriter writer = new OutputStreamWriter(connection.getOutputStream());
+			String data = URLEncoder.encode("room", "UTF-8") + "=" + URLEncoder.encode(""+roomName, "UTF-8");
+			data += "&" + URLEncoder.encode("username", "UTF-8") + "=" + URLEncoder.encode(propGlobal.getProperty("user.username"), "UTF-8");
+			data += "&" + URLEncoder.encode("password", "UTF-8") + "=" + URLEncoder.encode(propGlobal.getProperty("user.password"), "UTF-8");
+
+			System.out.println("sending data: " + data);
+			
+			writer.write(data);
+			writer.flush();
+			
+			String line;
+			BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+		    while ((line = reader.readLine()) != null) {
+		      System.out.println(line);
+		    }
+	        writer.close(); 
+	        reader.close(); 
+			
+		} catch (MalformedURLException e) {
+			e.printStackTrace();
+		} catch (ProtocolException e) {
+			e.printStackTrace();
+		} catch (UnsupportedEncodingException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	private String getDivisionForUsernameFromServer() {
+		
+		CustomProperties propGlobal = new CustomProperties();
+		try {
+			ResourceInputStream in = new ResourceInputStream("config/setting/global.cfg");
+			propGlobal.load(in);
+			in.close();
+		} catch(IOException e) {}
+		
+		URL url;
+		try {
+			url = new URL("http://tetris.vanderhoven.be/upload/division.php");
+			HttpURLConnection connection = (HttpURLConnection)url.openConnection();
+			connection.setDoOutput(true);
+			connection.setRequestProperty("Content-type","application/x-www-form-urlencoded");
+			connection.setRequestMethod("POST");
+			OutputStreamWriter writer = new OutputStreamWriter(connection.getOutputStream());
+			String data = URLEncoder.encode("username", "UTF-8") + "=" + URLEncoder.encode(propGlobal.getProperty("user.username"), "UTF-8");
+			
+			System.out.println("sending data: " + data);
+			
+			writer.write(data);
+			writer.flush();
+			
+			String repsonseLine = "";
+			String line;
+			BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+			while ((line = reader.readLine()) != null) {
+				repsonseLine += line;
+			}
+			writer.close(); 
+			reader.close(); 
+			
+			return repsonseLine;
+			
+		} catch (MalformedURLException e) {
+			e.printStackTrace();
+		} catch (ProtocolException e) {
+			e.printStackTrace();
+		} catch (UnsupportedEncodingException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return "Bronze";
+	}
+	
+	private String getTournamentsFromServer() {
+		
+		CustomProperties propGlobal = new CustomProperties();
+		try {
+			ResourceInputStream in = new ResourceInputStream("config/setting/global.cfg");
+			propGlobal.load(in);
+			in.close();
+		} catch(IOException e) {}
+		
+		URL url;
+		try {
+			url = new URL("http://tetris.vanderhoven.be/upload/tournaments.php");
+			HttpURLConnection connection = (HttpURLConnection)url.openConnection();
+			connection.setDoOutput(true);
+			connection.setRequestProperty("Content-type","application/x-www-form-urlencoded");
+			connection.setRequestMethod("POST");
+			OutputStreamWriter writer = new OutputStreamWriter(connection.getOutputStream());
+			String data = URLEncoder.encode("username", "UTF-8") + "=" + URLEncoder.encode(propGlobal.getProperty("user.username"), "UTF-8");
+			
+			System.out.println("sending data: " + data);
+			
+			writer.write(data);
+			writer.flush();
+			
+			String repsonseLine = "";
+			String line;
+			BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+			while ((line = reader.readLine()) != null) {
+				repsonseLine += line;
+			}
+			writer.close(); 
+			reader.close(); 
+			
+			return repsonseLine;
+			
+		} catch (MalformedURLException e) {
+			e.printStackTrace();
+		} catch (ProtocolException e) {
+			e.printStackTrace();
+		} catch (UnsupportedEncodingException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return "Bronze";
 	}
 
 	/**
@@ -3100,36 +3614,61 @@ public class NetLobbyFrame extends JFrame implements ActionListener, NetMessageL
 	 */
 	public void updateLobbyUserList() {
 		LinkedList<NetPlayerInfo> pList = new LinkedList<NetPlayerInfo>(netPlayerClient.getPlayerInfoList());
-
+		
 		if(!pList.isEmpty()) {
 			listmodelLobbyChatPlayerList.clear();
+			
+			Collections.sort(pList, new Comparator<NetPlayerInfo>(){
+
+				@Override
+				public int compare(NetPlayerInfo p1, NetPlayerInfo p2) {
+					if (p1.roomID == -1  && p2.roomID == -1){
+						return p2.strName.compareTo(p1.strName);
+					} else if (p1.roomID == -1  && p2.roomID != -1){
+						return -1;
+					} else if (p2.roomID == -1  && p1.roomID != -1){
+						return 1;
+					} else {
+						return p2.strName.compareTo(p1.strName);
+					}
+				}
+				
+			});
 
 			for(int i = 0; i < pList.size(); i++) {
 				NetPlayerInfo pInfo = pList.get(i);
 
 				// Name
-				String name = getPlayerNameWithTripCode(pInfo);
-				if(pInfo.uid == netPlayerClient.getPlayerUID()) name = "*" + getPlayerNameWithTripCode(pInfo);
-
-				// Team
-				if(pInfo.strTeam.length() > 0) {
-					name = getPlayerNameWithTripCode(pInfo) + " - " + pInfo.strTeam;
-					if(pInfo.uid == netPlayerClient.getPlayerUID()) name = "*" + getPlayerNameWithTripCode(pInfo) + " - " + pInfo.strTeam;
+				String name = pInfo.strName;
+				
+				if (name.contains("!")){
+					name = name.substring(0, name.indexOf("!"));
 				}
+				
+				//String name = getPlayerNameWithTripCode(pInfo);
+				if(pInfo.uid == netPlayerClient.getPlayerUID()) 
+					name = "<b>" + name + "</b>";
+					//name = "*" + getPlayerNameWithTripCode(pInfo);
 
-				// Rating
-				name += " |" + pInfo.rating[0] + "|";
-				/*
-				name += " |T:" + pInfo.rating[0] + "|";
-				name += "A:" + pInfo.rating[1] + "|";
-				name += "P:" + pInfo.rating[2] + "|";
-				name += "S:" + pInfo.rating[3] + "|";
-				*/
+//				// Team
+//				if(pInfo.strTeam.length() > 0) {
+//					name = getPlayerNameWithTripCode(pInfo) + " - " + pInfo.strTeam;
+//					if(pInfo.uid == netPlayerClient.getPlayerUID()) name = "*" + getPlayerNameWithTripCode(pInfo) + " - " + pInfo.strTeam;
+//				}
 
-				// Country code
-				if(pInfo.strCountry.length() > 0) {
-					name += " (" + pInfo.strCountry + ")";
-				}
+//				// Rating
+//				name += " |" + pInfo.rating[0] + "|";
+//				/*
+//				name += " |T:" + pInfo.rating[0] + "|";
+//				name += "A:" + pInfo.rating[1] + "|";
+//				name += "P:" + pInfo.rating[2] + "|";
+//				name += "S:" + pInfo.rating[3] + "|";
+//				*/
+
+//				// Country code
+//				if(pInfo.strCountry.length() > 0) {
+//					name += " (" + pInfo.strCountry + ")";
+//				}
 
 				/* XXX Hostname
 				if(pInfo.strHost.length() > 0) {
@@ -3138,9 +3677,12 @@ public class NetLobbyFrame extends JFrame implements ActionListener, NetMessageL
 				*/
 
 				if(pInfo.roomID == -1) {
-					listmodelLobbyChatPlayerList.addElement(name);
+					listmodelLobbyChatPlayerList.addElement(new PlayerListEntry("<html>"+name+"</html>", pInfo.roomID));
 				} else {
-					listmodelLobbyChatPlayerList.addElement("{" + pInfo.roomID + "} " + name);
+					String action = "playing...";
+					if (pInfo.isWatching() == true) action = "watching...";
+					else if (pInfo.queueID != -1 ) action = "waiting to play...";
+					listmodelLobbyChatPlayerList.addElement(new PlayerListEntry("<html><i>" + name + " ("+action+")</i></html>", pInfo.roomID));
 				}
 			}
 		}
@@ -3166,23 +3708,29 @@ public class NetLobbyFrame extends JFrame implements ActionListener, NetMessageL
 				NetPlayerInfo pInfo = pList.get(i);
 
 				if(pInfo.roomID == roomInfo.roomID) {
+					
+					//belz 
+					
 					// Name
-					String name = getPlayerNameWithTripCode(pInfo);
-					if(pInfo.uid == netPlayerClient.getPlayerUID()) name = "*" + getPlayerNameWithTripCode(pInfo);
+					//String name = getPlayerNameWithTripCode(pInfo);
+					String name = pInfo.strName;
+//					if(pInfo.uid == netPlayerClient.getPlayerUID()) 
+//						name = "<html><b>" + name + "</b></html>";
+						//name = "*" + getPlayerNameWithTripCode(pInfo);
+//
+//					// Team
+//					if(pInfo.strTeam.length() > 0) {
+//						name = getPlayerNameWithTripCode(pInfo) + " - " + pInfo.strTeam;
+//						if(pInfo.uid == netPlayerClient.getPlayerUID()) name = "*" + getPlayerNameWithTripCode(pInfo) + " - " + pInfo.strTeam;
+//					}
 
-					// Team
-					if(pInfo.strTeam.length() > 0) {
-						name = getPlayerNameWithTripCode(pInfo) + " - " + pInfo.strTeam;
-						if(pInfo.uid == netPlayerClient.getPlayerUID()) name = "*" + getPlayerNameWithTripCode(pInfo) + " - " + pInfo.strTeam;
-					}
-
-					// Rating
-					name += " |" + pInfo.rating[roomInfo.style] + "|";
-
-					// Country code
-					if(pInfo.strCountry.length() > 0) {
-						name += " (" + pInfo.strCountry + ")";
-					}
+//					// Rating
+//					name += " |" + pInfo.rating[roomInfo.style] + "|";
+//
+//					// Country code
+//					if(pInfo.strCountry.length() > 0) {
+//						name += " (" + pInfo.strCountry + ")";
+//					}
 
 					/* XXX Hostname
 					if(pInfo.strHost.length() > 0) {
@@ -3193,13 +3741,28 @@ public class NetLobbyFrame extends JFrame implements ActionListener, NetMessageL
 					// Status
 					if(pInfo.playing) name += getUIText("RoomUserList_Playing");
 					else if(pInfo.ready) name += getUIText("RoomUserList_Ready");
+					
+					boolean isCurrentuser = pInfo.uid == netPlayerClient.getPlayerUID();
 
 					if((pInfo.seatID >= 0) && (pInfo.seatID < roomInfo.maxPlayers)) {
-						listmodelRoomChatPlayerList.set(pInfo.seatID, "[" + (pInfo.seatID + 1) + "] " + name);
+						if (isCurrentuser){
+							listmodelRoomChatPlayerList.set(pInfo.seatID, "<html><b>" + "[" + (pInfo.seatID + 1) + "] " + name + "</b></html>");
+						}
+						else {
+							listmodelRoomChatPlayerList.set(pInfo.seatID, "[" + (pInfo.seatID + 1) + "] " + name);
+						}
 					} else if(pInfo.queueID != -1) {
-						listmodelRoomChatPlayerList.addElement((pInfo.queueID + 1) + ". " + name);
+						if (isCurrentuser){
+							listmodelRoomChatPlayerList.addElement("<html><b>" + (pInfo.queueID + 1) + ". " + name + "</b></html>");
+						} else {
+							listmodelRoomChatPlayerList.addElement((pInfo.queueID + 1) + ". " + name );
+						}
 					} else {
-						listmodelRoomChatPlayerList.addElement(name);
+						if (isCurrentuser){
+							listmodelRoomChatPlayerList.addElement("<html><b>" + name + "</b></html>");
+						} else {
+							listmodelRoomChatPlayerList.addElement(name);
+						}
 					}
 				}
 			}
@@ -3262,7 +3825,7 @@ public class NetLobbyFrame extends JFrame implements ActionListener, NetMessageL
 		propConfig.setProperty("mainwindow.x", this.getLocation().x);
 		propConfig.setProperty("mainwindow.y", this.getLocation().y);
 		propConfig.setProperty("lobby.splitLobby.location", splitLobby.getDividerLocation());
-		propConfig.setProperty("lobby.splitLobbyChat.location", splitLobbyChat.getDividerLocation());
+		//propConfig.setProperty("lobby.splitLobbyChat.location", splitLobbyChat.getDividerLocation());
 		propConfig.setProperty("room.splitRoom.location", splitRoom.getDividerLocation());
 		propConfig.setProperty("room.splitRoomChat.location", splitRoomChat.getDividerLocation());
 		propConfig.setProperty("serverselect.txtfldPlayerName.text", txtfldPlayerName.getText());
@@ -3413,18 +3976,20 @@ public class NetLobbyFrame extends JFrame implements ActionListener, NetMessageL
 		}
 
 		// Listener呼び出し
-		if(listeners != null) {
+		if(listeners.size() > 0) {
 			for(NetLobbyListener l: listeners) {
 				l.netlobbyOnExit(this);
 			}
-			listeners = null;
+			listeners = new LinkedList<NetLobbyListener>();
 		}
 		if(netDummyMode != null) {
 			netDummyMode.netlobbyOnExit(this);
 			netDummyMode = null;
 		}
 
-		this.dispose();
+		NullpoMinoSlick.getCanvasGameContainer().requestFocus();
+		
+		//this.dispose();
 	}
 
 	/**
@@ -3474,7 +4039,9 @@ public class NetLobbyFrame extends JFrame implements ActionListener, NetMessageL
 
 			txtpaneLobbyChatLog.setText("");
 			setLobbyButtonsEnabled(0);
-			tablemodelRoomList.setRowCount(0);
+//			tablemodelRoomList.setRowCount(0);
+			roomList = new ArrayList<Room>();
+			populateRoomListPanel();
 
 			changeCurrentScreenCard(SCREENCARD_LOBBY);
 		}
@@ -3885,7 +4452,54 @@ public class NetLobbyFrame extends JFrame implements ActionListener, NetMessageL
 			currentViewDetailRoomID = -1;
 			// setCreateRoomUIType(false, null);
 			changeCurrentScreenCard(SCREENCARD_CREATERATED_WAITING);
+			roomTypeToCreate = RoomType.Practice;
+			String[] part1 = new String[]{"Mighty", "Omnipotent", "Robust", "Vigorous", "Heartfelt", "Absolute", "All-powerful", "Invincible", " Brilliant", "Infamous", "Obscure", "Influential", "Brilliant","Honored"};
+			String[] part2 = new String[]{"Castle", "Church", "Stronghold","Victory","Fortress","Prison", "Shelter", "Crucifixion", "Cemetery", "Hovel", "Hut"};
+			String randomPart1 = part1[new Random().nextInt(part1.length)];
+			String randomPart2 = part2[new Random().nextInt(part2.length)];
+			txtfldCreateRatedName.setText("The " + randomPart1 + " " + randomPart2);
+			txtfldCreateRatedName.setEnabled(true);
+			subpanelTournamentSelect.setVisible(false);
 			netPlayerClient.send("getpresets\n");
+		}
+		if(e.getActionCommand() == "Lobby_TournamentStart") {
+			currentViewDetailRoomID = -1;
+			// setCreateRoomUIType(false, null);
+			changeCurrentScreenCard(SCREENCARD_CREATERATED_WAITING);
+			roomTypeToCreate = RoomType.Tournament;
+			String username = propGlobal.getProperty("user.username");
+			subpanelTournamentSelect.setVisible(true);
+			txtfldCreateRatedName.setEnabled(false);
+			txtfldCreateRatedName.setText(prefix + " - 1VS1 - " + roomTypeToCreate + " - " + username + " - " + new Date());
+			netPlayerClient.send("getpresets\n");
+		}
+		if(e.getActionCommand() == "Lobby_LeagueStart") {
+			
+			//belz
+			
+			// iterate over all rooms to find room to join
+			boolean roomFound = false;
+			
+			for (Room room : roomList){
+				if (room.is1VS1() && room.isWaitingForMorePlayers() && room.isLeageMatch()){
+					//don't join rooms not of your own division (otherwise silver players would always end up in bronze rooms)
+					if (isRoomInSameDivisionAsPlayer(room)){
+						joinRoom(room.getId(), false);
+						roomFound = true;
+					}
+				}
+			}
+			
+			if (!roomFound){ 
+				//TODO just create a room
+				currentViewDetailRoomID = -1;
+				changeCurrentScreenCard(SCREENCARD_CREATERATED_WAITING);
+				roomTypeToCreate = RoomType.League;
+				txtfldCreateRatedName.setText(prefix + " - 1VS1 - " + roomTypeToCreate + " - "+ new Date());
+				txtfldCreateRatedName.setEnabled(false);
+				subpanelTournamentSelect.setVisible(false);
+				netPlayerClient.send("getpresets\n");
+			}
 		}
 		// Lobby Options
 		if(e.getActionCommand() == "Lobby_Options") {
@@ -3911,10 +4525,10 @@ public class NetLobbyFrame extends JFrame implements ActionListener, NetMessageL
 				netPlayerClient = null;
 			}
 			tabLobbyAndRoom.setSelectedIndex(0);
-			tabLobbyAndRoom.setEnabledAt(1, false);
+			//tabLobbyAndRoom.setEnabledAt(1, false);
 			tabLobbyAndRoom.setTitleAt(1, getUIText("Lobby_Tab_NoRoom"));
 			setLobbyButtonsEnabled(1);
-			setTitle(getUIText("Title_NetLobby"));
+			//setTitle(getUIText("Title_NetLobby"));
 			changeCurrentScreenCard(SCREENCARD_SERVERSELECT);
 		}
 		// Multiplayer Leaderboard
@@ -3959,24 +4573,8 @@ public class NetLobbyFrame extends JFrame implements ActionListener, NetMessageL
 		}
 		// 退出 button
 		if(e.getActionCommand() == "Room_Leave") {
-			if((netPlayerClient != null) && (netPlayerClient.isConnected())) {
-				netPlayerClient.send("roomjoin\t-1\tfalse\n");
-			}
-
-			tablemodelGameStat.setRowCount(0);
-			tablemodelGameStat1P.setRowCount(0);
-
-			tabLobbyAndRoom.setSelectedIndex(0);
-			tabLobbyAndRoom.setEnabledAt(1, false);
-			tabLobbyAndRoom.setTitleAt(1, getUIText("Lobby_Tab_NoRoom"));
-
-			changeCurrentScreenCard(SCREENCARD_LOBBY);
-
-			// Listener call
-			for(NetLobbyListener l: listeners) {
-				l.netlobbyOnRoomLeave(this, netPlayerClient);
-			}
-			if(netDummyMode != null) netDummyMode.netlobbyOnRoomLeave(this, netPlayerClient);
+			leaveRoom();
+			populateRoomListPanel();
 		}
 		// 参戦 button
 		if(e.getActionCommand() == "Room_Join") {
@@ -4035,6 +4633,9 @@ public class NetLobbyFrame extends JFrame implements ActionListener, NetMessageL
 				int presetIndex = comboboxCreateRatedPresets.getSelectedIndex();
 				NetRoomInfo r = presets.get(presetIndex);
 				r.strName = txtfldCreateRatedName.getText();
+				if (r.strName.contains("Tournament")){
+					r.strName = r.strName.replaceAll("Tournament", ""+comboboxTournaments.getSelectedItem());
+				}
 				backupRoomInfo = r;
 
 				String msg = "ratedroomcreate\t"+NetUtil.urlEncode(r.strName)+"\t"
@@ -4043,11 +4644,13 @@ public class NetLobbyFrame extends JFrame implements ActionListener, NetMessageL
 
 				txtpaneRoomChatLog.setText("");
 				setRoomButtonsEnabled(false);
-				tabLobbyAndRoom.setEnabledAt(1, true);
-				tabLobbyAndRoom.setSelectedIndex(1);
+				//tabLobbyAndRoom.setEnabledAt(1, true);
+				//tabLobbyAndRoom.setSelectedIndex(1);
 				changeCurrentScreenCard(SCREENCARD_LOBBY);
 
 				netPlayerClient.send(msg);
+				
+				postConfirmationToServer(r.strName);  //belz
 			} catch (Exception e2) {
 				log.error("Error on CreateRated_OK", e2);
 			}
@@ -4117,8 +4720,8 @@ public class NetLobbyFrame extends JFrame implements ActionListener, NetMessageL
 
 				txtpaneRoomChatLog.setText("");
 				setRoomButtonsEnabled(false);
-				tabLobbyAndRoom.setEnabledAt(1, true);
-				tabLobbyAndRoom.setSelectedIndex(1);
+				//tabLobbyAndRoom.setEnabledAt(1, true);
+				//tabLobbyAndRoom.setSelectedIndex(1);
 				changeCurrentScreenCard(SCREENCARD_LOBBY);
 
 				netPlayerClient.send(msg);
@@ -4168,6 +4771,7 @@ public class NetLobbyFrame extends JFrame implements ActionListener, NetMessageL
 		// ルーム作成画面での参戦 button
 		if(e.getActionCommand() == "CreateRoom_Join") {
 			joinRoom(currentViewDetailRoomID, false);
+			joinRoom(currentViewDetailRoomID, false);
 		}
 		// ルーム作成画面での観戦 button
 		if(e.getActionCommand() == "CreateRoom_Watch") {
@@ -4193,8 +4797,8 @@ public class NetLobbyFrame extends JFrame implements ActionListener, NetMessageL
 
 					txtpaneRoomChatLog.setText("");
 					setRoomButtonsEnabled(false);
-					tabLobbyAndRoom.setEnabledAt(1, true);
-					tabLobbyAndRoom.setSelectedIndex(1);
+					//tabLobbyAndRoom.setEnabledAt(1, true);
+					//tabLobbyAndRoom.setSelectedIndex(1);
 					changeCurrentScreenCard(SCREENCARD_LOBBY);
 
 					netPlayerClient.send("singleroomcreate\t" + "\t" + NetUtil.urlEncode(strMode) + "\t" + NetUtil.urlEncode(strRule) + "\n");
@@ -4299,6 +4903,31 @@ public class NetLobbyFrame extends JFrame implements ActionListener, NetMessageL
 
 			changeCurrentScreenCard(SCREENCARD_LOBBY);
 		}
+	}
+
+	private boolean isRoomInSameDivisionAsPlayer(Room room) {
+		return room.getDivision().equalsIgnoreCase(getDivision());
+	}
+
+	public void leaveRoom() {
+		if((netPlayerClient != null) && (netPlayerClient.isConnected())) {
+			netPlayerClient.send("roomjoin\t-1\tfalse\n");
+		}
+
+		tablemodelGameStat.setRowCount(0);
+		tablemodelGameStat1P.setRowCount(0);
+
+		tabLobbyAndRoom.setSelectedIndex(0);
+		//tabLobbyAndRoom.setEnabledAt(1, false);
+		//tabLobbyAndRoom.setTitleAt(1, getUIText("Lobby_Tab_NoRoom"));
+
+		changeCurrentScreenCard(SCREENCARD_LOBBY);
+
+		// Listener call
+		for(NetLobbyListener l: listeners) {
+			l.netlobbyOnRoomLeave(this, netPlayerClient);
+		}
+		if(netDummyMode != null) netDummyMode.netlobbyOnRoomLeave(this, netPlayerClient);
 	}
 
 	/*
@@ -4451,6 +5080,7 @@ public class NetLobbyFrame extends JFrame implements ActionListener, NetMessageL
 			SwingUtilities.invokeLater(new Runnable() {
 				public void run() {
 					updateLobbyUserList();
+					populateRoomListPanel();
 				}
 			});
 
@@ -4529,11 +5159,14 @@ public class NetLobbyFrame extends JFrame implements ActionListener, NetMessageL
 		if(message[0].equals("roomlist")) {
 			int size = Integer.parseInt(message[1]);
 
-			tablemodelRoomList.setRowCount(0);
+//			tablemodelRoomList.setRowCount(0);
 			for(int i = 0; i < size; i++) {
 				NetRoomInfo r = new NetRoomInfo(message[2 + i]);
-				tablemodelRoomList.addRow(createRoomListRowData(r));
+//				tablemodelRoomList.addRow(createRoomListRowData(r));
+				Room room = Room.fromNetRoomInfo(r, propLangDefault, propLang);
+				roomList.add(room);
 			}
+			populateRoomListPanel();
 		}
 		// Receive presets
 		if(message[0].equals("ratedpresets")) {
@@ -4558,41 +5191,61 @@ public class NetLobbyFrame extends JFrame implements ActionListener, NetMessageL
 		// 新規ルーム出現
 		if(message[0].equals("roomcreate")) {
 			NetRoomInfo r = new NetRoomInfo(message[1]);
-			tablemodelRoomList.addRow(createRoomListRowData(r));
+			Room room = Room.fromNetRoomInfo(r, propLangDefault, propLang);
+			roomList.add(room);
+			populateRoomListPanel();
+//			tablemodelRoomList.addRow(createRoomListRowData(r));
 		}
 		// ルーム情報更新
 		if(message[0].equals("roomupdate")) {
 			NetRoomInfo r = new NetRoomInfo(message[1]);
-			int columnID = tablemodelRoomList.findColumn(getUIText(ROOMTABLE_COLUMNNAMES[0]));
-
-			for(int i = 0; i < tablemodelRoomList.getRowCount(); i++) {
-				String strID = (String)tablemodelRoomList.getValueAt(i, columnID);
-				int roomID = Integer.parseInt(strID);
-
-				if(roomID == r.roomID) {
-					String[] rowData = createRoomListRowData(r);
-					for(int j = 0; j < rowData.length; j++) {
-						tablemodelRoomList.setValueAt(rowData[j], i, j);
-					}
-					break;
+			
+			Room roomWithUpdatedInfo = Room.fromNetRoomInfo(r, propLangDefault, propLang);
+			Room roomToUpdate        = getRoomWithId(r.roomID);
+			
+			roomToUpdate.updateRoom(roomWithUpdatedInfo);
+			for (Component roomPanel : roomListPanel.getComponents()){
+				if (roomPanel instanceof RoomPanel){
+					((RoomPanel)roomPanel).refresh();
 				}
-			}
+			};
+			roomListPanel.revalidate();
+			
+//			int columnID = tablemodelRoomList.findColumn(getUIText(ROOMTABLE_COLUMNNAMES[0]));
+//
+//			for(int i = 0; i < tablemodelRoomList.getRowCount(); i++) {
+//				String strID = (String)tablemodelRoomList.getValueAt(i, columnID);
+//				int roomID = Integer.parseInt(strID);
+//
+//				if(roomID == r.roomID) {
+//					String[] rowData = createRoomListRowData(r);
+//					for(int j = 0; j < rowData.length; j++) {
+//						tablemodelRoomList.setValueAt(rowData[j], i, j);
+//					}
+//					break;
+//				}
+//			}
 		}
 		// ルーム消滅
 		if(message[0].equals("roomdelete")) {
 			NetRoomInfo r = new NetRoomInfo(message[1]);
-			int columnID = tablemodelRoomList.findColumn(getUIText(ROOMTABLE_COLUMNNAMES[0]));
-
-			for(int i = 0; i < tablemodelRoomList.getRowCount(); i++) {
-				String strID = (String)tablemodelRoomList.getValueAt(i, columnID);
-				int roomID = Integer.parseInt(strID);
-
-				if(roomID == r.roomID) {
-					tablemodelRoomList.removeRow(i);
-					break;
-				}
-			}
-
+			
+//			int columnID = tablemodelRoomList.findColumn(getUIText(ROOMTABLE_COLUMNNAMES[0]));
+//
+//			for(int i = 0; i < tablemodelRoomList.getRowCount(); i++) {
+//				String strID = (String)tablemodelRoomList.getValueAt(i, columnID);
+//				int roomID = Integer.parseInt(strID);
+//
+//				if(roomID == r.roomID) {
+//					tablemodelRoomList.removeRow(i);
+//					break;
+//				}
+//			}
+			
+			Room roomToRemove = getRoomWithId(r.roomID);
+			roomList.remove(roomToRemove);
+			populateRoomListPanel();
+			
 			if((r.roomID == currentViewDetailRoomID) && (currentScreenCardNumber == SCREENCARD_CREATEROOM)) {
 				changeCurrentScreenCard(SCREENCARD_LOBBY);
 			}
@@ -4644,9 +5297,10 @@ public class NetLobbyFrame extends JFrame implements ActionListener, NetMessageL
 					}
 				});
 
+				//belzebub: here is where the room of the chat is changed
 				String strTitle = roomInfo.strName;
-				this.setTitle(getUIText("Title_NetLobby") + " - " + strTitle);
-				tabLobbyAndRoom.setTitleAt(1, getUIText("Lobby_Tab_Room") + strTitle);
+				//this.setTitle(getUIText("Title_NetLobby") + " - " + strTitle);
+				//tabLobbyAndRoom.setTitleAt(1, getUIText("Lobby_Tab_Room") + strTitle);
 
 				addSystemChatLogLater(txtpaneRoomChatLog, getUIText("SysMsg_RoomJoin_Title") + strTitle, Color.blue);
 				addSystemChatLogLater(txtpaneRoomChatLog, getUIText("SysMsg_RoomJoin_ID") + roomInfo.roomID, Color.blue);
@@ -4654,7 +5308,7 @@ public class NetLobbyFrame extends JFrame implements ActionListener, NetMessageL
 					addSystemChatLogLater(txtpaneRoomChatLog, getUIText("SysMsg_RoomJoin_Rule") + roomInfo.ruleName, Color.blue);
 				}
 
-				setLobbyButtonsEnabled(2);
+				setLobbyButtonsEnabled(2); //belzebub -> here is where the buttons get disabled after a room is made
 				changeCurrentScreenCard(SCREENCARD_LOBBY);
 
 				// Listener呼び出し
@@ -4665,10 +5319,10 @@ public class NetLobbyFrame extends JFrame implements ActionListener, NetMessageL
 			} else {
 				addSystemChatLogLater(txtpaneRoomChatLog, getUIText("SysMsg_RoomJoin_Lobby"), Color.blue);
 
-				this.setTitle(getUIText("Title_NetLobby"));
+				//this.setTitle(getUIText("Title_NetLobby"));
 				tabLobbyAndRoom.setSelectedIndex(0);
-				tabLobbyAndRoom.setEnabledAt(1, false);
-				tabLobbyAndRoom.setTitleAt(1, getUIText("Lobby_Tab_NoRoom"));
+				//tabLobbyAndRoom.setEnabledAt(1, false);
+				//tabLobbyAndRoom.setTitleAt(1, getUIText("Lobby_Tab_NoRoom"));
 
 				setLobbyButtonsEnabled(1);
 				changeCurrentScreenCard(SCREENCARD_LOBBY);
@@ -4812,7 +5466,7 @@ public class NetLobbyFrame extends JFrame implements ActionListener, NetMessageL
 			rowdata[10] = message[13];									// KO
 			rowdata[11] = message[14];									// Win
 			rowdata[12] = message[15];									// Games
-
+			
 			int insertPos = 0;
 			for(int i = 0; i < tablemodelGameStat.getRowCount(); i++) {
 				String strRank = (String)tablemodelGameStat.getValueAt(i, 0);
@@ -4825,6 +5479,22 @@ public class NetLobbyFrame extends JFrame implements ActionListener, NetMessageL
 
 			tablemodelGameStat.insertRow(insertPos, rowdata);
 
+			String[] statdata = new String[13];
+			statdata[0] = Integer.toString(myRank);						// Rank
+			statdata[1] = convTripCode(NetUtil.urlDecode(message[3]));	// Name
+			statdata[2] = message[5];									// Attack count
+			statdata[3] = message[6];									// APL
+			statdata[4] = message[7];									// APM
+			statdata[5] = message[8];									// Line count
+			statdata[6] = message[9];									// LPM
+			statdata[7] = message[10];									// Piece count
+			statdata[8] = message[11];									// PPS
+			statdata[9] = ""+Integer.parseInt(message[12]);				//  Time
+			statdata[10] = message[13];									// KO
+			statdata[11] = message[14];									// Win
+			statdata[12] = message[15];									// Games
+			gameStats.add(Arrays.asList(statdata));
+			
 			if(writerRoomLog != null) {
 				writerRoomLog.print("[" + getCurrentTimeAsString() + "] ");
 
@@ -4963,7 +5633,9 @@ public class NetLobbyFrame extends JFrame implements ActionListener, NetMessageL
 			public void run() {
 				setLobbyButtonsEnabled(0);
 				setRoomButtonsEnabled(false);
-				tablemodelRoomList.setRowCount(0);
+				//tablemodelRoomList.setRowCount(0);
+				roomList = new ArrayList<Room>();
+				populateRoomListPanel();
 			}
 		});
 
@@ -4985,7 +5657,16 @@ public class NetLobbyFrame extends JFrame implements ActionListener, NetMessageL
 		}
 		if(netDummyMode != null) netDummyMode.netlobbyOnDisconnect(this, netPlayerClient, ex);
 	}
-
+	
+	public Room getRoomWithId(int roomId){
+		for (Room room : roomList){
+			if (room.getId() == roomId){
+				return room;
+			}
+		}
+		return null;
+	}
+	
 	/**
 	 * Add an new NetLobbyListener, but don't add NetDummyMode!
 	 * @param l A NetLobbyListener to add
@@ -5024,6 +5705,12 @@ public class NetLobbyFrame extends JFrame implements ActionListener, NetMessageL
 	 * @param args コマンドLines引count
 	 */
 	public static void main(String[] args) {
+
+		try {
+			UIManager.setLookAndFeel("com.sun.java.swing.plaf.nimbus.NimbusLookAndFeel");
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 		PropertyConfigurator.configure("config/etc/log.cfg");
 		NetLobbyFrame frame = new NetLobbyFrame();
 		frame.init();
@@ -5130,6 +5817,52 @@ public class NetLobbyFrame extends JFrame implements ActionListener, NetMessageL
 		}
 	}
 
+	protected class PlayerListPopupMenu extends JPopupMenu {
+		private static final long serialVersionUID = 1L;
+
+		private JList listbox;
+		private Action joinAction;
+		private Action watchAction;
+
+		public PlayerListPopupMenu(JList l) {
+			super();
+
+			this.listbox = l;
+			
+			add(joinAction = new AbstractAction(getUIText("Popup_PlayerWatchRoom")) {
+				private static final long serialVersionUID = 1L;
+				public void actionPerformed(ActionEvent e) {
+					if(listbox == null) return;
+					PlayerListEntry selectedPlayer = (PlayerListEntry) listbox.getSelectedValue();
+					int roomId = selectedPlayer.getRoomId();
+					setEnabled(roomId != -1);
+					joinRoom(roomId, true);
+				}
+			});
+			add(watchAction = new AbstractAction(getUIText("Popup_PlayerJoinRoom")) {
+				private static final long serialVersionUID = 1L;
+				public void actionPerformed(ActionEvent e) {
+					if(listbox == null) return;
+					PlayerListEntry selectedPlayer = (PlayerListEntry) listbox.getSelectedValue();
+					int roomId = selectedPlayer.getRoomId();
+					setEnabled(roomId != -1);
+					joinRoom(roomId, false);
+				}
+			});
+		}
+
+		@Override
+		public void show(Component c, int x, int y) {
+			if(listbox.getSelectedIndex() != -1) {
+				PlayerListEntry selectedPlayer = (PlayerListEntry) listbox.getSelectedValue();
+				boolean enabled = selectedPlayer.getRoomId() != -1;
+				watchAction.setEnabled(enabled);
+				joinAction.setEnabled(enabled);
+				super.show(c, x, y);
+			}
+		}
+	}
+	
 	/**
 	 * サーバー選択リストボックス用ポップアップMenu
 	 */
@@ -5186,113 +5919,113 @@ public class NetLobbyFrame extends JFrame implements ActionListener, NetMessageL
 		}
 	}
 
-	/**
-	 * Room list table用ポップアップMenu
-	 */
-	protected class RoomTablePopupMenu extends JPopupMenu {
-		private static final long serialVersionUID = 1L;
+//	/**
+//	 * Room list table用ポップアップMenu
+//	 */
+//	protected class RoomTablePopupMenu extends JPopupMenu {
+//		private static final long serialVersionUID = 1L;
+//
+//		private Action joinAction;
+//		private Action watchAction;
+//		private Action detailAction;
+//
+//		public RoomTablePopupMenu() {
+//			super();
+//
+//			add(joinAction = new AbstractAction(getUIText("Popup_RoomTable_Join")) {
+//				private static final long serialVersionUID = 1L;
+//				public void actionPerformed(ActionEvent evt) {
+//					int row = tableRoomList.getSelectedRow();
+//					if(row != -1) {
+//						int columnID = tablemodelRoomList.findColumn(getUIText(ROOMTABLE_COLUMNNAMES[0]));
+//						String strRoomID = (String)tablemodelRoomList.getValueAt(row, columnID);
+//						int roomID = Integer.parseInt(strRoomID);
+//						joinRoom(roomID, false);
+//					}
+//				}
+//			});
+//			add(watchAction = new AbstractAction(getUIText("Popup_RoomTable_Watch")) {
+//				private static final long serialVersionUID = 1L;
+//				public void actionPerformed(ActionEvent evt) {
+//					int row = tableRoomList.getSelectedRow();
+//					if(row != -1) {
+//						int columnID = tablemodelRoomList.findColumn(getUIText(ROOMTABLE_COLUMNNAMES[0]));
+//						String strRoomID = (String)tablemodelRoomList.getValueAt(row, columnID);
+//						int roomID = Integer.parseInt(strRoomID);
+//						joinRoom(roomID, true);
+//					}
+//				}
+//			});
+//			add(detailAction = new AbstractAction(getUIText("Popup_RoomTable_Detail")) {
+//				private static final long serialVersionUID = 1L;
+//				public void actionPerformed(ActionEvent evt) {
+//					int row = tableRoomList.getSelectedRow();
+//					if(row != -1) {
+//						int columnID = tablemodelRoomList.findColumn(getUIText(ROOMTABLE_COLUMNNAMES[0]));
+//						String strRoomID = (String)tablemodelRoomList.getValueAt(row, columnID);
+//						int roomID = Integer.parseInt(strRoomID);
+//						viewRoomDetail(roomID);
+//					}
+//				}
+//			});
+//		}
+//
+//		@Override
+//		public void show(Component c, int x, int y) {
+//			if(tableRoomList.getSelectedRow() != -1) {
+//				joinAction.setEnabled(true);
+//				watchAction.setEnabled(true);
+//				detailAction.setEnabled(true);
+//				super.show(c, x, y);
+//			}
+//		}
+//	}
 
-		private Action joinAction;
-		private Action watchAction;
-		private Action detailAction;
+//	/**
+//	 * Room list table用MouseAdapter
+//	 */
+//	protected class RoomTableMouseAdapter extends MouseAdapter {
+//		@Override
+//		public void mouseClicked(MouseEvent e) {
+//			if((e.getClickCount() == 2) && (e.getButton() == MouseEvent.BUTTON1)) {
+//				Point pt = e.getPoint();
+//				int row = tableRoomList.rowAtPoint(pt);
+//
+//				if(row != -1) {
+//					int columnID = tablemodelRoomList.findColumn(getUIText(ROOMTABLE_COLUMNNAMES[0]));
+//					String strRoomID = (String)tablemodelRoomList.getValueAt(row, columnID);
+//					int roomID = Integer.parseInt(strRoomID);
+//					joinRoom(roomID, false);
+//				}
+//			}
+//		}
+//	}
 
-		public RoomTablePopupMenu() {
-			super();
-
-			add(joinAction = new AbstractAction(getUIText("Popup_RoomTable_Join")) {
-				private static final long serialVersionUID = 1L;
-				public void actionPerformed(ActionEvent evt) {
-					int row = tableRoomList.getSelectedRow();
-					if(row != -1) {
-						int columnID = tablemodelRoomList.findColumn(getUIText(ROOMTABLE_COLUMNNAMES[0]));
-						String strRoomID = (String)tablemodelRoomList.getValueAt(row, columnID);
-						int roomID = Integer.parseInt(strRoomID);
-						joinRoom(roomID, false);
-					}
-				}
-			});
-			add(watchAction = new AbstractAction(getUIText("Popup_RoomTable_Watch")) {
-				private static final long serialVersionUID = 1L;
-				public void actionPerformed(ActionEvent evt) {
-					int row = tableRoomList.getSelectedRow();
-					if(row != -1) {
-						int columnID = tablemodelRoomList.findColumn(getUIText(ROOMTABLE_COLUMNNAMES[0]));
-						String strRoomID = (String)tablemodelRoomList.getValueAt(row, columnID);
-						int roomID = Integer.parseInt(strRoomID);
-						joinRoom(roomID, true);
-					}
-				}
-			});
-			add(detailAction = new AbstractAction(getUIText("Popup_RoomTable_Detail")) {
-				private static final long serialVersionUID = 1L;
-				public void actionPerformed(ActionEvent evt) {
-					int row = tableRoomList.getSelectedRow();
-					if(row != -1) {
-						int columnID = tablemodelRoomList.findColumn(getUIText(ROOMTABLE_COLUMNNAMES[0]));
-						String strRoomID = (String)tablemodelRoomList.getValueAt(row, columnID);
-						int roomID = Integer.parseInt(strRoomID);
-						viewRoomDetail(roomID);
-					}
-				}
-			});
-		}
-
-		@Override
-		public void show(Component c, int x, int y) {
-			if(tableRoomList.getSelectedRow() != -1) {
-				joinAction.setEnabled(true);
-				watchAction.setEnabled(true);
-				detailAction.setEnabled(true);
-				super.show(c, x, y);
-			}
-		}
-	}
-
-	/**
-	 * Room list table用MouseAdapter
-	 */
-	protected class RoomTableMouseAdapter extends MouseAdapter {
-		@Override
-		public void mouseClicked(MouseEvent e) {
-			if((e.getClickCount() == 2) && (e.getButton() == MouseEvent.BUTTON1)) {
-				Point pt = e.getPoint();
-				int row = tableRoomList.rowAtPoint(pt);
-
-				if(row != -1) {
-					int columnID = tablemodelRoomList.findColumn(getUIText(ROOMTABLE_COLUMNNAMES[0]));
-					String strRoomID = (String)tablemodelRoomList.getValueAt(row, columnID);
-					int roomID = Integer.parseInt(strRoomID);
-					joinRoom(roomID, false);
-				}
-			}
-		}
-	}
-
-	/**
-	 * Room list table用KeyAdapter
-	 */
-	protected class RoomTableKeyAdapter extends KeyAdapter {
-		@Override
-		public void keyPressed(KeyEvent e) {
-			if(e.getKeyCode() == KeyEvent.VK_ENTER) {
-				e.consume();
-			}
-		}
-
-		@Override
-		public void keyReleased(KeyEvent e) {
-			if(e.getKeyCode() == KeyEvent.VK_ENTER) {
-				int row = tableRoomList.getSelectedRow();
-				if(row != -1) {
-					int columnID = tablemodelRoomList.findColumn(getUIText(ROOMTABLE_COLUMNNAMES[0]));
-					String strRoomID = (String)tablemodelRoomList.getValueAt(row, columnID);
-					int roomID = Integer.parseInt(strRoomID);
-					joinRoom(roomID, false);
-				}
-				e.consume();
-			}
-		}
-	}
+//	/**
+//	 * Room list table用KeyAdapter
+//	 */
+//	protected class RoomTableKeyAdapter extends KeyAdapter {
+//		@Override
+//		public void keyPressed(KeyEvent e) {
+//			if(e.getKeyCode() == KeyEvent.VK_ENTER) {
+//				e.consume();
+//			}
+//		}
+//
+//		@Override
+//		public void keyReleased(KeyEvent e) {
+//			if(e.getKeyCode() == KeyEvent.VK_ENTER) {
+//				int row = tableRoomList.getSelectedRow();
+//				if(row != -1) {
+//					int columnID = tablemodelRoomList.findColumn(getUIText(ROOMTABLE_COLUMNNAMES[0]));
+//					String strRoomID = (String)tablemodelRoomList.getValueAt(row, columnID);
+//					int roomID = Integer.parseInt(strRoomID);
+//					joinRoom(roomID, false);
+//				}
+//				e.consume();
+//			}
+//		}
+//	}
 
 	/**
 	 * ログ表示欄用ポップアップMenu
@@ -5421,7 +6154,6 @@ public class NetLobbyFrame extends JFrame implements ActionListener, NetMessageL
 		/** Game style */
 		public int style;
 	}
-
 	/**
 	 * Each label of Image Combobox<br>
 	 * <a href="http://www.javadrive.jp/tutorial/jcombobox/index20.html">Source</a>
@@ -5489,5 +6221,42 @@ public class NetLobbyFrame extends JFrame implements ActionListener, NetMessageL
 
 			return this;
 		}
+	}
+	
+	protected class PlayerListEntry {
+		
+		String playerName;
+		int roomId;
+		
+		public PlayerListEntry(String playerName, int roomId) {
+			super();
+			this.playerName = playerName;
+			this.roomId = roomId;
+		}
+		public String getPlayerName() {
+			return playerName;
+		}
+		public void setPlayerName(String playerName) {
+			this.playerName = playerName;
+		}
+		public int getRoomId() {
+			return roomId;
+		}
+		public void setRoomId(int roomId) {
+			this.roomId = roomId;
+		}
+		@Override
+		public String toString() {
+			return getPlayerName();
+		}
+		
+	}
+
+	public String getDivision() {
+		return division;
+	}
+
+	public void setDivision(String division) {
+		this.division = division;
 	}
 }

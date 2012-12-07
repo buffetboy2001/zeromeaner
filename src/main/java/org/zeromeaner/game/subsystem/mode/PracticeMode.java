@@ -862,8 +862,8 @@ public class PracticeMode extends AbstractMode {
 
 		goal = 5 * (engine.statistics.level + 1);
 
-		engine.meterValue = 0;
-		engine.meterColor = GameEngine.METER_COLOR_GREEN;
+		engine.setMeterValue(0);
+		engine.setMeterColor(GameEngine.METER_COLOR_GREEN);
 		setMeter(engine, playerID);
 	}
 
@@ -957,7 +957,7 @@ public class PracticeMode extends AbstractMode {
 
 			// Time
 			receiver.drawScoreFont(engine, playerID, 0, 14, "TIME", EventReceiver.COLOR_BLUE);
-			int time = engine.statistics.time;
+			int time = engine.statistics.getTime();
 			if(timelimit > 0) time = timelimitTimer;
 			if(time < 0) time = 0;
 			int fontcolor = EventReceiver.COLOR_WHITE;
@@ -1015,7 +1015,7 @@ public class PracticeMode extends AbstractMode {
 
 			// Time
 			receiver.drawScoreFont(engine, playerID, 0, 17, "TIME", EventReceiver.COLOR_BLUE);
-			int time = engine.statistics.time;
+			int time = engine.statistics.getTime();
 			if(timelimit > 0) time = timelimitTimer;
 			if(time < 0) time = 0;
 			int fontcolor = EventReceiver.COLOR_WHITE;
@@ -1515,46 +1515,46 @@ public class PracticeMode extends AbstractMode {
 	private void setMeter(GameEngine engine, int playerID) {
 		if((engine.gameActive) && (engine.ending == 2)) {
 			int remainRollTime = rolltimelimit - rolltime;
-			engine.meterValue = (remainRollTime * receiver.getMeterMax(engine)) / rolltimelimit;
-			engine.meterColor = GameEngine.METER_COLOR_GREEN;
-			if(remainRollTime <= 30*60) engine.meterColor = GameEngine.METER_COLOR_YELLOW;
-			if(remainRollTime <= 20*60) engine.meterColor = GameEngine.METER_COLOR_ORANGE;
-			if(remainRollTime <= 10*60) engine.meterColor = GameEngine.METER_COLOR_RED;
+			engine.setMeterValue((remainRollTime * receiver.getMeterMax(engine)) / rolltimelimit);
+			engine.setMeterColor(GameEngine.METER_COLOR_GREEN);
+			if(remainRollTime <= 30*60) engine.setMeterColor(GameEngine.METER_COLOR_YELLOW);
+			if(remainRollTime <= 20*60) engine.setMeterColor(GameEngine.METER_COLOR_ORANGE);
+			if(remainRollTime <= 10*60) engine.setMeterColor(GameEngine.METER_COLOR_RED);
 		} else if(timelimit > 0) {
 			int remainTime = timelimitTimer;
-			engine.meterValue = (remainTime * receiver.getMeterMax(engine)) / timelimit;
-			engine.meterColor = GameEngine.METER_COLOR_GREEN;
-			if(remainTime <= 30*60) engine.meterColor = GameEngine.METER_COLOR_YELLOW;
-			if(remainTime <= 20*60) engine.meterColor = GameEngine.METER_COLOR_ORANGE;
-			if(remainTime <= 10*60) engine.meterColor = GameEngine.METER_COLOR_RED;
+			engine.setMeterValue((remainTime * receiver.getMeterMax(engine)) / timelimit);
+			engine.setMeterColor(GameEngine.METER_COLOR_GREEN);
+			if(remainTime <= 30*60) engine.setMeterColor(GameEngine.METER_COLOR_YELLOW);
+			if(remainTime <= 20*60) engine.setMeterColor(GameEngine.METER_COLOR_ORANGE);
+			if(remainTime <= 10*60) engine.setMeterColor(GameEngine.METER_COLOR_RED);
 		} else if(leveltype == LEVELTYPE_10LINES) {
-			engine.meterValue = ((engine.statistics.lines % 10) * receiver.getMeterMax(engine)) / 9;
-			engine.meterColor = GameEngine.METER_COLOR_GREEN;
-			if(engine.statistics.lines % 10 >= 4) engine.meterColor = GameEngine.METER_COLOR_YELLOW;
-			if(engine.statistics.lines % 10 >= 6) engine.meterColor = GameEngine.METER_COLOR_ORANGE;
-			if(engine.statistics.lines % 10 >= 8) engine.meterColor = GameEngine.METER_COLOR_RED;
+			engine.setMeterValue(((engine.statistics.lines % 10) * receiver.getMeterMax(engine)) / 9);
+			engine.setMeterColor(GameEngine.METER_COLOR_GREEN);
+			if(engine.statistics.lines % 10 >= 4) engine.setMeterColor(GameEngine.METER_COLOR_YELLOW);
+			if(engine.statistics.lines % 10 >= 6) engine.setMeterColor(GameEngine.METER_COLOR_ORANGE);
+			if(engine.statistics.lines % 10 >= 8) engine.setMeterColor(GameEngine.METER_COLOR_RED);
 		} else if(leveltype == LEVELTYPE_POINTS) {
-			engine.meterValue = (goal * receiver.getMeterMax(engine)) / (5 * (engine.statistics.level + 1));
-			engine.meterColor = GameEngine.METER_COLOR_GREEN;
-			if(engine.meterValue <= receiver.getMeterMax(engine) / 2) engine.meterColor = GameEngine.METER_COLOR_YELLOW;
-			if(engine.meterValue <= receiver.getMeterMax(engine) / 3) engine.meterColor = GameEngine.METER_COLOR_ORANGE;
-			if(engine.meterValue <= receiver.getMeterMax(engine) / 4) engine.meterColor = GameEngine.METER_COLOR_RED;
+			engine.setMeterValue((goal * receiver.getMeterMax(engine)) / (5 * (engine.statistics.level + 1)));
+			engine.setMeterColor(GameEngine.METER_COLOR_GREEN);
+			if(engine.getMeterValue() <= receiver.getMeterMax(engine) / 2) engine.setMeterColor(GameEngine.METER_COLOR_YELLOW);
+			if(engine.getMeterValue() <= receiver.getMeterMax(engine) / 3) engine.setMeterColor(GameEngine.METER_COLOR_ORANGE);
+			if(engine.getMeterValue() <= receiver.getMeterMax(engine) / 4) engine.setMeterColor(GameEngine.METER_COLOR_RED);
 		} else if((leveltype == LEVELTYPE_MANIA) || (leveltype == LEVELTYPE_MANIAPLUS)) {
-			engine.meterValue = ((engine.statistics.level % 100) * receiver.getMeterMax(engine)) / 99;
-			engine.meterColor = GameEngine.METER_COLOR_GREEN;
-			if(engine.statistics.level % 100 >= 50) engine.meterColor = GameEngine.METER_COLOR_YELLOW;
-			if(engine.statistics.level % 100 >= 80) engine.meterColor = GameEngine.METER_COLOR_ORANGE;
-			if(engine.statistics.level == nextseclv - 1) engine.meterColor = GameEngine.METER_COLOR_RED;
+			engine.setMeterValue(((engine.statistics.level % 100) * receiver.getMeterMax(engine)) / 99);
+			engine.setMeterColor(GameEngine.METER_COLOR_GREEN);
+			if(engine.statistics.level % 100 >= 50) engine.setMeterColor(GameEngine.METER_COLOR_YELLOW);
+			if(engine.statistics.level % 100 >= 80) engine.setMeterColor(GameEngine.METER_COLOR_ORANGE);
+			if(engine.statistics.level == nextseclv - 1) engine.setMeterColor(GameEngine.METER_COLOR_RED);
 		} else if((leveltype == LEVELTYPE_NONE) && (goallv != -1)) {
-			engine.meterValue = ((engine.statistics.lines) * receiver.getMeterMax(engine)) / (goallv + 1);
-			engine.meterColor = GameEngine.METER_COLOR_GREEN;
-			if(engine.meterValue >= receiver.getMeterMax(engine) / 10) engine.meterColor = GameEngine.METER_COLOR_YELLOW;
-			if(engine.meterValue >= receiver.getMeterMax(engine) / 5) engine.meterColor = GameEngine.METER_COLOR_ORANGE;
-			if(engine.meterValue >= receiver.getMeterMax(engine) / 2) engine.meterColor = GameEngine.METER_COLOR_RED;
+			engine.setMeterValue(((engine.statistics.lines) * receiver.getMeterMax(engine)) / (goallv + 1));
+			engine.setMeterColor(GameEngine.METER_COLOR_GREEN);
+			if(engine.getMeterValue() >= receiver.getMeterMax(engine) / 10) engine.setMeterColor(GameEngine.METER_COLOR_YELLOW);
+			if(engine.getMeterValue() >= receiver.getMeterMax(engine) / 5) engine.setMeterColor(GameEngine.METER_COLOR_ORANGE);
+			if(engine.getMeterValue() >= receiver.getMeterMax(engine) / 2) engine.setMeterColor(GameEngine.METER_COLOR_RED);
 		}
 
-		if(engine.meterValue < 0) engine.meterValue = 0;
-		if(engine.meterValue > receiver.getMeterMax(engine)) engine.meterValue = receiver.getMeterMax(engine);
+		if(engine.getMeterValue() < 0) engine.setMeterValue(0);
+		if(engine.getMeterValue() > receiver.getMeterMax(engine)) engine.setMeterValue(receiver.getMeterMax(engine));
 	}
 
 	/*

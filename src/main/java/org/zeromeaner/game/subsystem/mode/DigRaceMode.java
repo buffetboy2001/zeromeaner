@@ -28,10 +28,13 @@
 */
 package org.zeromeaner.game.subsystem.mode;
 
+import java.util.ArrayList;
+
 import org.apache.log4j.Logger;
 import org.zeromeaner.game.component.BGMStatus;
 import org.zeromeaner.game.component.Block;
 import org.zeromeaner.game.component.Controller;
+import org.zeromeaner.game.component.PiecePlacement;
 import org.zeromeaner.game.event.EventReceiver;
 import org.zeromeaner.game.net.NetUtil;
 import org.zeromeaner.game.play.GameEngine;
@@ -345,8 +348,8 @@ public class DigRaceMode extends NetDummyMode {
 				fillGarbage(engine, goaltype);
 
 				// Update meter
-				engine.meterValue = GOAL_TABLE[goaltype] * receiver.getBlockGraphicsHeight(engine, playerID);
-				engine.meterColor = GameEngine.METER_COLOR_GREEN;
+				engine.setMeterValue(GOAL_TABLE[goaltype] * receiver.getBlockGraphicsHeight(engine, playerID));
+				engine.setMeterColor(GameEngine.METER_COLOR_GREEN);
 
 				// NET: Send field
 				if(netNumSpectators > 0) {
@@ -493,10 +496,10 @@ public class DigRaceMode extends NetDummyMode {
 			receiver.drawScoreFont(engine, playerID, 0, 10, String.valueOf(engine.statistics.lpm));
 
 			receiver.drawScoreFont(engine, playerID, 0, 12, "PIECE/SEC", EventReceiver.COLOR_BLUE);
-			receiver.drawScoreFont(engine, playerID, 0, 13, String.valueOf(engine.statistics.pps));
+			receiver.drawScoreFont(engine, playerID, 0, 13, String.valueOf(engine.statistics.getPps()));
 
 			receiver.drawScoreFont(engine, playerID, 0, 15, "TIME", EventReceiver.COLOR_BLUE);
-			receiver.drawScoreFont(engine, playerID, 0, 16, GeneralUtil.getTime(engine.statistics.time));
+			receiver.drawScoreFont(engine, playerID, 0, 16, GeneralUtil.getTime(engine.statistics.getTime()));
 		}
 
 		// NET: Number of spectators
@@ -517,11 +520,11 @@ public class DigRaceMode extends NetDummyMode {
 	public void calcScore(GameEngine engine, int playerID, int lines) {
 		// Update meter
 		int remainLines = getRemainGarbageLines(engine, goaltype);
-		engine.meterValue = remainLines * receiver.getBlockGraphicsHeight(engine, playerID);
-		engine.meterColor = GameEngine.METER_COLOR_GREEN;
-		if(remainLines <= 14) engine.meterColor = GameEngine.METER_COLOR_YELLOW;
-		if(remainLines <= 8) engine.meterColor = GameEngine.METER_COLOR_ORANGE;
-		if(remainLines <= 4) engine.meterColor = GameEngine.METER_COLOR_RED;
+		engine.setMeterValue(remainLines * receiver.getBlockGraphicsHeight(engine, playerID));
+		engine.setMeterColor(GameEngine.METER_COLOR_GREEN);
+		if(remainLines <= 14) engine.setMeterColor(GameEngine.METER_COLOR_YELLOW);
+		if(remainLines <= 8) engine.setMeterColor(GameEngine.METER_COLOR_ORANGE);
+		if(remainLines <= 4) engine.setMeterColor(GameEngine.METER_COLOR_RED);
 
 		// Game is completed when there is no gem blocks
 		if((lines > 0) && (remainLines == 0)) {
@@ -557,6 +560,9 @@ public class DigRaceMode extends NetDummyMode {
 	 */
 	@Override
 	public void saveReplay(GameEngine engine, int playerID, CustomProperties prop) {
+		
+		prop.setProperty("linerace.pieceSequence", getEncodedPiecePlacements(engine));
+		
 		engine.owner.replayProp.setProperty("digrace.version", version);
 		savePreset(engine, engine.owner.replayProp, -1);
 
@@ -567,13 +573,22 @@ public class DigRaceMode extends NetDummyMode {
 
 		// Update rankings
 		if((!owner.replayMode) && (getRemainGarbageLines(engine, goaltype) == 0) && (engine.ending != 0) && (engine.ai == null) && (!netIsWatch)) {
-			updateRanking(engine.statistics.time, engine.statistics.lines, engine.statistics.totalPieceLocked);
+			updateRanking(engine.statistics.getTime(), engine.statistics.lines, engine.statistics.totalPieceLocked);
 
 			if(rankingRank != -1) {
 				saveRanking(owner.modeConfig, engine.ruleopt.strRuleName);
 				receiver.saveModeConfig(owner.modeConfig);
 			}
 		}
+	}
+	
+	private String getEncodedPiecePlacements(GameEngine engine) {
+		String encoded = ""; 
+		ArrayList<PiecePlacement> piecePlacements = engine.getPiecePlacements();
+		 for (PiecePlacement piecePlacement : piecePlacements){
+			 encoded += piecePlacement.toString();
+		 }
+		 return encoded;
 	}
 
 	/**
@@ -658,10 +673,10 @@ public class DigRaceMode extends NetDummyMode {
 	protected void netSendStats(GameEngine engine) {
 		String msg = "game\tstats\t";
 		msg += engine.statistics.lines + "\t" + engine.statistics.totalPieceLocked + "\t";
-		msg += engine.statistics.time + "\t" + engine.statistics.lpm + "\t";
-		msg += engine.statistics.pps + "\t" + goaltype + "\t";
+		msg += engine.statistics.getTime() + "\t" + engine.statistics.lpm + "\t";
+		msg += engine.statistics.getPps() + "\t" + goaltype + "\t";
 		msg += engine.gameActive + "\t" + engine.timerActive + "\t";
-		msg += engine.meterColor + "\t" + engine.meterValue;
+		msg += engine.getMeterColor() + "\t" + engine.getMeterValue();
 		msg += "\n";
 		netLobby.netPlayerClient.send(msg);
 	}
@@ -673,14 +688,14 @@ public class DigRaceMode extends NetDummyMode {
 	protected void netRecvStats(GameEngine engine, String[] message) {
 		engine.statistics.lines = Integer.parseInt(message[4]);
 		engine.statistics.totalPieceLocked = Integer.parseInt(message[5]);
-		engine.statistics.time = Integer.parseInt(message[6]);
+		engine.statistics.setTime(Integer.parseInt(message[6]));
 		engine.statistics.lpm = Float.parseFloat(message[7]);
-		engine.statistics.pps = Float.parseFloat(message[8]);
+		engine.statistics.setPps(Float.parseFloat(message[8]));
 		goaltype = Integer.parseInt(message[9]);
 		engine.gameActive = Boolean.parseBoolean(message[10]);
 		engine.timerActive = Boolean.parseBoolean(message[11]);
-		engine.meterColor = Integer.parseInt(message[12]);
-		engine.meterValue = Integer.parseInt(message[13]);
+		engine.setMeterColor(Integer.parseInt(message[12]));
+		engine.setMeterValue(Integer.parseInt(message[13]));
 	}
 
 	/**
@@ -693,9 +708,9 @@ public class DigRaceMode extends NetDummyMode {
 		subMsg += "GARBAGE;" + (GOAL_TABLE[goaltype] - getRemainGarbageLines(engine, goaltype)) + "/" + GOAL_TABLE[goaltype] + "\t";
 		subMsg += "LINE;" + engine.statistics.lines + "\t";
 		subMsg += "PIECE;" + engine.statistics.totalPieceLocked + "\t";
-		subMsg += "TIME;" + GeneralUtil.getTime(engine.statistics.time) + "\t";
+		subMsg += "TIME;" + GeneralUtil.getTime(engine.statistics.getTime()) + "\t";
 		subMsg += "LINE/MIN;" + engine.statistics.lpm + "\t";
-		subMsg += "PIECE/SEC;" + engine.statistics.pps + "\t";
+		subMsg += "PIECE/SEC;" + engine.statistics.getPps() + "\t";
 
 		String msg = "gstat1p\t" + NetUtil.urlEncode(subMsg) + "\n";
 		netLobby.netPlayerClient.send(msg);

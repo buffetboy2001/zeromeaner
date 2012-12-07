@@ -32,8 +32,6 @@ import org.zeromeaner.game.play.GameManager;
 import org.zeromeaner.gui.net.UpdateChecker;
 
 import sdljava.SDLException;
-//import sdljava.event.MouseState;
-//import sdljava.event.SDLEvent;
 import sdljava.video.SDLSurface;
 import sdljava.video.SDLVideo;
 

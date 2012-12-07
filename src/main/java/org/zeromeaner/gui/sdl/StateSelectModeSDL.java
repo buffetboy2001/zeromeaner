@@ -31,8 +31,6 @@ package org.zeromeaner.gui.sdl;
 import java.util.LinkedList;
 
 import sdljava.SDLException;
-//import sdljava.event.MouseState;
-//import sdljava.event.SDLEvent;
 import sdljava.video.SDLSurface;
 
 /**

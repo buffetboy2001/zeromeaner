@@ -1,10 +1,8 @@
 package org.zeromeaner.game.evil;
 
-import org.zeromeaner.game.play.GameEngine;
-
 import org.eviline.randomizer.AngelRandomizer;
 import org.eviline.randomizer.MaliciousRandomizer.MaliciousRandomizerProperties;
-import org.eviline.randomizer.ThreadedMaliciousRandomizer;
+import org.zeromeaner.game.play.GameEngine;
 
 public class TNAngelRandomizer extends TNRandomizer {
 	@Override

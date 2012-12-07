@@ -76,8 +76,8 @@ public class GeneralUtil {
 	 * @return ○ if b is true, × if b is false
 	 */
 	public static String getOorX(boolean b) {
-		if(b == true) return "c";
-		return "e";
+		if(b == true) return "ON";
+		return "OFF";
 	}
 
 	/**

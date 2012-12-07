@@ -30,7 +30,6 @@ package org.zeromeaner.game.net;
 
 import java.io.IOException;
 
-
 import org.apache.log4j.Logger;
 import org.zeromeaner.game.play.GameManager;
 

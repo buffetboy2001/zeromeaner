@@ -29,7 +29,6 @@
 package org.zeromeaner.gui.slick;
 
 import org.apache.log4j.Logger;
-
 import org.newdawn.slick.AppGameContainer;
 import org.newdawn.slick.GameContainer;
 import org.newdawn.slick.Graphics;
@@ -103,7 +102,7 @@ public class StateInGame extends BasicGameState {
 	 * State initialization
 	 */
 	public void init(GameContainer container, StateBasedGame game) throws SlickException {
-		appContainer = (AppGameContainer)container;
+		appContainer = (AppGameContainer) container;
 	}
 
 	/*
@@ -142,6 +141,9 @@ public class StateInGame extends BasicGameState {
 		if(modeObj == null) {
 			log.error("Couldn't find mode:" + modeName);
 		} else {
+			if (appContainer instanceof AppGameContainer){
+				((AppGameContainer) appContainer).setTitle("NullpoMino - " + modeName);
+			}
 			gameManager.mode = modeObj;
 		}
 
@@ -230,6 +232,9 @@ public class StateInGame extends BasicGameState {
 		if(modeObj == null) {
 			log.error("Couldn't find mode:" + modeName);
 		} else {
+			if (appContainer instanceof AppGameContainer){
+				((AppGameContainer) appContainer).setTitle("NullpoMino - " + modeName + " (Replay)");
+			}
 			gameManager.mode = modeObj;
 		}
 

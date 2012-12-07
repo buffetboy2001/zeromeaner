@@ -45,34 +45,34 @@ public class StateConfigGeneral extends BaseGameState {
 
 	/** UI Text identifier Strings */
 	protected static final String[] UI_TEXT = {
-		"ConfigGeneral_SE",
-		"ConfigGeneral_BGM",
-		"ConfigGeneral_BGMPreload",
+//		"ConfigGeneral_SE",
+//		"ConfigGeneral_BGM",
+//		"ConfigGeneral_BGMPreload",
 		"ConfigGeneral_SEVolume",
 		"ConfigGeneral_BGMVolume",
 		"ConfigGeneral_Background",
-		"ConfigGeneral_UseBackgroundFade",
-		"ConfigGeneral_ShowLineEffect",
-		"ConfigGeneral_LineEffectSpeed",
-		"ConfigGeneral_ShowMeter",
-		"ConfigGeneral_DarkNextArea",
-		"ConfigGeneral_NextShadow",
+//		"ConfigGeneral_UseBackgroundFade",
+//		"ConfigGeneral_ShowLineEffect",
+//		"ConfigGeneral_LineEffectSpeed",
+//		"ConfigGeneral_ShowMeter",
+//		"ConfigGeneral_DarkNextArea",
+//		"ConfigGeneral_NextShadow",
 		"ConfigGeneral_NextType",
 		"ConfigGeneral_OutlineGhost",
 		"ConfigGeneral_FieldBGBright",
 		"ConfigGeneral_ShowFieldBGGrid",
 		"ConfigGeneral_ShowInput",
 		"ConfigGeneral_Fullscreen",
-		"ConfigGeneral_ShowFPS",
-		"ConfigGeneral_MaxFPS",
-		"ConfigGeneral_FrameStep",
-		"ConfigGeneral_AlternateFPSPerfectMode",
-		"ConfigGeneral_AlternateFPSPerfectYield",
-		"ConfigGeneral_BGMStreaming",
-		"ConfigGeneral_VSync",
-		"ConfigGeneral_AlternateFPSTiming",
-		"ConfigGeneral_AlternateFPSDynamicAdjust",
-		"ConfigGeneral_ScreenSizeType",
+//		"ConfigGeneral_ShowFPS",
+//		"ConfigGeneral_MaxFPS",
+//		"ConfigGeneral_FrameStep",
+//		"ConfigGeneral_AlternateFPSPerfectMode",
+//		"ConfigGeneral_AlternateFPSPerfectYield",
+//		"ConfigGeneral_BGMStreaming",
+//		"ConfigGeneral_VSync",
+//		"ConfigGeneral_AlternateFPSTiming",
+//		"ConfigGeneral_AlternateFPSDynamicAdjust",
+//		"ConfigGeneral_ScreenSizeType",
 	};
 
 	/** Piece preview type options */
@@ -143,6 +143,12 @@ public class StateConfigGeneral extends BaseGameState {
 
 	/** 垂直同期を待つ */
 	protected boolean vsync;
+
+	protected boolean forcereplaysave;
+	protected boolean fumenrecording;
+	protected boolean fullframefumenrecording;
+	
+	protected boolean finesseCoach;
 
 	/** ghost ピースの上にNEXT表示 */
 	protected boolean nextshadow;
@@ -239,6 +245,10 @@ public class StateConfigGeneral extends BaseGameState {
 				break;
 			}
 		}
+		forcereplaysave = prop.getProperty("option.forcereplaysave", false);
+		fumenrecording = prop.getProperty("option.fumenrecording", false);
+		fullframefumenrecording = prop.getProperty("option.fullframefumenrecording", false);
+		finesseCoach = prop.getProperty("option.finesseCoach", false);
 	}
 
 	/**
@@ -287,6 +297,10 @@ public class StateConfigGeneral extends BaseGameState {
 			prop.setProperty("option.screenwidth", SCREENSIZE_TABLE[screenSizeType][0]);
 			prop.setProperty("option.screenheight", SCREENSIZE_TABLE[screenSizeType][1]);
 		}
+		prop.setProperty("option.forcereplaysave", forcereplaysave);
+		prop.setProperty("option.fumenrecording", fumenrecording);
+		prop.setProperty("option.fullframefumenrecording", fullframefumenrecording);
+		prop.setProperty("option.finesseCoach", finesseCoach);		
 	}
 
 	/*
@@ -362,12 +376,12 @@ public class StateConfigGeneral extends BaseGameState {
 		// Cursor movement
 		if(GameKeySlick.gamekey[0].isMenuRepeatKey(GameKeySlick.BUTTON_UP)) {
 		    cursor--;
-			if(cursor < 0) cursor = 27;
+			if(cursor < 0) cursor = 7;
 			ResourceHolderSlick.soundManager.play("cursor");
 		}
 		if(GameKeySlick.gamekey[0].isMenuRepeatKey(GameKeySlick.BUTTON_DOWN)) {
 			cursor++;
-			if(cursor > 27) cursor = 0;
+			if(cursor > 7) cursor = 0;
 			ResourceHolderSlick.soundManager.play("cursor");
 		}
 
@@ -380,103 +394,109 @@ public class StateConfigGeneral extends BaseGameState {
 			ResourceHolderSlick.soundManager.play("change");
 
 			switch(cursor) {
+//			case 0:
+//				se = !se;
+//				break;
+//			case 1:
+//				bgm = !bgm;
+//				break;
+//			case 2:
+//				bgmpreload = !bgmpreload;
+//				break;
 			case 0:
-				se = !se;
+				sevolume += change;
+				if(sevolume < 0) sevolume = 0;
+				if(sevolume > 128) sevolume = 128;
 				break;
 			case 1:
-				bgm = !bgm;
-				break;
-			case 2:
-				bgmpreload = !bgmpreload;
-				break;
-			case 3:
-				sevolume += change;
-				if(sevolume < 0) sevolume = 128;
-				if(sevolume > 128) sevolume = 0;
-				break;
-			case 4:
 				bgmvolume += change;
 				if(bgmvolume < 0) bgmvolume = 128;
 				if(bgmvolume > 128) bgmvolume = 0;
 				break;
-			case 5:
+			case 2:
 				showbg = !showbg;
 				break;
-			case 6:
-				heavyeffect = !heavyeffect;
-				break;
-			case 7:
-				showlineeffect = !showlineeffect;
-				break;
-			case 8:
-				lineeffectspeed += change;
-				if(lineeffectspeed < 0) lineeffectspeed = 9;
-				if(lineeffectspeed > 9) lineeffectspeed = 0;
-				break;
-			case 9:
-				showmeter = !showmeter;
-				break;
-			case 10:
-				darknextarea = !darknextarea;
-				break;
-			case 11:
-				nextshadow = !nextshadow;
-				break;
-			case 12:
+//			case 6:
+//				heavyeffect = !heavyeffect;
+//				break;
+//			case 7:
+//				showlineeffect = !showlineeffect;
+//				break;
+//			case 8:
+//				lineeffectspeed += change;
+//				if(lineeffectspeed < 0) lineeffectspeed = 9;
+//				if(lineeffectspeed > 9) lineeffectspeed = 0;
+//				break;
+//			case 9:
+//				showmeter = !showmeter;
+//				break;
+//			case 10:
+//				darknextarea = !darknextarea;
+//				break;
+//			case 11:
+//				nextshadow = !nextshadow;
+//				break;
+			case 3:
 				nexttype += change;
 				if(nexttype < 0) nexttype = 2;
 				if(nexttype > 2) nexttype = 0;
 				break;
-			case 13:
-				outlineghost = !outlineghost;
+//			case 13:
+//				outlineghost = !outlineghost;
+//				break;
+//			case 14:
+//				fieldbgbright += change;
+//				if(fieldbgbright < 0) fieldbgbright = 255;
+//				if(fieldbgbright > 255) fieldbgbright = 0;
+//				break;
+//			case 4:
+//				fullscreen = !fullscreen;
+//				break;
+//			case 16:
+//				showfps = !showfps;
+//				break;
+//			case 17:
+//				maxfps += change;
+//				if(maxfps < 0) maxfps = 99;
+//				if(maxfps > 99) maxfps = 0;
+//				break;
+//			case 18:
+//				enableframestep = !enableframestep;
+//				break;
+//			case 19:
+//				alternateFPSPerfectMode = !alternateFPSPerfectMode;
+//				break;
+//			case 20:
+//				alternateFPSPerfectYield = !alternateFPSPerfectYield;
+//				break;
+//			case 21:
+//				bgmstreaming = !bgmstreaming;
+//				break;
+//			case 22:
+//				vsync = !vsync;
+//				break;
+//			case 23:
+//				alternateFPSTiming = !alternateFPSTiming;
+//				break;
+//			case 24:
+//				alternateFPSDynamicAdjust = !alternateFPSDynamicAdjust;
+//				break;
+//			case 4:
+//				screenSizeType += change;
+//				if(screenSizeType < 0) screenSizeType = SCREENSIZE_TABLE.length - 1;
+//				if(screenSizeType > SCREENSIZE_TABLE.length - 1) screenSizeType = 0;
+//				break;
+			case 4:
+				forcereplaysave = !forcereplaysave;
 				break;
-			case 14:
-				fieldbgbright += change;
-				if(fieldbgbright < 0) fieldbgbright = 255;
-				if(fieldbgbright > 255) fieldbgbright = 0;
+			case 5:
+				fumenrecording = !fumenrecording;
 				break;
-			case 15:
-				showfieldbggrid = !showfieldbggrid;
+			case 6:
+				fullframefumenrecording = !fullframefumenrecording;
 				break;
-			case 16:
-				showInput = !showInput;
-				break;
-			case 17:
-				fullscreen = !fullscreen;
-				break;
-			case 18:
-				showfps = !showfps;
-				break;
-			case 19:
-				maxfps += change;
-				if(maxfps < 0) maxfps = 99;
-				if(maxfps > 99) maxfps = 0;
-				break;
-			case 20:
-				enableframestep = !enableframestep;
-				break;
-			case 21:
-				alternateFPSPerfectMode = !alternateFPSPerfectMode;
-				break;
-			case 22:
-				alternateFPSPerfectYield = !alternateFPSPerfectYield;
-				break;
-			case 23:
-				bgmstreaming = !bgmstreaming;
-				break;
-			case 24:
-				vsync = !vsync;
-				break;
-			case 25:
-				alternateFPSTiming = !alternateFPSTiming;
-				break;
-			case 26:
-				alternateFPSDynamicAdjust = !alternateFPSDynamicAdjust;
-				break;
-			case 27:
-				screenSizeType += change;
-				if(screenSizeType < 0) screenSizeType = SCREENSIZE_TABLE.length - 1;
-				if(screenSizeType > SCREENSIZE_TABLE.length - 1) screenSizeType = 0;
+			case 7:
+				finesseCoach = !finesseCoach;
 				break;
 			}
 		}

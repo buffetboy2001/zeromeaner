@@ -31,7 +31,6 @@ package org.zeromeaner.gui.sdl;
 import java.io.File;
 import java.util.LinkedList;
 
-
 import org.apache.log4j.Logger;
 import org.zeromeaner.game.component.BGMStatus;
 

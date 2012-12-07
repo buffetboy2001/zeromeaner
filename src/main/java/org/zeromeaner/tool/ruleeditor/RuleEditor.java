@@ -39,8 +39,8 @@ import java.awt.event.KeyEvent;
 import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Locale;
@@ -72,7 +72,6 @@ import javax.swing.ListCellRenderer;
 import javax.swing.UIManager;
 import javax.swing.filechooser.FileFilter;
 
-
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 import org.zeromeaner.game.component.Block;
@@ -80,10 +79,8 @@ import org.zeromeaner.game.component.Piece;
 import org.zeromeaner.game.component.RuleOptions;
 import org.zeromeaner.game.play.GameEngine;
 import org.zeromeaner.util.CustomProperties;
+import org.zeromeaner.util.ResourceInputStream;
 import org.zeromeaner.util.ResourceOutputStream;
-import org.zeromeaner.util.ResourceInputStream;
-import org.zeromeaner.util.ResourceInputStream;
-import java.io.InputStreamReader;
 
 /**
  * ルールエディター

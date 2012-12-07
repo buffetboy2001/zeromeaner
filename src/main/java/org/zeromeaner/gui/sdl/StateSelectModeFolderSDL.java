@@ -1,14 +1,13 @@
 package org.zeromeaner.gui.sdl;
 
 import java.io.BufferedReader;
-import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.LinkedList;
-import org.zeromeaner.util.ResourceInputStream;
-import java.io.InputStreamReader;
 
 import org.apache.log4j.Logger;
+import org.zeromeaner.util.ResourceInputStream;
 
 import sdljava.SDLException;
 import sdljava.video.SDLSurface;

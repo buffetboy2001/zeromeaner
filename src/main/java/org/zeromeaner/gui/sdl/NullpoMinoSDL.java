@@ -30,7 +30,6 @@ package org.zeromeaner.gui.sdl;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.text.DateFormat;
@@ -41,15 +40,14 @@ import java.util.Locale;
 
 import javax.swing.JOptionPane;
 
-
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 import org.zeromeaner.game.net.NetObserverClient;
 import org.zeromeaner.game.play.GameEngine;
 import org.zeromeaner.util.CustomProperties;
-import org.zeromeaner.util.ResourceOutputStream;
-import org.zeromeaner.util.ResourceInputStream;
 import org.zeromeaner.util.ModeManager;
+import org.zeromeaner.util.ResourceInputStream;
+import org.zeromeaner.util.ResourceOutputStream;
 
 import sdljava.SDLException;
 import sdljava.SDLMain;

@@ -434,7 +434,7 @@ public class MarathonMode extends NetDummyMode {
 			receiver.drawScoreFont(engine, playerID, 0, 10, String.valueOf(engine.statistics.level + 1));
 
 			receiver.drawScoreFont(engine, playerID, 0, 12, "TIME", EventReceiver.COLOR_BLUE);
-			receiver.drawScoreFont(engine, playerID, 0, 13, GeneralUtil.getTime(engine.statistics.time));
+			receiver.drawScoreFont(engine, playerID, 0, 13, GeneralUtil.getTime(engine.statistics.getTime()));
 
 			if((lastevent != EVENT_NONE) && (scgettime < 120)) {
 				String strPieceName = Piece.getPieceName(lastpiece);
@@ -641,11 +641,11 @@ public class MarathonMode extends NetDummyMode {
 		}
 
 		// Meter
-		engine.meterValue = ((engine.statistics.lines % 10) * receiver.getMeterMax(engine)) / 9;
-		engine.meterColor = GameEngine.METER_COLOR_GREEN;
-		if(engine.statistics.lines % 10 >= 4) engine.meterColor = GameEngine.METER_COLOR_YELLOW;
-		if(engine.statistics.lines % 10 >= 6) engine.meterColor = GameEngine.METER_COLOR_ORANGE;
-		if(engine.statistics.lines % 10 >= 8) engine.meterColor = GameEngine.METER_COLOR_RED;
+		engine.setMeterValue(((engine.statistics.lines % 10) * receiver.getMeterMax(engine)) / 9);
+		engine.setMeterColor(GameEngine.METER_COLOR_GREEN);
+		if(engine.statistics.lines % 10 >= 4) engine.setMeterColor(GameEngine.METER_COLOR_YELLOW);
+		if(engine.statistics.lines % 10 >= 6) engine.setMeterColor(GameEngine.METER_COLOR_ORANGE);
+		if(engine.statistics.lines % 10 >= 8) engine.setMeterColor(GameEngine.METER_COLOR_RED);
 
 		if((engine.statistics.lines >= tableGameClearLines[goaltype]) && (tableGameClearLines[goaltype] >= 0)) {
 			// Ending
@@ -718,7 +718,7 @@ public class MarathonMode extends NetDummyMode {
 
 		// Update rankings
 		if((owner.replayMode == false) && (big == false) && (engine.ai == null)) {
-			updateRanking(engine.statistics.score, engine.statistics.lines, engine.statistics.time, goaltype);
+			updateRanking(engine.statistics.score, engine.statistics.lines, engine.statistics.getTime(), goaltype);
 
 			if(rankingRank != -1) {
 				saveRanking(owner.modeConfig, engine.ruleopt.strRuleName);
@@ -848,7 +848,7 @@ public class MarathonMode extends NetDummyMode {
 		int bg = engine.owner.backgroundStatus.fadesw ? engine.owner.backgroundStatus.fadebg : engine.owner.backgroundStatus.bg;
 		String msg = "game\tstats\t";
 		msg += engine.statistics.score + "\t" + engine.statistics.lines + "\t" + engine.statistics.totalPieceLocked + "\t";
-		msg += engine.statistics.time + "\t" + engine.statistics.level + "\t";
+		msg += engine.statistics.getTime() + "\t" + engine.statistics.level + "\t";
 		msg += engine.statistics.lpm + "\t" + engine.statistics.spl + "\t" + goaltype + "\t";
 		msg += engine.gameActive + "\t" + engine.timerActive + "\t";
 		msg += lastscore + "\t" + scgettime + "\t" + lastevent + "\t" + lastb2b + "\t" + lastcombo + "\t" + lastpiece + "\t";
@@ -864,7 +864,7 @@ public class MarathonMode extends NetDummyMode {
 		engine.statistics.score = Integer.parseInt(message[4]);
 		engine.statistics.lines = Integer.parseInt(message[5]);
 		engine.statistics.totalPieceLocked = Integer.parseInt(message[6]);
-		engine.statistics.time = Integer.parseInt(message[7]);
+		engine.statistics.setTime(Integer.parseInt(message[7]));
 		engine.statistics.level = Integer.parseInt(message[8]);
 		engine.statistics.lpm = Float.parseFloat(message[9]);
 		engine.statistics.spl = Double.parseDouble(message[10]);
@@ -880,11 +880,11 @@ public class MarathonMode extends NetDummyMode {
 		engine.owner.backgroundStatus.bg = Integer.parseInt(message[20]);
 
 		// Meter
-		engine.meterValue = ((engine.statistics.lines % 10) * receiver.getMeterMax(engine)) / 9;
-		engine.meterColor = GameEngine.METER_COLOR_GREEN;
-		if(engine.statistics.lines % 10 >= 4) engine.meterColor = GameEngine.METER_COLOR_YELLOW;
-		if(engine.statistics.lines % 10 >= 6) engine.meterColor = GameEngine.METER_COLOR_ORANGE;
-		if(engine.statistics.lines % 10 >= 8) engine.meterColor = GameEngine.METER_COLOR_RED;
+		engine.setMeterValue(((engine.statistics.lines % 10) * receiver.getMeterMax(engine)) / 9);
+		engine.setMeterColor(GameEngine.METER_COLOR_GREEN);
+		if(engine.statistics.lines % 10 >= 4) engine.setMeterColor(GameEngine.METER_COLOR_YELLOW);
+		if(engine.statistics.lines % 10 >= 6) engine.setMeterColor(GameEngine.METER_COLOR_ORANGE);
+		if(engine.statistics.lines % 10 >= 8) engine.setMeterColor(GameEngine.METER_COLOR_RED);
 	}
 
 	/**
@@ -897,7 +897,7 @@ public class MarathonMode extends NetDummyMode {
 		subMsg += "SCORE;" + engine.statistics.score + "\t";
 		subMsg += "LINE;" + engine.statistics.lines + "\t";
 		subMsg += "LEVEL;" + (engine.statistics.level + engine.statistics.levelDispAdd) + "\t";
-		subMsg += "TIME;" + GeneralUtil.getTime(engine.statistics.time) + "\t";
+		subMsg += "TIME;" + GeneralUtil.getTime(engine.statistics.getTime()) + "\t";
 		subMsg += "SCORE/LINE;" + engine.statistics.spl + "\t";
 		subMsg += "LINE/MIN;" + engine.statistics.lpm + "\t";
 

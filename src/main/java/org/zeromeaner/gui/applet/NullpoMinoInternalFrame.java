@@ -37,11 +37,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
@@ -75,7 +72,6 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.filechooser.FileFilter;
 
-
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 import org.zeromeaner.contrib.net.omegaboshi.nullpomino.game.subsystem.randomizer.Randomizer;
@@ -94,11 +90,11 @@ import org.zeromeaner.gui.net.NetLobbyListener;
 import org.zeromeaner.gui.net.UpdateChecker;
 import org.zeromeaner.gui.net.UpdateCheckerListener;
 import org.zeromeaner.util.CustomProperties;
-import org.zeromeaner.util.ResourceInputStream.ResourceDownloadStream;
-import org.zeromeaner.util.ResourceOutputStream;
-import org.zeromeaner.util.ResourceInputStream;
 import org.zeromeaner.util.GeneralUtil;
 import org.zeromeaner.util.ModeManager;
+import org.zeromeaner.util.ResourceInputStream;
+import org.zeromeaner.util.ResourceInputStream.ResourceDownloadStream;
+import org.zeromeaner.util.ResourceOutputStream;
 
 /**
  * zeromeaner SwingVersion

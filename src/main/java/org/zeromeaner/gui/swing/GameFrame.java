@@ -46,8 +46,8 @@ import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
-import javax.swing.JFrame;
 
+import javax.swing.JFrame;
 
 import org.apache.log4j.Logger;
 import org.zeromeaner.game.net.NetObserverClient;

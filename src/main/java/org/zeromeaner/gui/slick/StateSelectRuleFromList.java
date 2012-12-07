@@ -1,12 +1,10 @@
 package org.zeromeaner.gui.slick;
 
 import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.LinkedList;
-
 
 import org.apache.log4j.Logger;
 import org.newdawn.slick.GameContainer;
@@ -15,8 +13,6 @@ import org.newdawn.slick.SlickException;
 import org.newdawn.slick.state.StateBasedGame;
 import org.zeromeaner.util.CustomProperties;
 import org.zeromeaner.util.ResourceInputStream;
-import org.zeromeaner.util.ResourceInputStream;
-import java.io.InputStreamReader;
 
 /**
  * Rule select (after mode selection)

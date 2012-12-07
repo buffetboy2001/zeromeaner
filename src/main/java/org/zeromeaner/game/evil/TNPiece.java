@@ -1,9 +1,8 @@
 package org.zeromeaner.game.evil;
 
-import org.zeromeaner.game.component.Piece;
-
 import org.eviline.Shape;
 import org.eviline.ShapeType;
+import org.zeromeaner.game.component.Piece;
 
 public class TNPiece {
 	public static ShapeType fromNullpo(int pieceId) {

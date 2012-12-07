@@ -28,24 +28,39 @@
 */
 package org.zeromeaner.game.play;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Random;
+
 import org.apache.log4j.Logger;
 import org.zeromeaner.contrib.net.omegaboshi.nullpomino.game.subsystem.randomizer.MemorylessRandomizer;
 import org.zeromeaner.contrib.net.omegaboshi.nullpomino.game.subsystem.randomizer.Randomizer;
+import org.zeromeaner.contrib.net.omegaboshi.nullpomino.game.subsystem.randomizer.ReplayRandomizer;
 import org.zeromeaner.game.component.BGMStatus;
 import org.zeromeaner.game.component.Block;
 import org.zeromeaner.game.component.Controller;
 import org.zeromeaner.game.component.Field;
+import org.zeromeaner.game.component.Manipulation;
 import org.zeromeaner.game.component.Piece;
+import org.zeromeaner.game.component.PiecePlacement;
 import org.zeromeaner.game.component.ReplayData;
 import org.zeromeaner.game.component.RuleOptions;
 import org.zeromeaner.game.component.SpeedParam;
 import org.zeromeaner.game.component.Statistics;
 import org.zeromeaner.game.component.WallkickResult;
 import org.zeromeaner.game.subsystem.ai.DummyAI;
+import org.zeromeaner.game.subsystem.mode.NetVSBattleMode;
 import org.zeromeaner.game.subsystem.wallkick.Wallkick;
+import org.zeromeaner.gui.slick.NullpoMinoSlick;
+import org.zeromeaner.util.CustomProperties;
 import org.zeromeaner.util.GeneralUtil;
+import org.zeromeaner.util.StatisticsReporter;
+import org.zeromeaner.util.fumen.FumenTransformer;
+import org.zeromeaner.util.fumen.FumenUtil;
 
 
 /**
@@ -163,6 +178,8 @@ public class GameEngine {
 
 	/** Player ID (0=1P) */
 	public int playerID;
+	
+	public String playerName;
 
 	/** RuleOptions: Most game settings are here */
 	public RuleOptions ruleopt;
@@ -196,7 +213,10 @@ public class GameEngine {
 
 	/** ReplayData: Manages input data for replays */
 	public ReplayData replayData;
-
+	
+	/** Piece sequences **/
+	private ArrayList<PiecePlacement> piecePlacements = new ArrayList<PiecePlacement>();
+	
 	/** AIPlayer: AI for auto playing */
 	public DummyAI ai;
 
@@ -355,6 +375,9 @@ public class GameEngine {
 
 	/** Number of current piece movement */
 	public int nowPieceMoveCount;
+
+	/** Number of current piece keypresses for movement (das to wall = 1) */
+	public int nowPieceMovePressCount;
 
 	/** Number of current piece rotations */
 	public int nowPieceRotateCount;
@@ -516,10 +539,10 @@ public class GameEngine {
 	public boolean ghost;
 
 	/** Amount of meter */
-	public int meterValue;
+	private int meterValue;
 
 	/** Color of meter */
-	public int meterColor;
+	private int meterColor;
 
 	/** Amount of meter (layer 2) */
 	public int meterValueSub;
@@ -665,6 +688,8 @@ public class GameEngine {
 	/** 0 = default, 1 = link by color, 2 = link by color but ignore links for cascade (Avalanche) */
 	public int sticky;
 
+	public String latestReportLocation = "";
+	
 	/**
 	 * Constructor
 	 * @param owner このゲームエンジンを所有するGameOwnerクラス
@@ -712,10 +737,22 @@ public class GameEngine {
 		field = null;
 		ctrl = new Controller();
 		statistics = new Statistics();
+		piecePlacements = new ArrayList<PiecePlacement>();
 		speed = new SpeedParam();
 		gcount = 0;
 		replayData = new ReplayData();
-
+		
+		boolean fumenrecording = NullpoMinoSlick.propConfig.getProperty("option.fumenrecording", false);
+		boolean fullframefumenrecording = NullpoMinoSlick.propConfig.getProperty("option.fullframefumenrecording", false);
+		finesseCoach = NullpoMinoSlick.propConfig.getProperty("option.finesseCoach", false);
+		
+		if (fumenrecording){
+			FumenUtil.getFumenUtil(this).reset();
+			if (fullframefumenrecording){
+				FumenUtil.getFullFrameFumenUtil(this).reset();
+			}
+		}
+		
 		if(owner.replayMode == false) {
 			versionMajor = GameManager.getVersionMajor();
 			versionMinor = GameManager.getVersionMinor();
@@ -724,8 +761,13 @@ public class GameEngine {
 
 			Random tempRand = new Random();
 			randSeed = tempRand.nextLong();
-			log.debug("Player + " + playerID + "Random seed :" + Long.toString(randSeed, 16));
-			random = new Random(randSeed);
+			
+			if (randomizer instanceof ReplayRandomizer){
+				loadSeedFromReplayFile();
+				((ReplayRandomizer) randomizer).setPlayerId(playerID);
+			} else {
+				random = new Random(randSeed);
+			}
 		} else {
 			versionMajor = owner.replayProp.getProperty("version.core.major", 0f);
 			versionMinor = owner.replayProp.getProperty("version.core.minor", 0);
@@ -807,6 +849,7 @@ public class GameEngine {
 		initialHoldContinuousUse = false;
 
 		nowPieceMoveCount = 0;
+		nowPieceMovePressCount = 0;
 		nowPieceRotateCount = 0;
 		nowPieceRotateFailCount = 0;
 
@@ -843,7 +886,7 @@ public class GameEngine {
 
 		blockHidden = -1;
 		blockHiddenAnim = true;
-		blockOutlineType = BLOCK_OUTLINE_NORMAL;
+		blockOutlineType = BLOCK_OUTLINE_NONE; //BLOCK_OUTLINE_NORMAL;
 		blockShowOutlineOnly = false;
 
 		heboHiddenEnable = false;
@@ -886,8 +929,8 @@ public class GameEngine {
 
 		ghost = true;
 
-		meterValue = 0;
-		meterColor = METER_COLOR_RED;
+		setMeterValue(0);
+		setMeterColor(METER_COLOR_RED);
 		meterValueSub = 0;
 		meterColorSub = METER_COLOR_RED;
 
@@ -943,6 +986,17 @@ public class GameEngine {
 		if(ai != null) {
 			ai.shutdown(this, playerID);
 			ai.init(this, playerID);
+		}
+	}
+
+	private void loadSeedFromReplayFile() {
+		try {
+			CustomProperties propertiesOfReplayFile = readProperties();
+			String randSeedAsString = propertiesOfReplayFile.getProperty(playerID + ".replay.randSeed");
+			randSeed =  Long.parseLong(randSeedAsString, 16);
+			random = new Random(randSeed);
+		} catch (FileNotFoundException e) {
+		} catch (IOException e) {
 		}
 	}
 
@@ -1619,7 +1673,8 @@ public class GameEngine {
 	 * Called when saving replay
 	 */
 	public void saveReplay() {
-		if((owner.replayMode == true) && (owner.replayRerecord == false)) return;
+		boolean forceReplaySave = NullpoMinoSlick.propConfig.getProperty("option.forcereplaysave", false);
+		if(forceReplaySave != true && (owner.replayMode == true) && (owner.replayRerecord == false)) return;
 
 		owner.replayProp.setProperty("version.core", versionMajor + "." + versionMinor);
 		owner.replayProp.setProperty("version.core.major", versionMajor);
@@ -1658,6 +1713,11 @@ public class GameEngine {
 		owner.replayProp.setProperty(playerID + ".tuning.owMoveDiagonal", owMoveDiagonal);
 
 		if(owner.mode != null) owner.mode.saveReplay(this, playerID, owner.replayProp);
+	}
+	
+	public void saveReport(boolean netplay, boolean replay){
+		StatisticsReporter statisticsReporter = new StatisticsReporter(statistics, this);
+		statisticsReporter.report(netplay, replay);
 	}
 
 	/**
@@ -1703,6 +1763,8 @@ public class GameEngine {
 	 */
 	public void update() {
 		if(gameActive) {
+			totalFrameCount++;
+			
 			// リプレイ関連の処理
 			if(!owner.replayMode || owner.replayRerecord) {
 				// AIの button処理
@@ -1802,8 +1864,9 @@ public class GameEngine {
 
 		// fieldのBlock stateや統計情報を更新
 		fieldUpdate();
-		if((ending == 0) || (staffrollEnableStatistics)) statistics.update();
-
+		//if((ending == 0) || (staffrollEnableStatistics)) statistics.update();
+		statistics.update(this);
+		
 		// 最後の処理
 		if(owner.mode != null) owner.mode.onLast(this, playerID);
 		owner.receiver.onLast(this, playerID);
@@ -1811,7 +1874,7 @@ public class GameEngine {
 
 		// Timer増加
 		if(gameActive && timerActive) {
-			statistics.time++;
+			statistics.setTime(statistics.getTime() + 1);
 		}
 
 		/*
@@ -1819,7 +1882,12 @@ public class GameEngine {
 			statistics.gamerate = (float)(replayTimer / (0.00000006*(System.nanoTime() - startTime)));
 		}
 		*/
+		
 	}
+	
+	public int totalFrameCount = 0;
+
+	private boolean finesseCoach;
 
 	/**
 	 * Draw the screen
@@ -2046,6 +2114,7 @@ public class GameEngine {
 	 * Blockピースの移動処理
 	 */
 	public void statMove() {
+		
 		dasRepeat = false;
 
 		//  event 発生
@@ -2168,6 +2237,7 @@ public class GameEngine {
 			harddropFall = 0;
 			manualLock = false;
 			nowPieceMoveCount = 0;
+			nowPieceMovePressCount = 0;
 			nowPieceRotateCount = 0;
 			nowPieceRotateFailCount = 0;
 			nowWallkickCount = 0;
@@ -2394,13 +2464,15 @@ public class GameEngine {
 								dasInstant = true;
 							}
 
-							//log.debug("Successful movement: move="+move);
+							//log.debug("Successful movement: move="+move+", dasSpeedCount = " + dasSpeedCount + ", dasCount=" + dasCount);
 
 							if((ruleopt.lockresetMove == true) && (isMoveCountExceed() == false)) {
 								lockDelayNow = 0;
 								nowPieceObject.setDarkness(0f);
 							}
-
+							
+							if (dasCount == 0) nowPieceMovePressCount++;
+							
 							nowPieceMoveCount++;
 							if((ending == 0) || (staffrollEnableStatistics)) statistics.totalPieceMove++;
 							nowPieceBottomY = nowPieceObject.getBottom(nowPieceX, nowPieceY, field);
@@ -2630,6 +2702,38 @@ public class GameEngine {
 
 				holdDisable = false;
 
+				//belzebub
+				if((ending == 0) || (staffrollEnableStatistics)) {
+					
+					int totalKeysPressedForThisPiece = nowPieceMovePressCount + nowPieceRotateCount;
+					int finesseDeltaForThisPiece = 0;
+					
+					//System.out.println("Piece type = " + nowPieceObject.id + ", x = " + nowPieceX + ", direction = " + nowPieceObject.direction);
+					
+					try {
+						finesseDeltaForThisPiece = parseFinesse();
+						if (finesseDeltaForThisPiece > 0 && finesseCoach){
+							playSE("died");
+						}
+					} catch (Exception e){}
+					
+					statistics.finesseDelta += finesseDeltaForThisPiece;
+					float totalKeysPressedThisGame = statistics.kpt * statistics.totalPieceLocked;
+					statistics.kpt = (totalKeysPressedThisGame + totalKeysPressedForThisPiece + 1) / (statistics.totalPieceLocked +1);
+					
+					PiecePlacement previousPiecePlacement = getPreviousPiecePlacement();
+					getPiecePlacements().add(new PiecePlacement(nowPieceObject.id, nowPieceX, nowPieceBottomY, nowPieceObject.direction, statistics.getTime(), nowPieceRotateCount, nowPieceMovePressCount));
+					
+					Manipulation manipulation = deriveManipulation();
+					int timeDeltaInFrames = calculateDeltaInFrames(previousPiecePlacement);
+					statistics.getManipulations().get(manipulation).add(timeDeltaInFrames);
+					
+					statistics.totalPieceMoveWithDasAsOne += nowPieceMovePressCount;
+					
+					owner.updateFumens();
+				}
+				//belzebub
+				
 				if((ending == 0) || (staffrollEnableStatistics)) statistics.totalPieceLocked++;
 
 				if (clearMode == CLEAR_LINE)
@@ -2717,6 +2821,179 @@ public class GameEngine {
 		}
 
 		statc[0]++;
+	}
+	
+	public void updateFumen() {
+		if (NullpoMinoSlick.propConfig.getProperty("option.fumenrecording", true) && field != null && nowPieceObject != null){
+			int[] fumenField = FumenTransformer.transform(field);
+			int[] activePiece = FumenTransformer.transformPiece(nowPieceObject, nowPieceX, nowPieceY);
+			
+			FumenUtil.getFumenUtil(this).addFrameAndActivePiece(fumenField, activePiece);		
+		}
+	}
+
+	private int calculateDeltaInFrames(PiecePlacement previousPiecePlacement) {
+		if (previousPiecePlacement == null){
+			return statistics.getTime();
+		} else {
+			return statistics.getTime() - previousPiecePlacement.getTime();
+		}
+	}
+
+	private PiecePlacement getPreviousPiecePlacement() {
+		return getPiecePlacements().size() > 0 ? getPiecePlacements().get(getPiecePlacements().size()-1) : null;
+	}
+
+	private Manipulation deriveManipulation() {
+		if (dasSpeedCount == 0){
+			if (nowPieceMovePressCount == 0){
+				switch(nowPieceRotateCount){
+					case 0: return Manipulation.DROP;
+					case 1: return Manipulation.ROTATE;
+					case 2: return Manipulation.DOUBLE_ROTATE;
+					}
+			} else if (nowPieceMovePressCount == 1){
+					switch(nowPieceRotateCount){
+					case 0: return Manipulation.TAP;
+					case 1: return Manipulation.TAP_ROTATE;
+					case 2: return Manipulation.TAP_DOUBLE_ROTATE;
+					}
+			} else if (nowPieceMovePressCount == 2){
+					switch(nowPieceRotateCount){
+					case 0: return Manipulation.DOUBLE_TAP;
+					case 1: return Manipulation.DOUBLE_TAP_ROTATE;
+					case 2: return Manipulation.DOUBLE_TAP_DOUBLE_ROTATE;
+					}
+			} else if (nowPieceMovePressCount == 3){
+					switch(nowPieceRotateCount){
+					case 0: return Manipulation.TRIPLE_TAP;
+					case 1: return Manipulation.TRIPLE_TAP_ROTATE;
+					case 2: return Manipulation.TRIPLE_TAP_DOUBLE_ROTATE;
+					}
+			}
+		} else {
+			if (nowPieceMovePressCount == 1){
+				switch(nowPieceRotateCount){
+					case 0: return Manipulation.DAS;
+					case 1: return Manipulation.DAS_ROTATE;
+					case 2: return Manipulation.DAS_DOUBLE_ROTATE;
+				}
+			}
+			if (nowPieceMovePressCount == 2){
+				switch(nowPieceRotateCount){
+					case 0: return Manipulation.DAS_TAPBACK;
+					case 1: return Manipulation.DAS_TAPBACK_ROTATE;
+					case 2: return Manipulation.DAS_TAPBACK_DOUBLE_ROTATE;
+				}
+			}
+		}
+		return Manipulation.OTHER;
+	}
+
+	private int parseFinesse() {
+		
+		int IFINESSE[][][] = { 
+				{{0, 0, 0, 0, 0, 0, 0},           {1, 2, 1, 0, 1, 2, 1}         , {0}},
+				{{1, 1, 1, 1, 1, 1, 1, 1, 1, 1},  {1, 1, 1, 1, 0, 0, 1, 1, 1, 1}, {2}},
+				{{0, 0, 0, 0, 0, 0, 0, 0, 0, 0},  {1, 2, 1, 0, 1, 2, 1, 0, 0, 0}, {0}},
+				{{1, 1, 1, 1, 1, 1, 1, 1, 1, 1},  {1, 1, 1, 1, 0, 0, 1, 1, 1, 1}, {1}}
+			};
+		
+		int OFINESSE[][][] = { 
+				{{0, 0, 0, 0, 0, 0, 0, 0, 0, 0},  {1, 2, 2, 1, 0, 1, 2, 2, 1}, {0}},
+				{{0, 0, 0, 0, 0, 0, 0, 0, 0, 0},  {1, 2, 2, 1, 0, 1, 2, 2, 1}, {2}},
+				{{0, 0, 0, 0, 0, 0, 0, 0, 0, 0},  {1, 2, 2, 1, 0, 1, 2, 2, 1}, {0}},
+				{{0, 0, 0, 0, 0, 0, 0, 0, 0, 0},  {1, 2, 2, 1, 0, 1, 2, 2, 1}, {1}}
+		};
+		
+		int TFINESSE[][][] = {
+				{{0, 0, 0, 0, 0, 0, 0, 0, 0, 0},  {1, 2, 1, 0, 1, 2, 2, 1}, {0}},	
+				{{1, 1, 1, 1, 1, 1, 1, 1, 1, 1},  {1, 1, 2, 1, 0, 1, 2, 2, 1}, {1}},
+				{{2, 2, 2, 2, 2, 2, 2, 2, 2, 2},  {1, 2, 1, 0, 1, 2, 2, 1}, {0}},
+				{{1, 1, 1, 1, 1, 1, 1, 1, 1, 1},  {1, 2, 1, 0, 1, 2, 2, 1, 1}, {0}}
+		};
+		
+		int LFINESSE[][][] = {
+				{{0, 0, 0, 0, 0, 0, 0, 0, 0, 0},  {1, 2, 1, 0, 1, 2, 2, 1}, {0}},	
+				{{1, 1, 1, 1, 1, 1, 1, 1, 1, 1},  {1, 1, 2, 1, 0, 1, 2, 2, 1}, {1}},
+				{{2, 2, 2, 2, 2, 2, 2, 2, 2, 2},  {1, 2, 1, 0, 1, 2, 2, 1}, {0}},
+				{{1, 1, 1, 1, 1, 1, 1, 1, 1, 1},  {1, 2, 1, 0, 1, 2, 2, 1, 1}, {0}}
+		};
+		
+		int JFINESSE[][][] = {
+				{{0, 0, 0, 0, 0, 0, 0, 0, 0, 0},  {1, 2, 1, 0, 1, 2, 2, 1}, {0}},	
+				{{1, 1, 1, 1, 1, 1, 1, 1, 1, 1},  {1, 1, 2, 1, 0, 1, 2, 2, 1}, {1}},
+				{{2, 2, 2, 2, 2, 2, 2, 2, 2, 2},  {1, 2, 1, 0, 1, 2, 2, 1}, {0}},
+				{{1, 1, 1, 1, 1, 1, 1, 1, 1, 1},  {1, 2, 1, 0, 1, 2, 2, 1, 1}, {0}}
+		};
+
+		int SFINESSE[][][] = {
+				{{0, 0, 0, 0, 0, 0, 0, 0, 0, 0},  {1, 2, 1, 0, 1, 2, 2, 1}, {0}},	
+				{{1, 1, 1, 1, 1, 1, 1, 1, 1, 1},  {1, 1, 1, 0, 0, 1, 2, 1, 1}, {1}},
+				{{0, 0, 0, 0, 0, 0, 0, 0, 0, 0},  {1, 2, 1, 0, 1, 2, 2, 1}, {0}},
+				{{1, 1, 1, 1, 1, 1, 1, 1, 1, 1},  {1, 1, 1, 0, 0, 1, 2, 1, 1}, {0}},
+		};
+		
+		int ZFINESSE[][][] = {
+				{{0, 0, 0, 0, 0, 0, 0, 0, 0, 0},  {1, 2, 1, 0, 1, 2, 2, 1}, {0}},	
+				{{1, 1, 1, 1, 1, 1, 1, 1, 1, 1},  {1, 1, 1, 0, 0, 1, 2, 1, 1}, {1}},
+				{{0, 0, 0, 0, 0, 0, 0, 0, 0, 0},  {1, 2, 1, 0, 1, 2, 2, 1}, {0}},
+				{{1, 1, 1, 1, 1, 1, 1, 1, 1, 1},  {1, 1, 1, 0, 0, 1, 2, 1, 1}, {0}},
+		};
+		
+		int finesseDeltaForThisPiece = 0;
+		int direction = nowPieceObject.direction;
+		
+		if (nowPieceObject.id == Piece.PIECE_I){
+			int [] rotates = IFINESSE[direction][0];
+			int [] moves   = IFINESSE[direction][1];
+			int posDelta   = IFINESSE[direction][2][0];
+			finesseDeltaForThisPiece = getFinesseDeltaForThisPiece(rotates, moves, nowPieceX + posDelta);
+		} else if (nowPieceObject.id == Piece.PIECE_O){
+			int [] rotates = OFINESSE[direction][0];
+			int [] moves   = OFINESSE[direction][1];
+			int posDelta   = OFINESSE[direction][2][0];
+			finesseDeltaForThisPiece = getFinesseDeltaForThisPiece(rotates, moves, nowPieceX + posDelta);
+		} else if (nowPieceObject.id == Piece.PIECE_T){
+			int [] rotates = TFINESSE[direction][0];
+			int [] moves   = TFINESSE[direction][1];
+			int posDelta   = TFINESSE[direction][2][0];
+			finesseDeltaForThisPiece = getFinesseDeltaForThisPiece(rotates, moves, nowPieceX + posDelta);
+		} else if (nowPieceObject.id == Piece.PIECE_L){
+			int [] rotates = LFINESSE[direction][0];
+			int [] moves   = LFINESSE[direction][1];
+			int posDelta   = LFINESSE[direction][2][0];
+			finesseDeltaForThisPiece = getFinesseDeltaForThisPiece(rotates, moves, nowPieceX + posDelta);
+		} else if (nowPieceObject.id == Piece.PIECE_J){
+			int [] rotates = JFINESSE[direction][0];
+			int [] moves   = JFINESSE[direction][1];
+			int posDelta   = JFINESSE[direction][2][0];
+			finesseDeltaForThisPiece = getFinesseDeltaForThisPiece(rotates, moves, nowPieceX + posDelta);
+		} else if (nowPieceObject.id == Piece.PIECE_S){
+			int [] rotates = SFINESSE[direction][0];
+			int [] moves   = SFINESSE[direction][1];
+			int posDelta   = SFINESSE[direction][2][0];
+			finesseDeltaForThisPiece = getFinesseDeltaForThisPiece(rotates, moves, nowPieceX + posDelta);
+		} else if (nowPieceObject.id == Piece.PIECE_Z){
+			int [] rotates = ZFINESSE[direction][0];
+			int [] moves   = ZFINESSE[direction][1];
+			int posDelta   = ZFINESSE[direction][2][0];
+			finesseDeltaForThisPiece = getFinesseDeltaForThisPiece(rotates, moves, nowPieceX + posDelta);
+		} 
+		else {
+			int deltaRotations = Math.max(0, nowPieceRotateCount - 2);
+			int deltaMovements = Math.max(0, nowPieceMovePressCount -2);
+			finesseDeltaForThisPiece = deltaRotations + deltaMovements;
+		}
+		return finesseDeltaForThisPiece;
+	}
+
+	private int getFinesseDeltaForThisPiece(int[] rotates, int[] moves, int position) {
+		int finesseDeltaForThisPiece;
+		int deltaRotations = Math.max(0, nowPieceRotateCount - rotates[position]);
+		int deltaMovements = Math.max(0, nowPieceMovePressCount - moves[position]);
+		finesseDeltaForThisPiece = deltaRotations + deltaMovements;
+		return finesseDeltaForThisPiece;
 	}
 
 	/**
@@ -3222,8 +3499,18 @@ public class GameEngine {
 
 				statc[0]++;
 			} else {
-				if(!owner.replayMode || owner.replayRerecord) owner.saveReplay();
-
+				
+				boolean forceReplaySave = NullpoMinoSlick.propConfig.getProperty("option.forcereplaysave", false);
+				
+				if(!owner.replayMode || owner.replayRerecord || forceReplaySave) {
+					owner.saveReplay();
+					boolean isNetPlay = owner.mode instanceof NetVSBattleMode;
+					boolean isReplay = owner.replayMode || owner.replayRerecord;
+					if (!isNetPlay){
+						saveReport(false, isReplay);
+					}
+				}
+				
 				for(int i = 0; i < owner.getPlayers(); i++) {
 					if((i == playerID) || (gameoverAll)) {
 						if(owner.engine[i].field != null) {
@@ -3296,6 +3583,29 @@ public class GameEngine {
 			} else {
 				quitflag = true;
 			}
+		}
+
+		if(ctrl.isPush(Controller.BUTTON_F)) {
+			playSE("decide");
+			System.out.println("pushed key");
+			
+			if( !java.awt.Desktop.isDesktopSupported() ) {
+	            log.error( "Desktop is not supported (fatal)" );
+	        }
+			java.awt.Desktop desktop = java.awt.Desktop.getDesktop();
+	        if( !desktop.isSupported( java.awt.Desktop.Action.BROWSE ) ) {
+	            log.error( "Desktop doesn't support the browse action (fatal)" );
+	        }
+	        try {
+	        	File reportFile = new File(latestReportLocation);
+                java.net.URI uri = new java.net.URI("file:" + reportFile.getAbsolutePath());
+                desktop.browse(uri);
+            }
+            catch ( Exception e ) {
+                log.error( e.getMessage() );
+                e.printStackTrace();
+            }
+			
 		}
 	}
 
@@ -3422,4 +3732,42 @@ public class GameEngine {
 		statc[0]++;
 		return true;
 	}
+	
+	private CustomProperties readProperties() throws FileNotFoundException, IOException {
+		CustomProperties propertiesOfReplayFile = new CustomProperties();
+		FileInputStream in = new FileInputStream(
+				NullpoMinoSlick.propGlobal.getProperty(
+						"custom.replay.directory", "replay")
+						+ "/"
+						+ NullpoMinoSlick.propGlobal.getProperty("latest.replay.file"));
+		propertiesOfReplayFile.load(in);
+		in.close();
+		return propertiesOfReplayFile;
+	}
+
+	public void setPiecePlacements(ArrayList<PiecePlacement> piecePlacements) {
+		this.piecePlacements = piecePlacements;
+	}
+
+	public ArrayList<PiecePlacement> getPiecePlacements() {
+		return piecePlacements;
+	}
+
+	public void setMeterColor(int meterColor) {
+		this.meterColor = meterColor;
+	}
+
+	public int getMeterColor() {
+		return meterColor;
+	}
+
+	public void setMeterValue(int meterValue) {
+		this.meterValue = meterValue;
+	}
+
+	public int getMeterValue() {
+		return meterValue;
+	}
+
+
 }

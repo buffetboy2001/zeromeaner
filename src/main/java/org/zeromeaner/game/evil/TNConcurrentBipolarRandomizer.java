@@ -1,15 +1,11 @@
 package org.zeromeaner.game.evil;
 
-import org.zeromeaner.game.play.GameEngine;
-
 import org.eviline.Shape;
-import org.eviline.randomizer.AngelRandomizer;
-import org.eviline.randomizer.BipolarRandomizer;
 import org.eviline.randomizer.ConcurrentRandomizer;
 import org.eviline.randomizer.Randomizer;
 import org.eviline.randomizer.RandomizerFactory;
 import org.eviline.randomizer.RandomizerPresets;
-import org.eviline.randomizer.MaliciousRandomizer.MaliciousRandomizerProperties;
+import org.zeromeaner.game.play.GameEngine;
 
 public class TNConcurrentBipolarRandomizer extends TNRandomizer {
 	@Override

@@ -67,31 +67,31 @@ public class NetSPRecord implements Serializable {
 				return true;
 			} else if((s1.score == s2.score) && (s1.lines > s2.lines)) {
 				return true;
-			} else if((s1.score == s2.score) && (s1.lines == s2.lines) && (s1.time < s2.time)) {
+			} else if((s1.score == s2.score) && (s1.lines == s2.lines) && (s1.getTime() < s2.getTime())) {
 				return true;
 			}
 		} else if(type == RANKINGTYPE_GENERIC_TIME) {
-			if(s1.time < s2.time) {
+			if(s1.getTime() < s2.getTime()) {
 				return true;
-			} else if((s1.time == s2.time) && (s1.totalPieceLocked < s2.totalPieceLocked)) {
+			} else if((s1.getTime() == s2.getTime()) && (s1.totalPieceLocked < s2.totalPieceLocked)) {
 				return true;
-			} else if((s1.time == s2.time) && (s1.totalPieceLocked == s2.totalPieceLocked) && (s1.pps > s2.pps)) {
+			} else if((s1.getTime() == s2.getTime()) && (s1.totalPieceLocked == s2.totalPieceLocked) && (s1.getPps() > s2.getPps())) {
 				return true;
 			}
 		} else if(type == RANKINGTYPE_SCORERACE) {
-			if(s1.time < s2.time) {
+			if(s1.getTime() < s2.getTime()) {
 				return true;
-			} else if((s1.time == s2.time) && (s1.lines < s2.lines)) {
+			} else if((s1.getTime() == s2.getTime()) && (s1.lines < s2.lines)) {
 				return true;
-			} else if((s1.time == s2.time) && (s1.lines == s2.lines) && (s1.spl > s2.spl)) {
+			} else if((s1.getTime() == s2.getTime()) && (s1.lines == s2.lines) && (s1.spl > s2.spl)) {
 				return true;
 			}
 		} else if(type == RANKINGTYPE_DIGRACE) {
-			if(s1.time < s2.time) {
+			if(s1.getTime() < s2.getTime()) {
 				return true;
-			} else if((s1.time == s2.time) && (s1.lines < s2.lines)) {
+			} else if((s1.getTime() == s2.getTime()) && (s1.lines < s2.lines)) {
 				return true;
-			} else if((s1.time == s2.time) && (s1.lines == s2.lines) && (s1.totalPieceLocked < s2.totalPieceLocked)) {
+			} else if((s1.getTime() == s2.getTime()) && (s1.lines == s2.lines) && (s1.totalPieceLocked < s2.totalPieceLocked)) {
 				return true;
 			}
 		} else if(type == RANKINGTYPE_ULTRA) {
@@ -105,9 +105,9 @@ public class NetSPRecord implements Serializable {
 		} else if(type == RANKINGTYPE_COMBORACE) {
 			if(s1.maxCombo > s2.maxCombo) {
 				return true;
-			} else if((s1.maxCombo == s2.maxCombo) && (s1.time < s2.time)) {
+			} else if((s1.maxCombo == s2.maxCombo) && (s1.getTime() < s2.getTime())) {
 				return true;
-			} else if((s1.maxCombo == s2.maxCombo) && (s1.time == s2.time) && (s1.pps > s2.pps)) {
+			} else if((s1.maxCombo == s2.maxCombo) && (s1.getTime() == s2.getTime()) && (s1.getPps() > s2.getPps())) {
 				return true;
 			}
 		} else if(type == RANKINGTYPE_DIGCHALLENGE) {
@@ -115,7 +115,7 @@ public class NetSPRecord implements Serializable {
 				return true;
 			} else if((s1.score == s2.score) && (s1.lines > s2.lines)) {
 				return true;
-			} else if((s1.score == s2.score) && (s1.lines == s2.lines) && (s1.time > s2.time)) {
+			} else if((s1.score == s2.score) && (s1.lines == s2.lines) && (s1.getTime() > s2.getTime())) {
 				return true;
 			}
 		} else if(type == RANKINGTYPE_TIMEATTACK) {
@@ -128,9 +128,9 @@ public class NetSPRecord implements Serializable {
 				return true;
 			} else if((s1.rollclear == s2.rollclear) && (l1 > l2)) {
 				return true;
-			} else if((s1.rollclear == s2.rollclear) && (l1 == l2) && (s1.time < s2.time)) {
+			} else if((s1.rollclear == s2.rollclear) && (l1 == l2) && (s1.getTime() < s2.getTime())) {
 				return true;
-			} else if((s1.rollclear == s2.rollclear) && (l1 == l2) && (s1.time == s2.time) && (s1.pps > s2.pps)) {
+			} else if((s1.rollclear == s2.rollclear) && (l1 == l2) && (s1.getTime() == s2.getTime()) && (s1.getPps() > s2.getPps())) {
 				return true;
 			}
 		}
@@ -383,17 +383,17 @@ public class NetSPRecord implements Serializable {
 		if(type == RANKINGTYPE_GENERIC_SCORE) {
 			strRow += stats.score + ",";
 			strRow += stats.lines + ",";
-			strRow += stats.time;
+			strRow += stats.getTime();
 		} else if(type == RANKINGTYPE_GENERIC_TIME) {
-			strRow += stats.time + ",";
+			strRow += stats.getTime() + ",";
 			strRow += stats.totalPieceLocked + ",";
-			strRow += stats.pps;
+			strRow += stats.getPps();
 		} else if(type == RANKINGTYPE_SCORERACE) {
-			strRow += stats.time + ",";
+			strRow += stats.getTime() + ",";
 			strRow += stats.lines + ",";
 			strRow += stats.spl;
 		} else if(type == RANKINGTYPE_DIGRACE) {
-			strRow += stats.time + ",";
+			strRow += stats.getTime() + ",";
 			strRow += stats.lines + ",";
 			strRow += stats.totalPieceLocked;
 		} else if(type == RANKINGTYPE_ULTRA) {
@@ -402,16 +402,16 @@ public class NetSPRecord implements Serializable {
 			strRow += stats.totalPieceLocked;
 		} else if(type == RANKINGTYPE_COMBORACE) {
 			strRow += stats.maxCombo + ",";
-			strRow += stats.time + ",";
-			strRow += stats.pps;
+			strRow += stats.getTime() + ",";
+			strRow += stats.getPps();
 		} else if(type == RANKINGTYPE_DIGCHALLENGE) {
 			strRow += stats.score + ",";
 			strRow += stats.lines + ",";
-			strRow += stats.time;
+			strRow += stats.getTime();
 		} else if(type == RANKINGTYPE_TIMEATTACK) {
 			strRow += stats.lines + ",";
-			strRow += stats.time + ",";
-			strRow += stats.pps + ",";
+			strRow += stats.getTime() + ",";
+			strRow += stats.getPps() + ",";
 			strRow += stats.rollclear;
 		}
 

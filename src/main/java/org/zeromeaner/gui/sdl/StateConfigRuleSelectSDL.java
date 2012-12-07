@@ -37,8 +37,6 @@ import org.zeromeaner.util.CustomProperties;
 import org.zeromeaner.util.ResourceInputStream;
 
 import sdljava.SDLException;
-//import sdljava.event.MouseState;
-//import sdljava.event.SDLEvent;
 import sdljava.video.SDLSurface;
 
 /**

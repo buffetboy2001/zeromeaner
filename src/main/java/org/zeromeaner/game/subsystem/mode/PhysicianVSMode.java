@@ -684,7 +684,7 @@ public class PhysicianVSMode extends AbstractMode {
 
 		// Timer
 		if(playerID == 0) {
-			receiver.drawDirectFont(engine, playerID, 256, 16, GeneralUtil.getTime(engine.statistics.time));
+			receiver.drawDirectFont(engine, playerID, 256, 16, GeneralUtil.getTime(engine.statistics.getTime()));
 		}
 
 		if(engine.gameStarted) {
@@ -853,18 +853,18 @@ public class PhysicianVSMode extends AbstractMode {
 			int rest = engine.field.getHowManyGems();
 			if (flash[playerID])
 			{
-				engine.meterValue = (rest * receiver.getMeterMax(engine)) / 3;
-				if (rest == 1) engine.meterColor = GameEngine.METER_COLOR_GREEN;
-				else if (rest == 2) engine.meterColor = GameEngine.METER_COLOR_YELLOW;
-				else engine.meterColor = GameEngine.METER_COLOR_RED;
+				engine.setMeterValue((rest * receiver.getMeterMax(engine)) / 3);
+				if (rest == 1) engine.setMeterColor(GameEngine.METER_COLOR_GREEN);
+				else if (rest == 2) engine.setMeterColor(GameEngine.METER_COLOR_YELLOW);
+				else engine.setMeterColor(GameEngine.METER_COLOR_RED);
 			}
 			else
 			{
-				engine.meterValue = (rest * receiver.getMeterMax(engine)) / hoverBlocks[playerID];
-				if (rest <= 3) engine.meterColor = GameEngine.METER_COLOR_GREEN;
-				else if (rest < (hoverBlocks[playerID] >> 2)) engine.meterColor = GameEngine.METER_COLOR_YELLOW;
-				else if (rest < (hoverBlocks[playerID] >> 1)) engine.meterColor = GameEngine.METER_COLOR_ORANGE;
-				else engine.meterColor = GameEngine.METER_COLOR_RED;
+				engine.setMeterValue((rest * receiver.getMeterMax(engine)) / hoverBlocks[playerID]);
+				if (rest <= 3) engine.setMeterColor(GameEngine.METER_COLOR_GREEN);
+				else if (rest < (hoverBlocks[playerID] >> 2)) engine.setMeterColor(GameEngine.METER_COLOR_YELLOW);
+				else if (rest < (hoverBlocks[playerID] >> 1)) engine.setMeterColor(GameEngine.METER_COLOR_ORANGE);
+				else engine.setMeterColor(GameEngine.METER_COLOR_RED);
 			}
 		}
 

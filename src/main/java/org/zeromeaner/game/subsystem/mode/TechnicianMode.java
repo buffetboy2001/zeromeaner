@@ -514,8 +514,8 @@ public class TechnicianMode extends NetDummyMode {
 
 			// TOTAL TIME
 			receiver.drawScoreFont(engine, playerID, 0, 15, "TOTAL TIME", EventReceiver.COLOR_BLUE);
-			int totaltime = engine.statistics.time;
-			if((goaltype == GAMETYPE_10MIN_EASY) || (goaltype == GAMETYPE_10MIN_HARD)) totaltime = TIMELIMIT_10MIN - engine.statistics.time;
+			int totaltime = engine.statistics.getTime();
+			if((goaltype == GAMETYPE_10MIN_EASY) || (goaltype == GAMETYPE_10MIN_HARD)) totaltime = TIMELIMIT_10MIN - engine.statistics.getTime();
 			if(goaltype == GAMETYPE_SPECIAL) totaltime = totalTimer;
 			int fontcolorTotalTime = EventReceiver.COLOR_WHITE;
 			if((goaltype != GAMETYPE_LV15_EASY) && (goaltype != GAMETYPE_LV15_HARD)) {
@@ -623,11 +623,11 @@ public class TechnicianMode extends NetDummyMode {
 			int remainTime = TIMELIMIT_LEVEL - levelTimer;
 
 			// Time meter
-			engine.meterValue = (remainTime * receiver.getMeterMax(engine)) / TIMELIMIT_LEVEL;
-			engine.meterColor = GameEngine.METER_COLOR_GREEN;
-			if(remainTime <= 60*60) engine.meterColor = GameEngine.METER_COLOR_YELLOW;
-			if(remainTime <= 30*60) engine.meterColor = GameEngine.METER_COLOR_ORANGE;
-			if(remainTime <= 10*60) engine.meterColor = GameEngine.METER_COLOR_RED;
+			engine.setMeterValue((remainTime * receiver.getMeterMax(engine)) / TIMELIMIT_LEVEL);
+			engine.setMeterColor(GameEngine.METER_COLOR_GREEN);
+			if(remainTime <= 60*60) engine.setMeterColor(GameEngine.METER_COLOR_YELLOW);
+			if(remainTime <= 30*60) engine.setMeterColor(GameEngine.METER_COLOR_ORANGE);
+			if(remainTime <= 10*60) engine.setMeterColor(GameEngine.METER_COLOR_RED);
 
 			if(!netIsWatch) {
 				if(levelTimer >= TIMELIMIT_LEVEL) {
@@ -657,11 +657,11 @@ public class TechnicianMode extends NetDummyMode {
 
 			// Time meter
 			if(goaltype == GAMETYPE_SPECIAL) {
-				engine.meterValue = (totalTimer * receiver.getMeterMax(engine)) / (5 * 3600);
-				engine.meterColor = GameEngine.METER_COLOR_GREEN;
-				if(totalTimer <= 60*60) engine.meterColor = GameEngine.METER_COLOR_YELLOW;
-				if(totalTimer <= 30*60) engine.meterColor = GameEngine.METER_COLOR_ORANGE;
-				if(totalTimer <= 10*60) engine.meterColor = GameEngine.METER_COLOR_RED;
+				engine.setMeterValue((totalTimer * receiver.getMeterMax(engine)) / (5 * 3600));
+				engine.setMeterColor(GameEngine.METER_COLOR_GREEN);
+				if(totalTimer <= 60*60) engine.setMeterColor(GameEngine.METER_COLOR_YELLOW);
+				if(totalTimer <= 30*60) engine.setMeterColor(GameEngine.METER_COLOR_ORANGE);
+				if(totalTimer <= 10*60) engine.setMeterColor(GameEngine.METER_COLOR_RED);
 			}
 
 			if(!netIsWatch) {
@@ -690,11 +690,11 @@ public class TechnicianMode extends NetDummyMode {
 
 			// Time meter
 			int remainRollTime = TIMELIMIT_ROLL - rolltime;
-			engine.meterValue = (remainRollTime * receiver.getMeterMax(engine)) / TIMELIMIT_ROLL;
-			engine.meterColor = GameEngine.METER_COLOR_GREEN;
-			if(remainRollTime <= 30*60) engine.meterColor = GameEngine.METER_COLOR_YELLOW;
-			if(remainRollTime <= 20*60) engine.meterColor = GameEngine.METER_COLOR_ORANGE;
-			if(remainRollTime <= 10*60) engine.meterColor = GameEngine.METER_COLOR_RED;
+			engine.setMeterValue((remainRollTime * receiver.getMeterMax(engine)) / TIMELIMIT_ROLL);
+			engine.setMeterColor(GameEngine.METER_COLOR_GREEN);
+			if(remainRollTime <= 30*60) engine.setMeterColor(GameEngine.METER_COLOR_YELLOW);
+			if(remainRollTime <= 20*60) engine.setMeterColor(GameEngine.METER_COLOR_ORANGE);
+			if(remainRollTime <= 10*60) engine.setMeterColor(GameEngine.METER_COLOR_RED);
 
 			// Finished
 			if((rolltime >= TIMELIMIT_ROLL) && (!netIsWatch)) {
@@ -952,7 +952,7 @@ public class TechnicianMode extends NetDummyMode {
 
 		// Update rankings
 		if((owner.replayMode == false) && (big == false) && (engine.ai == null) && (startlevel == 0)) {
-			updateRanking(engine.statistics.score, engine.statistics.lines, engine.statistics.time, goaltype);
+			updateRanking(engine.statistics.score, engine.statistics.lines, engine.statistics.getTime(), goaltype);
 
 			if(rankingRank != -1) {
 				saveRanking(owner.modeConfig, engine.ruleopt.strRuleName);
@@ -1083,11 +1083,11 @@ public class TechnicianMode extends NetDummyMode {
 		int bg = owner.backgroundStatus.fadesw ? owner.backgroundStatus.fadebg : owner.backgroundStatus.bg;
 		String msg = "game\tstats\t";
 		msg += engine.statistics.score + "\t" + engine.statistics.lines + "\t" + engine.statistics.totalPieceLocked + "\t";
-		msg += engine.statistics.time + "\t" + engine.statistics.lpm + "\t" + engine.statistics.spl + "\t";
+		msg += engine.statistics.getTime() + "\t" + engine.statistics.lpm + "\t" + engine.statistics.spl + "\t";
 		msg += goaltype + "\t" + engine.gameActive + "\t" + engine.timerActive + "\t";
 		msg += lastscore + "\t" + scgettime + "\t" + lastevent + "\t" + lastb2b + "\t" + lastcombo + "\t" + lastpiece + "\t";
 		msg += lastgoal + "\t" + lasttimebonus + "\t" + regretdispframe + "\t";
-		msg += bg + "\t" + engine.meterValue + "\t" + engine.meterColor + "\t";
+		msg += bg + "\t" + engine.getMeterValue() + "\t" + engine.getMeterColor() + "\t";
 		msg += engine.statistics.level + "\t" + levelTimer + "\t" + totalTimer + "\t" + rolltime + "\t" + goal + "\n";
 		netLobby.netPlayerClient.send(msg);
 	}
@@ -1100,7 +1100,7 @@ public class TechnicianMode extends NetDummyMode {
 		engine.statistics.score = Integer.parseInt(message[4]);
 		engine.statistics.lines = Integer.parseInt(message[5]);
 		engine.statistics.totalPieceLocked = Integer.parseInt(message[6]);
-		engine.statistics.time = Integer.parseInt(message[7]);
+		engine.statistics.setTime(Integer.parseInt(message[7]));
 		engine.statistics.lpm = Float.parseFloat(message[8]);
 		engine.statistics.spl = Double.parseDouble(message[9]);
 		goaltype = Integer.parseInt(message[10]);
@@ -1116,8 +1116,8 @@ public class TechnicianMode extends NetDummyMode {
 		lasttimebonus = Integer.parseInt(message[20]);
 		regretdispframe = Integer.parseInt(message[21]);
 		owner.backgroundStatus.bg = Integer.parseInt(message[22]);
-		engine.meterValue = Integer.parseInt(message[23]);
-		engine.meterColor = Integer.parseInt(message[24]);
+		engine.setMeterValue(Integer.parseInt(message[23]));
+		engine.setMeterColor(Integer.parseInt(message[24]));
 		engine.statistics.level = Integer.parseInt(message[25]);
 		levelTimer = Integer.parseInt(message[26]);
 		totalTimer = Integer.parseInt(message[27]);
@@ -1135,7 +1135,7 @@ public class TechnicianMode extends NetDummyMode {
 		subMsg += "SCORE;" + engine.statistics.score + "\t";
 		subMsg += "LINE;" + engine.statistics.lines + "\t";
 		subMsg += "LEVEL;" + (engine.statistics.level + engine.statistics.levelDispAdd) + "\t";
-		subMsg += "TIME;" + GeneralUtil.getTime(engine.statistics.time) + "\t";
+		subMsg += "TIME;" + GeneralUtil.getTime(engine.statistics.getTime()) + "\t";
 		subMsg += "SCORE/LINE;" + engine.statistics.spl + "\t";
 		subMsg += "LINE/MIN;" + engine.statistics.lpm + "\t";
 

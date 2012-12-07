@@ -44,7 +44,6 @@ import org.zeromeaner.gui.net.NetLobbyFrame;
 import org.zeromeaner.gui.net.NetLobbyListener;
 import org.zeromeaner.util.GeneralUtil;
 
-
 import sdljava.SDLException;
 import sdljava.mixer.SDLMixer;
 import sdljava.video.SDLSurface;

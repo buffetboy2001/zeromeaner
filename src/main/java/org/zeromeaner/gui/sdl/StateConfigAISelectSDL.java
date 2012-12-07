@@ -29,16 +29,14 @@
 package org.zeromeaner.gui.sdl;
 
 import java.io.BufferedReader;
-import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
-
 
 import org.apache.log4j.Logger;
 import org.zeromeaner.game.subsystem.ai.AIPlayer;
 import org.zeromeaner.util.GeneralUtil;
 import org.zeromeaner.util.ResourceInputStream;
-import java.io.InputStreamReader;
 
 import sdljava.SDLException;
 import sdljava.video.SDLSurface;

@@ -604,26 +604,26 @@ public class NetVSBattleMode extends NetDummyVSMode {
 		float tempGarbageF = (float) garbage[playerID] / GARBAGE_DENOMINATOR;
 		int newMeterValue = (int)(tempGarbageF * owner.receiver.getBlockGraphicsHeight(engine, playerID));
 		if((playerID == 0) && !netvsIsWatch()) {
-			if(newMeterValue > engine.meterValue) {
-				engine.meterValue += owner.receiver.getBlockGraphicsHeight(engine, playerID) / 2;
-				if(engine.meterValue > newMeterValue) {
-					engine.meterValue = newMeterValue;
+			if(newMeterValue > engine.getMeterValue()) {
+				engine.setMeterValue(engine.getMeterValue() +  owner.receiver.getBlockGraphicsHeight(engine, playerID) / 2);
+				if(engine.getMeterValue() > newMeterValue) {
+					engine.setMeterValue(newMeterValue);
 				}
-			} else if(newMeterValue < engine.meterValue) {
-				engine.meterValue--;
+			} else if(newMeterValue < engine.getMeterValue()) {
+				engine.setMeterValue(engine.getMeterValue() - 1);
 			}
 		} else {
-			engine.meterValue = newMeterValue;
+			engine.setMeterValue(newMeterValue);
 		}
-		if(tempGarbage >= 4) engine.meterColor = GameEngine.METER_COLOR_RED;
-		else if(tempGarbage >= 3) engine.meterColor = GameEngine.METER_COLOR_ORANGE;
-		else if(tempGarbage >= 1) engine.meterColor = GameEngine.METER_COLOR_YELLOW;
-		else engine.meterColor = GameEngine.METER_COLOR_GREEN;
+		if(tempGarbage >= 4) engine.setMeterColor(GameEngine.METER_COLOR_RED);
+		else if(tempGarbage >= 3) engine.setMeterColor(GameEngine.METER_COLOR_ORANGE);
+		else if(tempGarbage >= 1) engine.setMeterColor(GameEngine.METER_COLOR_YELLOW);
+		else engine.setMeterColor(GameEngine.METER_COLOR_GREEN);
 
 		// APL & APM
 		if((playerID == 0) && (engine.gameActive) && (engine.timerActive) && !netvsIsWatch()) {
 			float tempGarbageSent = (float)garbageSent[playerID] / GARBAGE_DENOMINATOR;
-			playerAPM[0] = (tempGarbageSent * 3600) / (engine.statistics.time);
+			playerAPM[0] = (tempGarbageSent * 3600) / (engine.statistics.getTime());
 
 			if(engine.statistics.lines > 0) {
 				playerAPL[0] = (float)(tempGarbageSent / engine.statistics.lines);
@@ -883,8 +883,8 @@ public class NetVSBattleMode extends NetDummyVSMode {
 				"ATK/LINE", String.format("%10g", playerAPL[playerID]),
 				"ATTACK/MIN", String.format("%10g", playerAPM[playerID]),
 				"LINE/MIN", String.format("%10g", engine.statistics.lpm),
-				"PIECE/SEC", String.format("%10g", engine.statistics.pps),
-				"TIME", String.format("%10s", GeneralUtil.getTime(engine.statistics.time)));
+				"PIECE/SEC", String.format("%10g", engine.statistics.getPps()),
+				"TIME", String.format("%10s", GeneralUtil.getTime(engine.statistics.getTime())));
 	}
 
 	/*
@@ -917,7 +917,7 @@ public class NetVSBattleMode extends NetDummyVSMode {
 		msg += netvsPlayerPlace[playerID] + "\t";
 		msg += ((float)garbageSent[playerID] / GARBAGE_DENOMINATOR) + "\t" + playerAPL[playerID] + "\t" + playerAPM[playerID] + "\t";
 		msg += engine.statistics.lines + "\t" + engine.statistics.lpm + "\t";
-		msg += engine.statistics.totalPieceLocked + "\t" + engine.statistics.pps + "\t";
+		msg += engine.statistics.totalPieceLocked + "\t" + engine.statistics.getPps() + "\t";
 		msg += netvsPlayTimer + "\t" + currentKO + "\t" + netvsPlayerWinCount[playerID] + "\t" + netvsPlayerPlayCount[playerID];
 		msg += "\n";
 		netLobby.netPlayerClient.send(msg);
@@ -942,8 +942,8 @@ public class NetVSBattleMode extends NetDummyVSMode {
 			engine.statistics.lines = Integer.parseInt(message[8]);
 			engine.statistics.lpm = Float.parseFloat(message[9]);
 			engine.statistics.totalPieceLocked = Integer.parseInt(message[10]);
-			engine.statistics.pps = Float.parseFloat(message[11]);
-			engine.statistics.time = Integer.parseInt(message[12]);
+			engine.statistics.setPps(Float.parseFloat(message[11]));
+			engine.statistics.setTime(Integer.parseInt(message[12]));
 
 			netvsPlayerResultReceived[playerID] = true;
 		}

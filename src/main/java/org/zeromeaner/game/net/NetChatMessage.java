@@ -3,7 +3,6 @@ package org.zeromeaner.game.net;
 import java.io.Serializable;
 import java.util.Calendar;
 
-
 import org.apache.log4j.Logger;
 import org.zeromeaner.util.GeneralUtil;
 

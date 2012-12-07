@@ -43,21 +43,22 @@ public class StateConfigMainMenu extends DummyMenuChooseState {
 	/** UI Text identifier Strings */
 	private static final String[] UI_TEXT = {
 		"ConfigMainMenu_General",
-		"ConfigMainMenu_Rule",
+		//"ConfigMainMenu_Rule",
 		"ConfigMainMenu_GameTuning",
-		"ConfigMainMenu_AI",
+		//"ConfigMainMenu_AI",
 		"ConfigMainMenu_Keyboard",
-		"ConfigMainMenu_KeyboardNavi",
-		"ConfigMainMenu_KeyboardReset",
-		"ConfigMainMenu_Joystick"
+		//"ConfigMainMenu_KeyboardNavi",
+		//"ConfigMainMenu_KeyboardReset",
+		//"ConfigMainMenu_Joystick"
 	};
 
 	/** Player number */
 	protected int player = 0;
 
 	public StateConfigMainMenu () {
-		maxCursor = 7;
+		maxCursor = 2;
 		minChoiceY = 3;
+		mouseEnabled = false;
 	}
 
 	/*
@@ -88,24 +89,25 @@ public class StateConfigMainMenu extends DummyMenuChooseState {
 
 		NormalFontSlick.printFontGrid(1, 3 + cursor, "b", NormalFontSlick.COLOR_RED);
 
-		NormalFontSlick.printFontGrid(2, 3, "[GENERAL OPTIONS]", (cursor == 0));
-		NormalFontSlick.printFontGrid(2, 4, "[RULE SELECT]:" + (player + 1) + "P", (cursor == 1));
-		NormalFontSlick.printFontGrid(2, 5, "[GAME TUNING]:" + (player + 1) + "P", (cursor == 2));
-		NormalFontSlick.printFontGrid(2, 6, "[AI SETTING]:" + (player + 1) + "P", (cursor == 3));
-		NormalFontSlick.printFontGrid(2, 7, "[KEYBOARD SETTING]:" + (player + 1) + "P", (cursor == 4));
-		NormalFontSlick.printFontGrid(2, 8, "[KEYBOARD NAVIGATION SETTING]:" + (player + 1) + "P", (cursor == 5));
-		NormalFontSlick.printFontGrid(2, 9, "[KEYBOARD RESET]:" + (player + 1) + "P", (cursor == 6));
-		NormalFontSlick.printFontGrid(2, 10, "[JOYSTICK SETTING]:" + (player + 1) + "P", (cursor == 7));
+		NormalFontSlick.printFontGrid(2, 3, "KEYBOARD", (cursor == 0));
+		NormalFontSlick.printFontGrid(2, 4, "TUNING", (cursor == 1));
+		NormalFontSlick.printFontGrid(2, 5, "OTHER", (cursor == 2));
+		//NormalFont.printFontGrid(2, 4, "[RULE SELECT]:" + (player + 1) + "P", (cursor == 1));
+		//NormalFont.printFontGrid(2, 6, "[AI SETTING]:" + (player + 1) + "P", (cursor == 3));
+		//NormalFont.printFontGrid(2, 8, "[KEYBOARD NAVIGATION SETTING]:" + (player + 1) + "P", (cursor == 5));
+		//NormalFont.printFontGrid(2, 9, "[KEYBOARD RESET]:" + (player + 1) + "P", (cursor == 6));
+		//NormalFont.printFontGrid(2, 10, "[JOYSTICK SETTING]:" + (player + 1) + "P", (cursor == 7));
 
 		NormalFontSlick.printTTFFont(16, 432, NullpoMinoSlick.getUIText(UI_TEXT[cursor]));
 	}
 
 	@Override
 	protected void onChange(GameContainer container, StateBasedGame game, int delta, int change) {
-		player += change;
-		if(player < 0) player = 1;
-		if(player > 1) player = 0;
-		ResourceHolderSlick.soundManager.play("change");
+		player = 0;
+//		player += change;
+//		if(player < 0) player = 1;
+//		if(player > 1) player = 0;
+//		ResourceHolder.soundManager.play("change");
 	}
 
 	@Override
@@ -113,38 +115,37 @@ public class StateConfigMainMenu extends DummyMenuChooseState {
 		ResourceHolderSlick.soundManager.play("decide");
 
 		switch (cursor) {
-		case 0:
+		case 2:
 			game.enterState(StateConfigGeneral.ID);
 			break;
+//		
+			//NullpoMinoSlick.stateConfigRuleStyleSelect.player = player;
+			//game.enterState(StateConfigRuleStyleSelect.ID);
 		case 1:
-			NullpoMinoSlick.stateConfigRuleStyleSelect.player = player;
-			game.enterState(StateConfigRuleStyleSelect.ID);
-			break;
-		case 2:
 			NullpoMinoSlick.stateConfigGameTuning.player = player;
 			game.enterState(StateConfigGameTuning.ID);
 			break;
-		case 3:
-			NullpoMinoSlick.stateConfigAISelect.player = player;
-			game.enterState(StateConfigAISelect.ID);
-			break;
-		case 4:
+//		case 3:
+//			NullpoMinoSlick.stateConfigAISelect.player = player;
+//			game.enterState(StateConfigAISelect.ID);
+//			break;
+		case 0:
 			NullpoMinoSlick.stateConfigKeyboard.player = player;
 			NullpoMinoSlick.stateConfigKeyboard.isNavSetting = false;
 			game.enterState(StateConfigKeyboard.ID);
 			break;
-		case 5:
-			NullpoMinoSlick.stateConfigKeyboardNavi.player = player;
-			game.enterState(StateConfigKeyboardNavi.ID);
-			break;
-		case 6:
-			NullpoMinoSlick.stateConfigKeyboardReset.player = player;
-			game.enterState(StateConfigKeyboardReset.ID);
-			break;
-		case 7:
-			NullpoMinoSlick.stateConfigJoystickMain.player = player;
-			game.enterState(StateConfigJoystickMain.ID);
-			break;
+//		case 5:
+//			NullpoMinoSlick.stateConfigKeyboardNavi.player = player;
+//			game.enterState(StateConfigKeyboardNavi.ID);
+//			break;
+//		case 6:
+//			NullpoMinoSlick.stateConfigKeyboardReset.player = player;
+//			game.enterState(StateConfigKeyboardReset.ID);
+//			break;
+//		case 7:
+//			NullpoMinoSlick.stateConfigJoystickMain.player = player;
+//			game.enterState(StateConfigJoystickMain.ID);
+//			break;
 		}
 
 		return false;

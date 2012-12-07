@@ -3,12 +3,10 @@ package org.zeromeaner.game.evil;
 import java.util.Arrays;
 
 import org.apache.log4j.Logger;
-
 import org.zeromeaner.game.component.Block;
 import org.zeromeaner.game.component.Piece;
 import org.zeromeaner.game.event.EventReceiver;
 import org.zeromeaner.game.play.GameEngine;
-import org.zeromeaner.game.play.GameManager;
 import org.zeromeaner.game.subsystem.mode.MarathonMode;
 import org.zeromeaner.util.GeneralUtil;
 

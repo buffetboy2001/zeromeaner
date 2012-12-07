@@ -336,8 +336,8 @@ public class VSLineRaceMode extends AbstractMode {
 		engine.enableSE = enableSE[playerID];
 		if(playerID == 1) owner.bgmStatus.bgm = bgmno;
 
-		engine.meterColor = GameEngine.METER_COLOR_GREEN;
-		engine.meterValue = receiver.getMeterMax(engine);
+		engine.setMeterColor(GameEngine.METER_COLOR_GREEN);
+		engine.setMeterValue(receiver.getMeterMax(engine));
 	}
 
 	/*
@@ -383,7 +383,7 @@ public class VSLineRaceMode extends AbstractMode {
 
 		// Timer
 		if(playerID == 0) {
-			receiver.drawDirectFont(engine, playerID, 256, 16, GeneralUtil.getTime(engine.statistics.time));
+			receiver.drawDirectFont(engine, playerID, 256, 16, GeneralUtil.getTime(engine.statistics.getTime()));
 		}
 
 		// Normal layout
@@ -426,11 +426,11 @@ public class VSLineRaceMode extends AbstractMode {
 		if(playerID == 0) enemyID = 1;
 
 		int remainLines = goalLines[playerID] - engine.statistics.lines;
-		engine.meterValue = (remainLines * receiver.getMeterMax(engine)) / goalLines[playerID];
+		engine.setMeterValue((remainLines * receiver.getMeterMax(engine)) / goalLines[playerID]);
 
-		if(remainLines <= 30) engine.meterColor = GameEngine.METER_COLOR_YELLOW;
-		if(remainLines <= 20) engine.meterColor = GameEngine.METER_COLOR_ORANGE;
-		if(remainLines <= 10) engine.meterColor = GameEngine.METER_COLOR_RED;
+		if(remainLines <= 30) engine.setMeterColor(GameEngine.METER_COLOR_YELLOW);
+		if(remainLines <= 20) engine.setMeterColor(GameEngine.METER_COLOR_ORANGE);
+		if(remainLines <= 10) engine.setMeterColor(GameEngine.METER_COLOR_RED);
 
 		// All clear
 		if((lines >= 1) && (engine.field.isEmpty())) {

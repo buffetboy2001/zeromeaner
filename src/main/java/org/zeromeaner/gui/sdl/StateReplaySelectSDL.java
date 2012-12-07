@@ -33,16 +33,13 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.Arrays;
 
-
 import org.apache.log4j.Logger;
 import org.zeromeaner.game.component.Statistics;
 import org.zeromeaner.util.CustomProperties;
-import org.zeromeaner.util.ResourceInputStream;
 import org.zeromeaner.util.GeneralUtil;
+import org.zeromeaner.util.ResourceInputStream;
 
 import sdljava.SDLException;
-//import sdljava.event.MouseState;
-//import sdljava.event.SDLEvent;
 import sdljava.video.SDLSurface;
 
 /**
@@ -148,7 +145,7 @@ public class StateReplaySelectSDL extends DummyMenuScrollStateSDL {
 									, NormalFontSDL.COLOR_CYAN);
 		NormalFontSDL.printFontGrid(1, 26,
 									"LEVEL:" + (statsList[cursor].level + statsList[cursor].levelDispAdd) +
-									" TIME:" + GeneralUtil.getTime(statsList[cursor].time)
+									" TIME:" + GeneralUtil.getTime(statsList[cursor].getTime())
 									, NormalFontSDL.COLOR_CYAN);
 		NormalFontSDL.printFontGrid(1, 27,
 									"GAME RATE:" + ( (statsList[cursor].gamerate == 0f) ? "UNKNOWN" : ((100*statsList[cursor].gamerate) + "%") )

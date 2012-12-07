@@ -29,10 +29,8 @@
 package org.zeromeaner.gui.slick;
 
 import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
-
 
 import org.apache.log4j.Logger;
 import org.newdawn.slick.GameContainer;
@@ -42,7 +40,6 @@ import org.newdawn.slick.state.StateBasedGame;
 import org.zeromeaner.game.subsystem.ai.AIPlayer;
 import org.zeromeaner.util.GeneralUtil;
 import org.zeromeaner.util.ResourceInputStream;
-import java.io.InputStreamReader;
 
 /**
  * AI config screen state
@@ -108,7 +105,7 @@ public class StateConfigAISelect extends BaseGameState {
 			aiPathList = loadAIList(in);
 			aiNameList = loadAINames(aiPathList);
 			in.close();
-		} catch (IOException e) {
+		} catch (Exception e) {
 			log.error("Failed to load AI list", e);
 		}
 	}

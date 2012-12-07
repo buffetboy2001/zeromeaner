@@ -32,7 +32,6 @@ import java.io.IOException;
 import java.util.LinkedList;
 import java.util.Locale;
 
-
 import org.apache.log4j.Logger;
 import org.zeromeaner.game.play.GameManager;
 

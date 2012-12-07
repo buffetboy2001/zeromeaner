@@ -38,9 +38,9 @@ import java.awt.event.KeyEvent;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.Locale;
 import java.util.Vector;
 
@@ -69,8 +69,6 @@ import org.zeromeaner.contrib.net.omegaboshi.nullpomino.game.subsystem.randomize
 import org.zeromeaner.game.component.Piece;
 import org.zeromeaner.util.CustomProperties;
 import org.zeromeaner.util.ResourceInputStream;
-import org.zeromeaner.util.ResourceInputStream;
-import java.io.InputStreamReader;
 
 
 /**

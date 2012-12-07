@@ -28,11 +28,29 @@
 */
 package org.zeromeaner.game.subsystem.mode;
 
+import java.awt.BorderLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.BufferedReader;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.io.UnsupportedEncodingException;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.ProtocolException;
+import java.net.URL;
+import java.net.URLEncoder;
+import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Locale;
 import java.util.Random;
 
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JDialog;
 
 import org.apache.log4j.Logger;
 import org.zeromeaner.contrib.net.omegaboshi.nullpomino.game.subsystem.randomizer.Randomizer;
@@ -49,8 +67,13 @@ import org.zeromeaner.game.net.NetUtil;
 import org.zeromeaner.game.play.GameEngine;
 import org.zeromeaner.game.play.GameManager;
 import org.zeromeaner.game.subsystem.wallkick.Wallkick;
+import org.zeromeaner.gui.net.ImagePanel;
 import org.zeromeaner.gui.net.NetLobbyFrame;
+import org.zeromeaner.gui.net.RoomType;
+import org.zeromeaner.gui.slick.NullpoMinoSlick;
+import org.zeromeaner.util.CustomProperties;
 import org.zeromeaner.util.GeneralUtil;
+import org.zeromeaner.util.fumen.FumenUtil;
 
 /**
  * The old version of NET-VS-BATTLE Mode
@@ -126,12 +149,12 @@ public class LegacyNetVSBattleMode extends NetDummyMode {
 		{1, 1, 0, 0, 0},	// Double
 		{2, 2, 1, 1, 1},	// Triple
 		{4, 3, 2, 2, 2},	// Four
-		{1, 1, 0, 0, 0},	// T-Mini-S
+		{0, 1, 0, 0, 0},	// T-Mini-S
 		{2, 2, 1, 1, 1},	// T-Single
 		{4, 3, 2, 2, 2},	// T-Double
 		{6, 4, 3, 3, 3},	// T-Triple
-		{4, 3, 2, 2, 2},	// T-Mini-D
-		{1, 1, 0, 0, 0},	// EZ-T
+		{0, 3, 2, 2, 2},	// T-Mini-D
+		{0, 1, 0, 0, 0},	// EZ-T
 	};
 
 	/** Attack table(for All Spin) */
@@ -164,7 +187,7 @@ public class LegacyNetVSBattleMode extends NetDummyMode {
 
 	/** Combo attack table */
 	private static final int[][] COMBO_ATTACK_TABLE = {
-		{0,0,1,1,2,2,3,3,4,4,4,5}, // 1-2 Player(s)
+		{0,0,1,1,1,2,2,3,3,4,4,5}, // 1-2 Player(s)
 		{0,0,1,1,1,2,2,3,3,4,4,4}, // 3 Player
 		{0,0,0,1,1,1,2,2,3,3,4,4}, // 4 Player
 		{0,0,0,1,1,1,1,2,2,3,3,4}, // 5 Player
@@ -277,6 +300,14 @@ public class LegacyNetVSBattleMode extends NetDummyMode {
 
 	/** Number of wins */
 	private int[] playerWinCount;
+	
+	private float[] playerAllAPL = new float[5];
+	private float[] playerAllAPM = new float[5];
+	private float[] playerAllAttack = new float[5];
+	private int[] playerAllLines = new int[5];
+	private float[] playerAllLPM = new float[5];
+	private int[] playerAllPieces = new int[5];
+	private float[] playerAllPPS = new float[5];
 
 //	private boolean[] playerTeamsIsTank;
 //
@@ -526,14 +557,6 @@ public class LegacyNetVSBattleMode extends NetDummyMode {
 	}
 
 	/*
-	 * Maximum players count
-	 */
-	@Override
-	public int getPlayers() {
-		return MAX_PLAYERS;
-	}
-
-	/*
 	 * ネットプレイ
 	 */
 	@Override
@@ -744,6 +767,8 @@ public class LegacyNetVSBattleMode extends NetDummyMode {
 					playerTeams[i] = pInfo.strTeam;
 					playerGamesCount[i] = pInfo.playCountNow;
 					playerWinCount[i] = pInfo.winCountNow;
+					
+					owner.engine[i].playerName = pInfo.strName;
 
 					// Set team color
 					if(playerTeams[i].length() > 0) {
@@ -860,12 +885,13 @@ public class LegacyNetVSBattleMode extends NetDummyMode {
 	 * @param engine GameEngine
 	 * @param playerID Player ID
 	 */
-	private void sendGameStat(GameEngine engine, int playerID) {
+	private void sendGameStat(GameEngine engine, int playerID) {		
+		//send stats to server
 		String msg = "gstat\t";
 		msg += playerPlace[playerID] + "\t";
 		msg += ((float)garbageSent[playerID] / GARBAGE_DENOMINATOR) + "\t" + playerAPL[0] + "\t" + playerAPM[0] + "\t";
 		msg += engine.statistics.lines + "\t" + engine.statistics.lpm + "\t";
-		msg += engine.statistics.totalPieceLocked + "\t" + engine.statistics.pps + "\t";
+		msg += engine.statistics.totalPieceLocked + "\t" + engine.statistics.getPps() + "\t";
 		msg += netPlayTimer + "\t" + currentKO + "\t" + numWins + "\t" + numGames;
 		msg += "\n";
 		netLobby.netPlayerClient.send(msg);
@@ -891,8 +917,8 @@ public class LegacyNetVSBattleMode extends NetDummyMode {
 			engine.statistics.lines = Integer.parseInt(message[8]);
 			engine.statistics.lpm = Float.parseFloat(message[9]);
 			engine.statistics.totalPieceLocked = Integer.parseInt(message[10]);
-			engine.statistics.pps = Float.parseFloat(message[11]);
-			engine.statistics.time = Integer.parseInt(message[12]);
+			engine.statistics.setPps(Float.parseFloat(message[11]));
+			engine.statistics.setTime(Integer.parseInt(message[12]));
 
 			isPlayerResultReceived[playerID] = true;
 		}
@@ -1309,10 +1335,10 @@ public class LegacyNetVSBattleMode extends NetDummyMode {
 			if(engine.b2b) {
 				lastb2b[playerID] = true;
 
-				if(pts[mainAttackCategory] > 0) {
-					if((attackLineIndex == LINE_ATTACK_INDEX_TTRIPLE) && (!engine.useAllSpinBonus))
-						pts[ATTACK_CATEGORY_B2B] += 2;
-					else
+				if(pts[mainAttackCategory] > 0 && !engine.tspinmini && !engine.tspinez) {
+					//if((attackLineIndex == LINE_ATTACK_INDEX_TTRIPLE) && (!engine.useAllSpinBonus))
+					//	pts[ATTACK_CATEGORY_B2B] += 2;
+					//else
 						pts[ATTACK_CATEGORY_B2B] += 1;
 				}
 			} else {
@@ -1522,7 +1548,7 @@ public class LegacyNetVSBattleMode extends NetDummyMode {
 		if((playerID == 0) && (hurryupShowFrames > 0)) hurryupShowFrames--;
 
 		// HURRY UP!
-		if((playerID == 0) && (engine.timerActive) && (hurryupSeconds >= 0) && (engine.statistics.time == hurryupSeconds * 60) &&
+		if((playerID == 0) && (engine.timerActive) && (hurryupSeconds >= 0) && (engine.statistics.getTime() == hurryupSeconds * 60) &&
 		   (!isPractice) && (!hurryupStarted))
 		{
 			netLobby.netPlayerClient.send("game\thurryup\n");
@@ -1536,26 +1562,27 @@ public class LegacyNetVSBattleMode extends NetDummyMode {
 		float tempGarbageF = (float) garbage[playerID] / GARBAGE_DENOMINATOR;
 		int newMeterValue = (int)(tempGarbageF * receiver.getBlockGraphicsHeight(engine, playerID));
 		if((playerID == 0) && (playerSeatNumber != -1)) {
-			if(newMeterValue > engine.meterValue) {
-				engine.meterValue += receiver.getBlockGraphicsHeight(engine, playerID) / 2;
-				if(engine.meterValue > newMeterValue) {
-					engine.meterValue = newMeterValue;
+			if(newMeterValue > engine.getMeterValue()) {
+				engine.setMeterValue(engine.getMeterValue()
+						+ (receiver.getBlockGraphicsHeight(engine, playerID) / 2));
+				if(engine.getMeterValue() > newMeterValue) {
+					engine.setMeterValue(newMeterValue);
 				}
-			} else if(newMeterValue < engine.meterValue) {
-				engine.meterValue--;
+			} else if(newMeterValue < engine.getMeterValue()) {
+				engine.setMeterValue(engine.getMeterValue() - 1);
 			}
 		} else {
-			engine.meterValue = newMeterValue;
+			engine.setMeterValue(newMeterValue);
 		}
-		if(tempGarbage >= 4) engine.meterColor = GameEngine.METER_COLOR_RED;
-		else if(tempGarbage >= 3) engine.meterColor = GameEngine.METER_COLOR_ORANGE;
-		else if(tempGarbage >= 1) engine.meterColor = GameEngine.METER_COLOR_YELLOW;
-		else engine.meterColor = GameEngine.METER_COLOR_GREEN;
+		if(tempGarbage >= 4) engine.setMeterColor(GameEngine.METER_COLOR_RED);
+		else if(tempGarbage >= 3) engine.setMeterColor(GameEngine.METER_COLOR_ORANGE);
+		else if(tempGarbage >= 1) engine.setMeterColor(GameEngine.METER_COLOR_YELLOW);
+		else engine.setMeterColor(GameEngine.METER_COLOR_GREEN);
 
 		// APL & APM
 		if((playerID == 0) && (engine.gameActive) && (engine.timerActive)) {
 			float tempGarbageSent = (float)garbageSent[playerID] / GARBAGE_DENOMINATOR;
-			playerAPM[0] = (tempGarbageSent * 3600) / (engine.statistics.time);
+			playerAPM[0] = (tempGarbageSent * 3600) / (engine.statistics.getTime());
 
 			if(engine.statistics.lines > 0) {
 				playerAPL[0] = (float)(tempGarbageSent / engine.statistics.lines);
@@ -1716,7 +1743,7 @@ public class LegacyNetVSBattleMode extends NetDummyMode {
 			}
 
 			if(isPractice && engine.timerActive) {
-				receiver.drawDirectFont(engine, 0, 256, 32, GeneralUtil.getTime(engine.statistics.time), EventReceiver.COLOR_PURPLE);
+				receiver.drawDirectFont(engine, 0, 256, 32, GeneralUtil.getTime(engine.statistics.getTime()), EventReceiver.COLOR_PURPLE);
 			}
 		}
 
@@ -1902,7 +1929,7 @@ public class LegacyNetVSBattleMode extends NetDummyMode {
 
 		if(isDead[playerID]) {
 			if((playerPlace[playerID] <= 2) && (playerID == 0) && (playerSeatNumber >= 0)) {
-				engine.statistics.time = netPlayTimer;
+				engine.statistics.setTime(netPlayTimer);
 			}
 			if(engine.field == null) {
 				engine.stat = GameEngine.STAT_SETTING;
@@ -2113,8 +2140,8 @@ public class LegacyNetVSBattleMode extends NetDummyMode {
 				"ATK/LINE", String.format("%10g", playerAPL[playerID]),
 				"ATTACK/MIN", String.format("%10g", playerAPM[playerID]),
 				"LINE/MIN", String.format("%10g", engine.statistics.lpm),
-				"PIECE/SEC", String.format("%10g", engine.statistics.pps),
-				"TIME", String.format("%10s", GeneralUtil.getTime(engine.statistics.time)));
+				"PIECE/SEC", String.format("%10g", engine.statistics.getPps()),
+				"TIME", String.format("%10s", GeneralUtil.getTime(engine.statistics.getTime())));
 
 		if(!isNetGameActive && (playerSeatNumber >= 0) && (playerID == 0)) {
 			String strTemp = "A(" + receiver.getKeyNameByButtonID(engine, Controller.BUTTON_A) + " KEY):";
@@ -2172,6 +2199,76 @@ public class LegacyNetVSBattleMode extends NetDummyMode {
 
 			updatePlayerExist();
 			updatePlayerNames();
+			
+			//belz
+			
+			int player1_wincount = client.getYourPlayerInfo().winCountNow;
+			int player2_wincount = 0;
+
+			String player1_name = client.getYourPlayerInfo().strName;
+			String player2_name = "";
+				
+				LinkedList<NetPlayerInfo> pList = netLobby.getSameRoomPlayerInfoList();
+				for(NetPlayerInfo playerInfo: pList) {
+					if (!playerInfo.equals(client.getYourPlayerInfo()) && !playerInfo.isWatching()){
+						player2_wincount = playerInfo.winCountNow;
+						player2_name = playerInfo.strName;
+					}
+				}
+				
+				String foundRoomName = lobby.getRoomNameForRoomId(currentRoomID);
+				RoomType roomType = getTypeFromRoomName(foundRoomName);
+
+				if (roomType != RoomType.Practice){
+
+					boolean youwon = client.getYourPlayerInfo().winCountNow >= 5;
+					boolean opponentwon = player2_wincount >= 5;
+					
+					if (youwon){
+						postWinToServer(player1_name, player2_name, player1_wincount, player2_wincount, foundRoomName, lobby.gameStats);
+						
+						final JDialog winDialog = new JDialog();
+						winDialog.setLayout(new BorderLayout());
+						winDialog.add(new ImagePanel(new ImageIcon("res/graphics/won.jpg").getImage()), BorderLayout.CENTER);
+						JButton okButton = new JButton("OK");
+						okButton.addActionListener(new ActionListener() {
+							
+							@Override
+							public void actionPerformed(ActionEvent arg0) {
+								winDialog.dispose();
+							}
+						});
+						winDialog.add(okButton, BorderLayout.SOUTH);
+						winDialog.pack();
+						winDialog.setModal(true);
+						winDialog.setLocationRelativeTo(NullpoMinoSlick.mainFrame);
+						winDialog.setVisible(true);
+						
+						lobby.leaveRoom();
+					}				
+					
+					if (opponentwon){
+						
+						final JDialog lostDialog = new JDialog();
+						lostDialog.setLayout(new BorderLayout());
+						lostDialog.add(new ImagePanel(new ImageIcon("res/graphics/lost.jpg").getImage()), BorderLayout.CENTER);
+						JButton okLostButton = new JButton("OK");
+						okLostButton.addActionListener(new ActionListener() {
+							@Override
+							public void actionPerformed(ActionEvent arg0) {
+								lostDialog.dispose();
+							}
+						});
+						lostDialog.add(okLostButton, BorderLayout.SOUTH);
+						lostDialog.pack();
+						lostDialog.setVisible(true);
+						lostDialog.setModal(true);
+						lostDialog.setLocationRelativeTo(NullpoMinoSlick.mainFrame);
+						
+						lobby.leaveRoom();
+					}
+				}
+			
 		}
 		// Player切断
 		if(message[0].equals("playerlogout")) {
@@ -2277,6 +2374,23 @@ public class LegacyNetVSBattleMode extends NetDummyMode {
 		}
 		// game start
 		if(message[0].equals("start")) {
+			
+			log.debug("Game started");
+			
+			for(int i = 0; i < getPlayers(); i++) {
+				GameEngine engine = owner.engine[i];
+				
+				boolean fumenrecording = NullpoMinoSlick.propConfig.getProperty("option.fumenrecording", false);
+				boolean fullframefumenrecording = NullpoMinoSlick.propConfig.getProperty("option.fullframefumenrecording", false);
+				
+				if (fumenrecording){
+					FumenUtil.getFumenUtil(engine).start();
+					if (fullframefumenrecording){
+						FumenUtil.getFullFrameFumenUtil(engine).start();
+					}
+				}
+			}
+			
 			long randseed = Long.parseLong(message[1], 16);
 			numNowPlayers = Integer.parseInt(message[2]);
 			if((numNowPlayers >= 2) && (playerSeatNumber != -1)) numGames++;
@@ -2389,7 +2503,21 @@ public class LegacyNetVSBattleMode extends NetDummyMode {
 		// game finished
 		if(message[0].equals("finish")) {
 			log.debug("Game Finished");
+			
+			owner.engine[0].saveReport(true, false);
 
+			boolean fumenrecording = NullpoMinoSlick.propConfig.getProperty("option.fumenrecording", false);
+			boolean fullframefumenrecording = NullpoMinoSlick.propConfig.getProperty("option.fullframefumenrecording", false);
+			if (fumenrecording){
+				for(int i = 0; i < getPlayers() && i < owner.engine.length; i++) {
+					GameEngine engine = owner.engine[i];
+					if (fullframefumenrecording){
+						FumenUtil.getFullFrameFumenUtil(engine).end();
+					}
+					FumenUtil.getFumenUtil(engine).end();
+				}
+			}
+			
 			isNetGameActive = false;
 			isNetGameFinished = true;
 			isNewcomer = false;
@@ -2416,7 +2544,7 @@ public class LegacyNetVSBattleMode extends NetDummyMode {
 						owner.engine[i].gameEnded();
 						owner.engine[i].stat = GameEngine.STAT_EXCELLENT;
 						owner.engine[i].resetStatc();
-						owner.engine[i].statistics.time = netPlayTimer;
+						owner.engine[i].statistics.setTime(netPlayTimer);
 						numAlivePlayers--;
 
 						if((i == 0) && (playerSeatNumber != -1)) {
@@ -2434,7 +2562,7 @@ public class LegacyNetVSBattleMode extends NetDummyMode {
 						owner.engine[playerID].gameEnded();
 						owner.engine[playerID].stat = GameEngine.STAT_EXCELLENT;
 						owner.engine[playerID].resetStatc();
-						owner.engine[playerID].statistics.time = netPlayTimer;
+						owner.engine[playerID].statistics.setTime(netPlayTimer);
 						numAlivePlayers--;
 
 						if((seatID == playerSeatNumber) && (playerSeatNumber != -1)) {
@@ -2716,4 +2844,166 @@ public class LegacyNetVSBattleMode extends NetDummyMode {
 			uid = s;
 		}
 	}
+	
+	private void postWinToServer(String player1Name, String player2Name, int player1_wins, int player2_wins, String roomName, ArrayList<List<String>> gameStats) {
+		
+		
+		CustomProperties propGlobal = new CustomProperties();
+		try {
+			FileInputStream in = new FileInputStream("config/setting/global.cfg");
+			propGlobal.load(in);
+			in.close();
+		} catch(IOException e) {}
+		
+		URL url;
+		try {
+			url = new URL("http://tetris.vanderhoven.be/upload/games.php");
+			HttpURLConnection connection = (HttpURLConnection)url.openConnection();
+			connection.setDoOutput(true);
+			connection.setRequestProperty("Content-type","application/x-www-form-urlencoded");
+			connection.setRequestMethod("POST");
+			OutputStreamWriter writer = new OutputStreamWriter(connection.getOutputStream());
+			String data = URLEncoder.encode("player", "UTF-8") + "=" + URLEncoder.encode("0", "UTF-8");
+			data += "&" + URLEncoder.encode("player1", "UTF-8") + "=" + URLEncoder.encode(""+player1Name, "UTF-8");
+			data += "&" + URLEncoder.encode("player2", "UTF-8") + "=" + URLEncoder.encode(""+player2Name, "UTF-8");
+			data += "&" + URLEncoder.encode("player1_wins", "UTF-8") + "=" + URLEncoder.encode(""+player1_wins, "UTF-8");
+			data += "&" + URLEncoder.encode("player2_wins", "UTF-8") + "=" + URLEncoder.encode(""+player2_wins, "UTF-8");
+			data += "&" + URLEncoder.encode("room", "UTF-8") + "=" + URLEncoder.encode(""+roomName, "UTF-8");
+			data += "&" + URLEncoder.encode("username", "UTF-8") + "=" + URLEncoder.encode(propGlobal.getProperty("user.username"), "UTF-8");
+			data += "&" + URLEncoder.encode("password", "UTF-8") + "=" + URLEncoder.encode(propGlobal.getProperty("user.password"), "UTF-8");
+			data += "&" + URLEncoder.encode("version", "UTF-8") + "=" + URLEncoder.encode("5.2", "UTF-8");
+			
+			//data = getAllRoundsAsData(gameStats, statData, data);
+			data = addGameStatsToData(gameStats, propGlobal, data);
+
+			System.out.println("sending data: " + data);
+			
+			writer.write(data);
+			writer.flush();
+			
+			String line;
+			BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+		    while ((line = reader.readLine()) != null) {
+		      System.out.println(line);
+		    }
+	        writer.close(); 
+	        reader.close(); 
+			
+		} catch (MalformedURLException e) {
+			e.printStackTrace();
+		} catch (ProtocolException e) {
+			e.printStackTrace();
+		} catch (UnsupportedEncodingException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}    
+	}
+
+	private String addGameStatsToData(ArrayList<List<String>> gameStats,
+			CustomProperties propGlobal, String data)
+			throws UnsupportedEncodingException {
+		String[] statData = {"rank", "name", "attack", "apl", "apm", "lines","lpm","pieces","pps","time","ko","win","games"};
+		int stat_name=1; int stat_attack=2; int stat_apl=3; int stat_apm=4; int stat_lines=5; 
+		int stat_lpm=6;  int stat_pieces=7; int stat_pps=8; int stat_time=9;
+		
+		float p1_totalAttack = 0; float p2_totalAttack = 0;
+		float p1_totalAPL = 0; 	  float p2_totalAPL = 0;
+		float p1_totalAPM = 0;	  float p2_totalAPM = 0;
+		int p1_linecount = 0; 	  int p2_linecount = 0;
+		float p1_totalLPM = 0; 	  float p2_totalLPM = 0;
+		float p1_totalPieces = 0;   float p2_totalPieces = 0;
+		float p1_totalPPS = 0; 	  float p2_totalPPS = 0;
+		
+		int totalTime = 0;
+		
+		String p1_username = propGlobal.getProperty("user.username");
+		
+		int games_recorded = 0;
+		for (List<String> row : gameStats) {
+			for (int i = 0; i < statData.length; i++) {
+				if (p1_username.equals(row.get(stat_name))){
+					p1_totalAttack += Float.parseFloat(row.get(stat_attack));
+					p1_totalAPL += Float.parseFloat(row.get(stat_apl));
+					p1_totalAPM += Float.parseFloat(row.get(stat_apm));
+					p1_linecount += Integer.parseInt(row.get(stat_lines));
+					p1_totalLPM += Float.parseFloat(row.get(stat_lpm));
+					p1_totalPPS += Float.parseFloat(row.get(stat_pps));
+					p1_totalPieces += Float.parseFloat(row.get(stat_pieces));
+					totalTime += Integer.parseInt(row.get(stat_time));
+					games_recorded++;
+				}
+				else {
+					p2_totalAttack += Float.parseFloat(row.get(stat_attack));
+					p2_totalAPL += Float.parseFloat(row.get(stat_apl));
+					p2_totalAPM += Float.parseFloat(row.get(stat_apm));
+					p2_linecount += Integer.parseInt(row.get(stat_lines));
+					p2_totalLPM += Float.parseFloat(row.get(stat_lpm));
+					p2_totalPPS += Float.parseFloat(row.get(stat_pps));
+					p2_totalPieces += Float.parseFloat(row.get(stat_lpm));
+					totalTime += Integer.parseInt(row.get(stat_time));
+				}
+			}
+		}
+		
+		float p1_averageAttack = p1_totalAttack/games_recorded; 
+		float p2_averageAttack = p2_totalAttack/games_recorded; ;
+		float p1_averageAPL = p1_totalAPL/games_recorded; 
+		float p2_averageAPL = p2_totalAPL/games_recorded;
+		float p1_averageAPM = p1_totalAPM/games_recorded; 
+		float p2_averageAPM = p2_totalAPM/games_recorded; 
+		int p1_averagelinecount = p1_linecount/games_recorded; 
+		int p2_averagelinecount = p2_linecount/games_recorded;
+		float p1_averageLPM = p1_totalLPM/games_recorded; 
+		float p2_averageLPM = p2_totalLPM/games_recorded;
+		float p1_averagePPS = p1_totalPPS/games_recorded; 
+		float p2_averagePPS = p2_totalPPS/games_recorded;
+		float p1_averagePieces = p1_totalPieces/games_recorded; 
+		float p2_averagePieces = p2_totalPieces/games_recorded;
+		
+		data += "&" + URLEncoder.encode("p1_averageAttack", "UTF-8") + "=" + URLEncoder.encode(""+p1_averageAttack, "UTF-8");
+		data += "&" + URLEncoder.encode("p2_averageAttack", "UTF-8") + "=" + URLEncoder.encode(""+p2_averageAttack, "UTF-8");
+		data += "&" + URLEncoder.encode("p1_averageAPL", "UTF-8") + "=" + URLEncoder.encode(""+p1_averageAPL, "UTF-8");
+		data += "&" + URLEncoder.encode("p2_averageAPL", "UTF-8") + "=" + URLEncoder.encode(""+p2_averageAPL, "UTF-8");
+		data += "&" + URLEncoder.encode("p1_averageAPM", "UTF-8") + "=" + URLEncoder.encode(""+p1_averageAPM, "UTF-8");
+		data += "&" + URLEncoder.encode("p2_averageAPM", "UTF-8") + "=" + URLEncoder.encode(""+p2_averageAPM, "UTF-8");
+		data += "&" + URLEncoder.encode("p1_averagelinecount", "UTF-8") + "=" + URLEncoder.encode(""+p1_averagelinecount, "UTF-8");
+		data += "&" + URLEncoder.encode("p2_averagelinecount", "UTF-8") + "=" + URLEncoder.encode(""+p2_averagelinecount, "UTF-8");
+		data += "&" + URLEncoder.encode("p1_averageLPM", "UTF-8") + "=" + URLEncoder.encode(""+p1_averageLPM, "UTF-8");
+		data += "&" + URLEncoder.encode("p2_averageLPM", "UTF-8") + "=" + URLEncoder.encode(""+p2_averageLPM, "UTF-8");
+		data += "&" + URLEncoder.encode("p1_averagePPS", "UTF-8") + "=" + URLEncoder.encode(""+p1_averagePPS, "UTF-8");
+		data += "&" + URLEncoder.encode("p2_averagePPS", "UTF-8") + "=" + URLEncoder.encode(""+p2_averagePPS, "UTF-8");
+		data += "&" + URLEncoder.encode("p1_averagePieces", "UTF-8") + "=" + URLEncoder.encode(""+p1_averagePieces, "UTF-8");
+		data += "&" + URLEncoder.encode("p2_averagePieces", "UTF-8") + "=" + URLEncoder.encode(""+p2_averagePieces, "UTF-8");
+		data += "&" + URLEncoder.encode("totalTime", "UTF-8") + "=" + URLEncoder.encode(""+totalTime, "UTF-8");
+		return data;
+	}
+
+	private String getAllRoundsAsData(ArrayList<List<String>> gameStats,
+			String[] statData, String data) throws UnsupportedEncodingException {
+		int round = 0;
+		int player = 0;
+		for (List<String> row : gameStats) {
+			for (int i = 0; i<row.size(); i++) {
+				String paramName = ""+round+"-"+player+"-"+statData[i];
+				String paramValue = row.get(i);
+				data += "&" + URLEncoder.encode(paramName, "UTF-8") + "=" + URLEncoder.encode(paramValue, "UTF-8");
+			}
+			if (player==0){
+				player++;
+			} else {
+				player = 0;
+				round++;
+			}
+		}
+		return data;
+	}
+	
+	
+	private RoomType getTypeFromRoomName(String roomName) {
+		return 
+			( roomName.contains("1VS1") && roomName.contains("League") ) ? RoomType.League : 
+				(roomName.contains("1VS1") && roomName.contains("Tournament") ) ? RoomType.Tournament : RoomType.Practice;
+	}
+	
 }

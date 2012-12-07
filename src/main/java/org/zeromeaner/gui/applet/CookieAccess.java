@@ -7,7 +7,6 @@ import java.io.ObjectOutputStream;
 import java.util.Map;
 import java.util.TreeMap;
 
-
 import netscape.javascript.JSObject;
 
 public class CookieAccess {

@@ -479,7 +479,7 @@ public class GradeManiaMode extends AbstractMode {
 			receiver.drawScoreFont(engine, playerID, 0, 12, String.format("%3d", nextseclv));
 
 			receiver.drawScoreFont(engine, playerID, 0, 14, "TIME", EventReceiver.COLOR_BLUE);
-			receiver.drawScoreFont(engine, playerID, 0, 15, GeneralUtil.getTime(engine.statistics.time));
+			receiver.drawScoreFont(engine, playerID, 0, 15, GeneralUtil.getTime(engine.statistics.getTime()));
 
 			if((engine.gameActive) && (engine.ending == 2)) {
 				int time = ROLLTIMELIMIT - rolltime;
@@ -561,11 +561,11 @@ public class GradeManiaMode extends AbstractMode {
 	 */
 	private void levelUp(GameEngine engine) {
 		// Meter
-		engine.meterValue = ((engine.statistics.level % 100) * receiver.getMeterMax(engine)) / 99;
-		engine.meterColor = GameEngine.METER_COLOR_GREEN;
-		if(engine.statistics.level % 100 >= 50) engine.meterColor = GameEngine.METER_COLOR_YELLOW;
-		if(engine.statistics.level % 100 >= 80) engine.meterColor = GameEngine.METER_COLOR_ORANGE;
-		if(engine.statistics.level == nextseclv - 1) engine.meterColor = GameEngine.METER_COLOR_RED;
+		engine.setMeterValue(((engine.statistics.level % 100) * receiver.getMeterMax(engine)) / 99);
+		engine.setMeterColor(GameEngine.METER_COLOR_GREEN);
+		if(engine.statistics.level % 100 >= 50) engine.setMeterColor(GameEngine.METER_COLOR_YELLOW);
+		if(engine.statistics.level % 100 >= 80) engine.setMeterColor(GameEngine.METER_COLOR_ORANGE);
+		if(engine.statistics.level == nextseclv - 1) engine.setMeterColor(GameEngine.METER_COLOR_RED);
 
 		// 速度変更
 		setSpeed(engine);
@@ -613,7 +613,7 @@ public class GradeManiaMode extends AbstractMode {
 				engine.playSE("gradeup");
 				grade++;
 				gradeflash = 180;
-				lastGradeTime = engine.statistics.time;
+				lastGradeTime = engine.statistics.getTime();
 			}
 
 			// Level up
@@ -624,13 +624,13 @@ public class GradeManiaMode extends AbstractMode {
 				// Ending
 				engine.statistics.level = 999;
 				engine.timerActive = false;
-				lastGradeTime = engine.statistics.time;
+				lastGradeTime = engine.statistics.getTime();
 
 				sectionscomp++;
 				setAverageSectionTime();
 				stNewRecordCheck(sectionscomp - 1);
 
-				if((engine.statistics.time <= GM_999_TIME_REQUIRE) && (engine.statistics.score >= tableGradeScore[17]) && (gm300) && (gm500)) {
+				if((engine.statistics.getTime() <= GM_999_TIME_REQUIRE) && (engine.statistics.score >= tableGradeScore[17]) && (gm300) && (gm500)) {
 					engine.playSE("endingstart");
 					engine.playSE("gradeup");
 
@@ -654,14 +654,14 @@ public class GradeManiaMode extends AbstractMode {
 				owner.backgroundStatus.fadebg = nextseclv / 100;
 
 				if(version >= 1) {
-					if((nextseclv == 300) && (grade >= GM_300_GRADE_REQUIRE) && (engine.statistics.time <= GM_300_TIME_REQUIRE))
+					if((nextseclv == 300) && (grade >= GM_300_GRADE_REQUIRE) && (engine.statistics.getTime() <= GM_300_TIME_REQUIRE))
 						gm300 = true;
-					if((nextseclv == 500) && (grade >= GM_500_GRADE_REQUIRE) && (engine.statistics.time <= GM_500_TIME_REQUIRE))
+					if((nextseclv == 500) && (grade >= GM_500_GRADE_REQUIRE) && (engine.statistics.getTime() <= GM_500_TIME_REQUIRE))
 						gm500 = true;
 				} else {
 					if((nextseclv == 300) && (grade >= GM_300_GRADE_REQUIRE))
 						gm300 = true;
-					if((nextseclv == 500) && (grade >= GM_500_GRADE_REQUIRE) && (engine.statistics.time <= GM_500_TIME_REQUIRE_V0))
+					if((nextseclv == 500) && (grade >= GM_500_GRADE_REQUIRE) && (engine.statistics.getTime() <= GM_500_TIME_REQUIRE_V0))
 						gm500 = true;
 				}
 
@@ -709,11 +709,11 @@ public class GradeManiaMode extends AbstractMode {
 
 			// Time meter
 			int remainRollTime = ROLLTIMELIMIT - rolltime;
-			engine.meterValue = (remainRollTime * receiver.getMeterMax(engine)) / ROLLTIMELIMIT;
-			engine.meterColor = GameEngine.METER_COLOR_GREEN;
-			if(remainRollTime <= 30*60) engine.meterColor = GameEngine.METER_COLOR_YELLOW;
-			if(remainRollTime <= 20*60) engine.meterColor = GameEngine.METER_COLOR_ORANGE;
-			if(remainRollTime <= 10*60) engine.meterColor = GameEngine.METER_COLOR_RED;
+			engine.setMeterValue((remainRollTime * receiver.getMeterMax(engine)) / ROLLTIMELIMIT);
+			engine.setMeterColor(GameEngine.METER_COLOR_GREEN);
+			if(remainRollTime <= 30*60) engine.setMeterColor(GameEngine.METER_COLOR_YELLOW);
+			if(remainRollTime <= 20*60) engine.setMeterColor(GameEngine.METER_COLOR_ORANGE);
+			if(remainRollTime <= 10*60) engine.setMeterColor(GameEngine.METER_COLOR_RED);
 
 			// Roll 終了
 			if(rolltime >= ROLLTIMELIMIT) {
@@ -773,7 +773,7 @@ public class GradeManiaMode extends AbstractMode {
 			if(grade == 18) {
 				int pierRank = 0;
 				for(int i = 1; i < tablePier21GradeTime.length; i++) {
-					if(engine.statistics.time < tablePier21GradeTime[i]) pierRank = i;
+					if(engine.statistics.getTime() < tablePier21GradeTime[i]) pierRank = i;
 				}
 				drawResult(engine, playerID, receiver, 10, EventReceiver.COLOR_BLUE,
 						"PIER GRADE", String.format("%10s", tablePier21GradeName[pierRank]));

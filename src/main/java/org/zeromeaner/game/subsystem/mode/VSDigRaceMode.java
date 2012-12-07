@@ -344,8 +344,8 @@ public class VSDigRaceMode extends AbstractMode {
 
 			// Update meter
 			int remainLines = getRemainGarbageLines(engine, playerID);
-			engine.meterValue = remainLines * receiver.getBlockGraphicsHeight(engine, playerID);
-			engine.meterColor = GameEngine.METER_COLOR_GREEN;
+			engine.setMeterValue(remainLines * receiver.getBlockGraphicsHeight(engine, playerID));
+			engine.setMeterColor(GameEngine.METER_COLOR_GREEN);
 		}
 		return false;
 	}
@@ -358,8 +358,8 @@ public class VSDigRaceMode extends AbstractMode {
 		engine.enableSE = enableSE[playerID];
 		if(playerID == 1) owner.bgmStatus.bgm = bgmno;
 
-		engine.meterColor = GameEngine.METER_COLOR_GREEN;
-		engine.meterValue = receiver.getMeterMax(engine);
+		engine.setMeterColor(GameEngine.METER_COLOR_GREEN);
+		engine.setMeterValue(receiver.getMeterMax(engine));
 	}
 
 	/**
@@ -485,7 +485,7 @@ public class VSDigRaceMode extends AbstractMode {
 
 		// Timer
 		if(playerID == 0) {
-			receiver.drawDirectFont(engine, playerID, 256, 16, GeneralUtil.getTime(engine.statistics.time));
+			receiver.drawDirectFont(engine, playerID, 256, 16, GeneralUtil.getTime(engine.statistics.getTime()));
 		}
 
 		// Normal layout
@@ -529,10 +529,10 @@ public class VSDigRaceMode extends AbstractMode {
 
 		// Update meter
 		int remainLines = getRemainGarbageLines(engine, playerID);
-		engine.meterValue = remainLines * receiver.getBlockGraphicsHeight(engine, playerID);
-		if(remainLines <= 14) engine.meterColor = GameEngine.METER_COLOR_YELLOW;
-		if(remainLines <= 8) engine.meterColor = GameEngine.METER_COLOR_ORANGE;
-		if(remainLines <= 4) engine.meterColor = GameEngine.METER_COLOR_RED;
+		engine.setMeterValue(remainLines * receiver.getBlockGraphicsHeight(engine, playerID));
+		if(remainLines <= 14) engine.setMeterColor(GameEngine.METER_COLOR_YELLOW);
+		if(remainLines <= 8) engine.setMeterColor(GameEngine.METER_COLOR_ORANGE);
+		if(remainLines <= 4) engine.setMeterColor(GameEngine.METER_COLOR_RED);
 
 		// Game completed
 		if((lines > 0) && (remainLines <= 0)) {

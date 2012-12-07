@@ -28,9 +28,12 @@
 */
 package org.zeromeaner.game.subsystem.mode;
 
+import java.util.ArrayList;
+
 import org.apache.log4j.Logger;
 import org.zeromeaner.game.component.BGMStatus;
 import org.zeromeaner.game.component.Controller;
+import org.zeromeaner.game.component.PiecePlacement;
 import org.zeromeaner.game.event.EventReceiver;
 import org.zeromeaner.game.net.NetUtil;
 import org.zeromeaner.game.play.GameEngine;
@@ -50,10 +53,10 @@ public class LineRaceMode extends NetDummyMode {
 	private static final int RANKING_MAX = 10;
 
 	/** Target line count type */
-	private static final int GOALTYPE_MAX = 3;
+	private static final int GOALTYPE_MAX = 4;
 
 	/** Target line count constants */
-	private static final int[] GOAL_TABLE = {20, 40, 100};
+	public static final int[] GOAL_TABLE = {20, 40, 100, 10};
 
 	/** BGM number */
 	private int bgmno;
@@ -61,8 +64,8 @@ public class LineRaceMode extends NetDummyMode {
 	/** Big */
 	private boolean big;
 
-	/** Target line count type (0=20,1=40,2=100) */
-	private int goaltype;
+	/** Target line count type (0=20,1=40,2=100,3=10) */
+	public int goaltype;
 
 	/** Last preset number used */
 	private int presetNumber;
@@ -78,7 +81,24 @@ public class LineRaceMode extends NetDummyMode {
 
 	/** Rankings' PPS values */
 	private float[][] rankingPPS;
+	
+	/** play the hurry up sound if dropping below the hard limit **/
+	private boolean hurryUpSound;
 
+	/** the unit for the finesse to display on the screen (0=fault,1=kpt) **/
+	private int finesseUnit;
+	
+	/** Finesse stat display values */
+	private static final String[] FINESSE_TABLE = {"FAULTS", "KPT"};
+	
+	private int softSpeedLimit;
+	private int hardSpeedLimit;
+	
+	/** Finesse stat display values */
+	private static final String[] VIEW_TABLE = {"BASIC", "NORMAL", "ADVANCED"};
+	
+	private int viewMode;
+	
 	/*
 	 * Mode name
 	 */
@@ -101,7 +121,13 @@ public class LineRaceMode extends NetDummyMode {
 		big = false;
 		goaltype = 0;
 		presetNumber = 0;
-
+		
+		softSpeedLimit = 100;
+		hardSpeedLimit = 90;
+		hurryUpSound = false;
+		finesseUnit = 0;
+		viewMode = 0;
+		
 		rankingRank = -1;
 		rankingTime = new int[GOALTYPE_MAX][RANKING_MAX];
 		rankingPiece = new int[GOALTYPE_MAX][RANKING_MAX];
@@ -131,16 +157,21 @@ public class LineRaceMode extends NetDummyMode {
 	 * @param preset Preset number
 	 */
 	private void loadPreset(GameEngine engine, CustomProperties prop, int preset) {
-		engine.speed.gravity = prop.getProperty("linerace.gravity." + preset, 4);
-		engine.speed.denominator = prop.getProperty("linerace.denominator." + preset, 256);
-		engine.speed.are = prop.getProperty("linerace.are." + preset, 0);
-		engine.speed.areLine = prop.getProperty("linerace.areLine." + preset, 0);
-		engine.speed.lineDelay = prop.getProperty("linerace.lineDelay." + preset, 0);
-		engine.speed.lockDelay = prop.getProperty("linerace.lockDelay." + preset, 30);
+		engine.speed.gravity = 0; //prop.getProperty("linerace.gravity." + preset, 4);
+		engine.speed.denominator = 256; //prop.getProperty("linerace.denominator." + preset, 256);
+		engine.speed.are = 0; //prop.getProperty("linerace.are." + preset, 0);
+		engine.speed.areLine = 0; //prop.getProperty("linerace.areLine." + preset, 0);
+		engine.speed.lineDelay = 0; //prop.getProperty("linerace.lineDelay." + preset, 0);
+		engine.speed.lockDelay = 30; //prop.getProperty("linerace.lockDelay." + preset, 30);
 		engine.speed.das = prop.getProperty("linerace.das." + preset, 14);
 		bgmno = prop.getProperty("linerace.bgmno." + preset, 0);
 		big = prop.getProperty("linerace.big." + preset, false);
 		goaltype = prop.getProperty("linerace.goaltype." + preset, 1);
+		softSpeedLimit = prop.getProperty("linerace.softlimit." + preset, 100);
+		hardSpeedLimit = prop.getProperty("linerace.hardlimit." + preset, 90);
+		hurryUpSound = prop.getProperty("linerace.hurryupsound." + preset, false);
+		finesseUnit = prop.getProperty("linerace.finesseUnit." + preset, 0);
+		viewMode = prop.getProperty("linerace.viewMode." + preset, 0);
 	}
 
 	/**
@@ -160,6 +191,11 @@ public class LineRaceMode extends NetDummyMode {
 		prop.setProperty("linerace.bgmno." + preset, bgmno);
 		prop.setProperty("linerace.big." + preset, big);
 		prop.setProperty("linerace.goaltype." + preset, goaltype);
+		prop.setProperty("linerace.softlimit." + preset, softSpeedLimit);
+		prop.setProperty("linerace.hardlimit." + preset, hardSpeedLimit);
+		prop.setProperty("linerace.hurryupsound." + preset, hurryUpSound);
+		prop.setProperty("linerace.finesseUnit." + preset, finesseUnit);
+		prop.setProperty("linerace.viewMode." + preset, viewMode);
 	}
 
 	/*
@@ -174,7 +210,7 @@ public class LineRaceMode extends NetDummyMode {
 		// Menu
 		else if(engine.owner.replayMode == false) {
 			// Configuration changes
-			int change = updateCursor(engine, 11, playerID);
+			int change = updateCursor(engine, 4, playerID);
 
 			if(change != 0) {
 				engine.playSE("change");
@@ -184,60 +220,79 @@ public class LineRaceMode extends NetDummyMode {
 				if(engine.ctrl.isPress(Controller.BUTTON_F)) m = 1000;
 
 				switch(engine.statc[2]) {
+//				case 0:
+//					engine.speed.gravity += change * m;
+//					if(engine.speed.gravity < -1) engine.speed.gravity = 99999;
+//					if(engine.speed.gravity > 99999) engine.speed.gravity = -1;
+//					break;
+//				case 1:
+//					engine.speed.denominator += change * m;
+//					if(engine.speed.denominator < -1) engine.speed.denominator = 99999;
+//					if(engine.speed.denominator > 99999) engine.speed.denominator = -1;
+//					break;
+//				case 2:
+//					engine.speed.are += change;
+//					if(engine.speed.are < 0) engine.speed.are = 99;
+//					if(engine.speed.are > 99) engine.speed.are = 0;
+//					break;
+//				case 3:
+//					engine.speed.areLine += change;
+//					if(engine.speed.areLine < 0) engine.speed.areLine = 99;
+//					if(engine.speed.areLine > 99) engine.speed.areLine = 0;
+//					break;
+//				case 4:
+//					engine.speed.lineDelay += change;
+//					if(engine.speed.lineDelay < 0) engine.speed.lineDelay = 99;
+//					if(engine.speed.lineDelay > 99) engine.speed.lineDelay = 0;
+//					break;
+//				case 5:
+//					engine.speed.lockDelay += change;
+//					if(engine.speed.lockDelay < 0) engine.speed.lockDelay = 99;
+//					if(engine.speed.lockDelay > 99) engine.speed.lockDelay = 0;
+//					break;
+//				case 6:
+//					engine.speed.das += change;
+//					if(engine.speed.das < 0) engine.speed.das = 99;
+//					if(engine.speed.das > 99) engine.speed.das = 0;
+//					break;
+//				case 7:
+//					bgmno += change;
+//					if(bgmno < 0) bgmno = BGMStatus.BGM_COUNT - 1;
+//					if(bgmno > BGMStatus.BGM_COUNT - 1) bgmno = 0;
+//					break;
+//				case 8:
+//					big = !big;
+//					break;
 				case 0:
-					engine.speed.gravity += change * m;
-					if(engine.speed.gravity < -1) engine.speed.gravity = 99999;
-					if(engine.speed.gravity > 99999) engine.speed.gravity = -1;
-					break;
-				case 1:
-					engine.speed.denominator += change * m;
-					if(engine.speed.denominator < -1) engine.speed.denominator = 99999;
-					if(engine.speed.denominator > 99999) engine.speed.denominator = -1;
-					break;
-				case 2:
-					engine.speed.are += change;
-					if(engine.speed.are < 0) engine.speed.are = 99;
-					if(engine.speed.are > 99) engine.speed.are = 0;
-					break;
-				case 3:
-					engine.speed.areLine += change;
-					if(engine.speed.areLine < 0) engine.speed.areLine = 99;
-					if(engine.speed.areLine > 99) engine.speed.areLine = 0;
-					break;
-				case 4:
-					engine.speed.lineDelay += change;
-					if(engine.speed.lineDelay < 0) engine.speed.lineDelay = 99;
-					if(engine.speed.lineDelay > 99) engine.speed.lineDelay = 0;
-					break;
-				case 5:
-					engine.speed.lockDelay += change;
-					if(engine.speed.lockDelay < 0) engine.speed.lockDelay = 99;
-					if(engine.speed.lockDelay > 99) engine.speed.lockDelay = 0;
-					break;
-				case 6:
-					engine.speed.das += change;
-					if(engine.speed.das < 0) engine.speed.das = 99;
-					if(engine.speed.das > 99) engine.speed.das = 0;
-					break;
-				case 7:
-					bgmno += change;
-					if(bgmno < 0) bgmno = BGMStatus.BGM_COUNT - 1;
-					if(bgmno > BGMStatus.BGM_COUNT - 1) bgmno = 0;
-					break;
-				case 8:
-					big = !big;
-					break;
-				case 9:
 					goaltype += change;
 					if(goaltype < 0) goaltype = 2;
-					if(goaltype > 2) goaltype = 0;
+					if(goaltype > 3) goaltype = 0;
 					break;
-				case 10:
-				case 11:
-					presetNumber += change;
-					if(presetNumber < 0) presetNumber = 99;
-					if(presetNumber > 99) presetNumber = 0;
+				case 1:
+					viewMode += change;
+					if(viewMode < 0) viewMode = 2;
+					if(viewMode > 3) viewMode = 0;
 					break;
+//				case 1:
+//					softSpeedLimit += change;
+//					break;
+//				case 2:
+//					hardSpeedLimit += change;
+//					break;
+//				case 3:
+//					hurryUpSound = !hurryUpSound;
+//					break;
+//				case 4:
+//					finesseUnit += change;
+//					if(finesseUnit < 0) finesseUnit = 1;
+//					if(finesseUnit > 1) finesseUnit = 0;
+//					break;
+//				case 14:
+//				case 15:
+//					presetNumber += change;
+//					if(presetNumber < 0) presetNumber = 99;
+//					if(presetNumber > 99) presetNumber = 0;
+//					break;
 				}
 
 				// NET: Signal options change
@@ -250,7 +305,7 @@ public class LineRaceMode extends NetDummyMode {
 			if(engine.ctrl.isPush(Controller.BUTTON_A) && (engine.statc[3] >= 5) && (!netIsWatch)) {
 				engine.playSE("decide");
 
-				if(engine.statc[2] == 10) {
+				if(engine.statc[2] == 14) {
 					// Load preset
 					loadPreset(engine, owner.modeConfig, presetNumber);
 
@@ -258,7 +313,7 @@ public class LineRaceMode extends NetDummyMode {
 					if(netIsNetPlay && (netNumSpectators > 0)) {
 						netSendOptions(engine);
 					}
-				} else if(engine.statc[2] == 11) {
+				} else if(engine.statc[2] == 15) {
 					// Save preset
 					savePreset(engine, owner.modeConfig, presetNumber);
 					receiver.saveModeConfig(owner.modeConfig);
@@ -344,8 +399,8 @@ public class LineRaceMode extends NetDummyMode {
 			owner.bgmStatus.bgm = bgmno;
 		}
 
-		engine.meterColor = GameEngine.METER_COLOR_GREEN;
-		engine.meterValue = receiver.getMeterMax(engine);
+		engine.setMeterColor(GameEngine.METER_COLOR_GREEN);
+		engine.setMeterValue(receiver.getMeterMax(engine));
 	}
 
 	/*
@@ -372,7 +427,6 @@ public class LineRaceMode extends NetDummyMode {
 				}
 			}
 		} else {
-			receiver.drawScoreFont(engine, playerID, 0, 3, "LINE", EventReceiver.COLOR_BLUE);
 			int remainLines = GOAL_TABLE[goaltype] - engine.statistics.lines;
 			String strLines = String.valueOf(remainLines);
 			if(remainLines < 0) strLines = "0";
@@ -380,28 +434,70 @@ public class LineRaceMode extends NetDummyMode {
 			if((remainLines <= 30) && (remainLines > 0)) fontcolor = EventReceiver.COLOR_YELLOW;
 			if((remainLines <= 20) && (remainLines > 0)) fontcolor = EventReceiver.COLOR_ORANGE;
 			if((remainLines <= 10) && (remainLines > 0)) fontcolor = EventReceiver.COLOR_RED;
-			receiver.drawScoreFont(engine, playerID, 0, 4, strLines, fontcolor);
 
-			if(strLines.length() == 1) {
-				receiver.drawMenuFont(engine, playerID, 4, 21, strLines, fontcolor, 2.0f);
-			} else if(strLines.length() == 2) {
-				receiver.drawMenuFont(engine, playerID, 3, 21, strLines, fontcolor, 2.0f);
-			} else if(strLines.length() == 3) {
-				receiver.drawMenuFont(engine, playerID, 2, 21, strLines, fontcolor, 2.0f);
+			if (viewMode > 0){
+				receiver.drawScoreFont(engine, playerID, 0, 3, "LINE", EventReceiver.COLOR_BLUE);
+				receiver.drawScoreFont(engine, playerID, 0, 4, strLines, fontcolor);
 			}
 
-			receiver.drawScoreFont(engine, playerID, 0, 6, "PIECE", EventReceiver.COLOR_BLUE);
-			receiver.drawScoreFont(engine, playerID, 0, 7, String.valueOf(engine.statistics.totalPieceLocked));
+			if(strLines.length() == 1) {
+					receiver.drawMenuFont(engine, playerID, 4, 21, strLines, fontcolor, 2.0f);
+			} else if(strLines.length() == 2) {
+					receiver.drawMenuFont(engine, playerID, 3, 21, strLines, fontcolor, 2.0f);
+			} else if(strLines.length() == 3) {
+					receiver.drawMenuFont(engine, playerID, 2, 21, strLines, fontcolor, 2.0f);
+			}
+			
+			if (viewMode > 0){
 
-			receiver.drawScoreFont(engine, playerID, 0, 9, "LINE/MIN", EventReceiver.COLOR_BLUE);
-			receiver.drawScoreFont(engine, playerID, 0, 10, String.valueOf(engine.statistics.lpm));
+				receiver.drawScoreFont(engine, playerID, 0, 6, "PIECE", EventReceiver.COLOR_BLUE);
+				receiver.drawScoreFont(engine, playerID, 0, 7, String.valueOf(engine.statistics.totalPieceLocked));
+			}
+			
+			if (viewMode > 1){
+	
+				receiver.drawScoreFont(engine, playerID, 0, 9, "CURRENT SPEED (PPM)", EventReceiver.COLOR_BLUE);
+				receiver.drawScoreFont(engine, playerID, 0, 10, String.valueOf(engine.statistics.getCurrentPPM()));
+				
+				receiver.drawScoreFont(engine, playerID, 0, 12, "PIECE/SEC", EventReceiver.COLOR_BLUE);
+				receiver.drawScoreFont(engine, playerID, 0, 13, String.valueOf(engine.statistics.getPps()));
+			}
+			
+			if (viewMode > 0){
+				
+				int paintColor = engine.statistics.ppm > softSpeedLimit ? EventReceiver.COLOR_GREEN : engine.statistics.ppm > hardSpeedLimit ? EventReceiver.COLOR_ORANGE : EventReceiver.COLOR_RED;
+				engine.framecolor = engine.statistics.ppm > softSpeedLimit ? GameEngine.FRAME_COLOR_GREEN : engine.statistics.ppm > hardSpeedLimit ? GameEngine.FRAME_COLOR_YELLOW : GameEngine.FRAME_COLOR_RED;
+				
+				if ( hurryUpSound && engine.statistics.ppm < hardSpeedLimit && engine.statistics.getTime() > 250){
+					engine.playSE("hurryup");
+				}
+				
+				receiver.drawScoreFont(engine, playerID, 0, 15, "PIECE/MIN", EventReceiver.COLOR_BLUE);
+				receiver.drawScoreFont(engine, playerID, 0, 16, String.valueOf(String.valueOf(engine.statistics.ppm)), paintColor);
+			}
+			
+			receiver.drawScoreFont(engine, playerID, 0, 18, "TIME", EventReceiver.COLOR_BLUE);
+			receiver.drawScoreFont(engine, playerID, 0, 19, GeneralUtil.getTime(engine.statistics.getTime()));
 
-			receiver.drawScoreFont(engine, playerID, 0, 12, "PIECE/SEC", EventReceiver.COLOR_BLUE);
-			receiver.drawScoreFont(engine, playerID, 0, 13, String.valueOf(engine.statistics.pps));
-
-			receiver.drawScoreFont(engine, playerID, 0, 15, "TIME", EventReceiver.COLOR_BLUE);
-			receiver.drawScoreFont(engine, playerID, 0, 16, GeneralUtil.getTime(engine.statistics.time));
+			if (viewMode > 1){
+				receiver.drawScoreFont(engine, playerID, 0, 21, "FINESSE", EventReceiver.COLOR_BLUE);
+				if (finesseUnit == 1){
+					receiver.drawScoreFont(engine, playerID, 0, 22, String.valueOf(engine.statistics.kpt));
+				} else {
+					receiver.drawScoreFont(engine, playerID, 0, 22, String.valueOf(engine.statistics.finesseDelta));
+				}
+			}
+				
 		}
+		
+		//System.out.println(engine.statistics.getCurrentPPM() + "," + engine.statistics.ppm);
+		//System.out.println(engine.statistics.getTime() + "," + engine.statistics.getCurrentPPM() + "," + engine.statistics.ppm);
+		engine.statistics.speedEntries.add(engine.statistics.new SpeedEntry(engine.statistics.getTime(), engine.statistics.getCurrentPPM(), engine.statistics.ppm));
+		engine.setMeterValue((int)((engine.statistics.getCurrentPPM() * receiver.getMeterMax(engine)) / 360f));
+		engine.setMeterColor(GameEngine.METER_COLOR_RED);
+		
+		//draw frame number
+		//NormalFont.printFont(200, 480-16, " - " + engine.statistics.getTime(), NormalFont.COLOR_RED);
 
 		// NET: Number of spectators
 		netDrawSpectatorsCount(engine, 0, 18);
@@ -420,11 +516,15 @@ public class LineRaceMode extends NetDummyMode {
 	@Override
 	public void calcScore(GameEngine engine, int playerID, int lines) {
 		int remainLines = GOAL_TABLE[goaltype] - engine.statistics.lines;
-		engine.meterValue = (remainLines * receiver.getMeterMax(engine)) / GOAL_TABLE[goaltype];
-
-		if(remainLines <= 30) engine.meterColor = GameEngine.METER_COLOR_YELLOW;
-		if(remainLines <= 20) engine.meterColor = GameEngine.METER_COLOR_ORANGE;
-		if(remainLines <= 10) engine.meterColor = GameEngine.METER_COLOR_RED;
+		
+//		engine.setMeterValue((remainLines * receiver.getMeterMax(engine)) / GOAL_TABLE[goaltype]);
+//		System.out.println((int)((engine.statistics.getCurrentPPM() * receiver.getMeterMax(engine)) / 360f));
+//		engine.setMeterValue((int)((engine.statistics.getCurrentPPM() * receiver.getMeterMax(engine)) / 360f));
+//		engine.setMeterColor(GameEngine.METER_COLOR_RED);
+		
+		//if(remainLines <= 30) engine.setMeterColor(GameEngine.METER_COLOR_YELLOW);
+		//if(remainLines <= 20) engine.setMeterColor(GameEngine.METER_COLOR_ORANGE);
+		//if(remainLines <= 10) engine.setMeterColor(GameEngine.METER_COLOR_RED);
 
 		// All clear
 		if((lines >= 1) && (engine.field.isEmpty())) {
@@ -433,11 +533,21 @@ public class LineRaceMode extends NetDummyMode {
 
 		// Game completed
 		if(engine.statistics.lines >= GOAL_TABLE[goaltype]) {
+			printPieceTimings(engine);
 			engine.ending = 1;
 			engine.gameEnded();
 		} else if(engine.statistics.lines >= GOAL_TABLE[goaltype] - 5) {
 			owner.bgmStatus.fadesw = true;
 		}
+	}
+
+	private void printPieceTimings(GameEngine engine) {
+//		System.out.print("--Piece timings:");
+//		ArrayList<PiecePlacement> piecePlacements = engine.getPiecePlacements();
+//		for (int i = 0; i<piecePlacements.size(); i++){
+//			System.out.println(i + "," + piecePlacements.get(i).getTime());
+//		}
+//		System.out.print("--End piece timings");
 	}
 
 	/*
@@ -469,6 +579,8 @@ public class LineRaceMode extends NetDummyMode {
 	public void saveReplay(GameEngine engine, int playerID, CustomProperties prop) {
 		savePreset(engine, engine.owner.replayProp, -1);
 
+		prop.setProperty("linerace.pieceSequence", getEncodedPiecePlacements(engine));
+		
 		// NET: Save name
 		if((netPlayerName != null) && (netPlayerName.length() > 0)) {
 			prop.setProperty(playerID + ".net.netPlayerName", netPlayerName);
@@ -477,13 +589,22 @@ public class LineRaceMode extends NetDummyMode {
 		// Update rankings
 		if((!owner.replayMode) && (engine.statistics.lines >= GOAL_TABLE[goaltype]) && (!big) && (engine.ai == null) && (!netIsWatch))
 		{
-			updateRanking(engine.statistics.time, engine.statistics.totalPieceLocked, engine.statistics.pps);
+			updateRanking(engine.statistics.getTime(), engine.statistics.totalPieceLocked, engine.statistics.getPps());
 
 			if(rankingRank != -1) {
 				saveRanking(owner.modeConfig, engine.ruleopt.strRuleName);
 				receiver.saveModeConfig(owner.modeConfig);
 			}
 		}
+	}
+
+	private String getEncodedPiecePlacements(GameEngine engine) {
+		String encoded = ""; 
+		ArrayList<PiecePlacement> piecePlacements = engine.getPiecePlacements();
+		 for (PiecePlacement piecePlacement : piecePlacements){
+			 encoded += piecePlacement.toString();
+		 }
+		 return encoded;
 	}
 
 	/**
@@ -568,8 +689,8 @@ public class LineRaceMode extends NetDummyMode {
 	protected void netSendStats(GameEngine engine) {
 		String msg = "game\tstats\t";
 		msg += engine.statistics.lines + "\t" + engine.statistics.totalPieceLocked + "\t";
-		msg += engine.statistics.time + "\t" + engine.statistics.lpm + "\t";
-		msg += engine.statistics.pps + "\t" + goaltype + "\t";
+		msg += engine.statistics.getTime() + "\t" + engine.statistics.lpm + "\t";
+		msg += engine.statistics.getPps() + "\t" + goaltype + "\t";
 		msg += engine.gameActive + "\t" + engine.timerActive;
 		msg += "\n";
 		netLobby.netPlayerClient.send(msg);
@@ -582,19 +703,19 @@ public class LineRaceMode extends NetDummyMode {
 	protected void netRecvStats(GameEngine engine, String[] message) {
 		engine.statistics.lines = Integer.parseInt(message[4]);
 		engine.statistics.totalPieceLocked = Integer.parseInt(message[5]);
-		engine.statistics.time = Integer.parseInt(message[6]);
+		engine.statistics.setTime(Integer.parseInt(message[6]));
 		engine.statistics.lpm = Float.parseFloat(message[7]);
-		engine.statistics.pps = Float.parseFloat(message[8]);
+		engine.statistics.setPps(Float.parseFloat(message[8]));
 		goaltype = Integer.parseInt(message[9]);
 		engine.gameActive = Boolean.parseBoolean(message[10]);
 		engine.timerActive = Boolean.parseBoolean(message[11]);
 
 		// Update meter
 		int remainLines = GOAL_TABLE[goaltype] - engine.statistics.lines;
-		engine.meterValue = (remainLines * receiver.getMeterMax(engine)) / GOAL_TABLE[goaltype];
-		if(remainLines <= 30) engine.meterColor = GameEngine.METER_COLOR_YELLOW;
-		if(remainLines <= 20) engine.meterColor = GameEngine.METER_COLOR_ORANGE;
-		if(remainLines <= 10) engine.meterColor = GameEngine.METER_COLOR_RED;
+		engine.setMeterValue((remainLines * receiver.getMeterMax(engine)) / GOAL_TABLE[goaltype]);
+		if(remainLines <= 30) engine.setMeterColor(GameEngine.METER_COLOR_YELLOW);
+		if(remainLines <= 20) engine.setMeterColor(GameEngine.METER_COLOR_ORANGE);
+		if(remainLines <= 10) engine.setMeterColor(GameEngine.METER_COLOR_RED);
 	}
 
 	/**
@@ -606,9 +727,9 @@ public class LineRaceMode extends NetDummyMode {
 		String subMsg = "";
 		subMsg += "LINE;" + engine.statistics.lines + "/" + GOAL_TABLE[goaltype] + "\t";
 		subMsg += "PIECE;" + engine.statistics.totalPieceLocked + "\t";
-		subMsg += "TIME;" + GeneralUtil.getTime(engine.statistics.time) + "\t";
+		subMsg += "TIME;" + GeneralUtil.getTime(engine.statistics.getTime()) + "\t";
 		subMsg += "LINE/MIN;" + engine.statistics.lpm + "\t";
-		subMsg += "PIECE/SEC;" + engine.statistics.pps + "\t";
+		subMsg += "PIECE/SEC;" + engine.statistics.getPps() + "\t";
 
 		String msg = "gstat1p\t" + NetUtil.urlEncode(subMsg) + "\n";
 		netLobby.netPlayerClient.send(msg);

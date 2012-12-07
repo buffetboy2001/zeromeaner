@@ -1,9 +1,8 @@
 package org.zeromeaner.game.evil;
 
+import org.eviline.randomizer.MaliciousRandomizer.MaliciousRandomizerProperties;
 import org.eviline.randomizer.Randomizer;
 import org.eviline.randomizer.RandomizerFactory;
-import org.eviline.randomizer.MaliciousRandomizer.MaliciousRandomizerProperties;
-import org.zeromeaner.game.component.Piece;
 import org.zeromeaner.game.play.GameEngine;
 
 public class TNNetplayRandomizer extends TNConcurrentRandomizer {
