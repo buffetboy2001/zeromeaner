@@ -95,6 +95,11 @@
 			<id>local-artifacts</id>
 			<url>file://${project.basedir}/local-artifacts</url>
 		</repository>
+		
+		<repository>
+			<id>sonatype</id>
+			<url>https://oss.sonatype.org/content/groups/public/</url>
+		</repository>
 	</repositories>
 
 	<profiles>
@@ -223,7 +228,7 @@
 	<parent>
 		<groupId>org.zeromeaner</groupId>
 		<artifactId>zeromeaner-parent</artifactId>
-		<version>8.0.3.11-SNAPSHOT</version>
+		<version>8.0.3.12-SNAPSHOT</version>
 		<relativePath>modules</relativePath>
 	</parent>
 	<name>Zeromeaner Core</name>
