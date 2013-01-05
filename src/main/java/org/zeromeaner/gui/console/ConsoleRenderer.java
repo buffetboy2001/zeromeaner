@@ -46,4 +46,9 @@ public class ConsoleRenderer extends EventRenderer {
 			float scale) {
 		screen.putString(x, y, str, toColor(color), null);
 	}
+	
+	@Override
+	public void drawTTFMenuFont(GameEngine engine, int playerID, int x, int y, String str, int color) {
+		screen.putString(x, y, str, toColor(color), null);
+	}
 }
