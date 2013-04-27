@@ -2,7 +2,7 @@ package org.zeromeaner.game.event;
 
 import java.util.EventListener;
 
-import org.zeromeaner.game.subsystem.mode.GameMode;
+import org.zeromeaner.game.mode.GameMode;
 
 public interface EngineListener extends EventListener {
 	/**

@@ -1,12 +1,11 @@
 package org.zeromeaner.knet;
 
 import java.lang.annotation.RetentionPolicy;
-
 import java.lang.annotation.Retention;
 
 import org.zeromeaner.game.component.Field;
 import org.zeromeaner.game.component.Piece;
-import org.zeromeaner.game.subsystem.mode.NetVSBattleMode;
+import org.zeromeaner.game.mode.NetVSBattleMode;
 import org.zeromeaner.knet.obj.KNStartInfo;
 import org.zeromeaner.knet.obj.KNetChannelInfo;
 import org.zeromeaner.knet.obj.KNetPlayerInfo;

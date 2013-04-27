@@ -76,17 +76,20 @@ import javax.swing.event.ListSelectionListener;
 import javax.swing.filechooser.FileFilter;
 
 
+
+
+
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 import org.funcish.core.Mappings;
+import org.zeromeaner.game.ai.AbstractAI;
 import org.zeromeaner.game.component.RuleOptions;
+import org.zeromeaner.game.mode.AbstractNetMode;
+import org.zeromeaner.game.mode.GameMode;
 import org.zeromeaner.game.play.GameEngine;
 import org.zeromeaner.game.play.GameManager;
 import org.zeromeaner.game.randomizer.Randomizer;
-import org.zeromeaner.game.subsystem.ai.AbstractAI;
-import org.zeromeaner.game.subsystem.mode.GameMode;
-import org.zeromeaner.game.subsystem.mode.AbstractNetMode;
-import org.zeromeaner.game.subsystem.wallkick.Wallkick;
+import org.zeromeaner.game.wallkick.Wallkick;
 import org.zeromeaner.gui.knet.KNetPanelEvent;
 import org.zeromeaner.gui.knet.KNetPanelListener;
 import org.zeromeaner.util.CustomProperties;
@@ -98,7 +101,6 @@ import org.zeromeaner.util.ResourceFileSystemView;
 import org.zeromeaner.util.ResourceOutputStream;
 import org.zeromeaner.util.ResourceInputStream;
 import org.zeromeaner.util.GeneralUtil;
-
 import org.zeromeaner.util.Zeroflections;
 
 /**

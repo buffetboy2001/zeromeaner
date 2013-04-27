@@ -3,12 +3,11 @@ package org.zeromeaner.game.evil;
 import java.util.Arrays;
 
 import org.apache.log4j.Logger;
-
 import org.zeromeaner.game.component.Block;
 import org.zeromeaner.game.component.Piece;
 import org.zeromeaner.game.event.EventRenderer;
+import org.zeromeaner.game.mode.MarathonMode;
 import org.zeromeaner.game.play.GameEngine;
-import org.zeromeaner.game.subsystem.mode.MarathonMode;
 import org.zeromeaner.util.GeneralUtil;
 
 public class TNMode extends MarathonMode {

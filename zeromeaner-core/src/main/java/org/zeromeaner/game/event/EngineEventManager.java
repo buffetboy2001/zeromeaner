@@ -5,8 +5,8 @@ import javax.swing.event.EventListenerList;
 import org.zeromeaner.game.component.Block;
 import org.zeromeaner.game.event.EngineEvent.Args;
 import org.zeromeaner.game.event.EngineEvent.Type;
+import org.zeromeaner.game.mode.GameMode;
 import org.zeromeaner.game.play.GameEngine;
-import org.zeromeaner.game.subsystem.mode.GameMode;
 import org.zeromeaner.util.CustomProperties;
 
 public class EngineEventManager implements EngineEventGenerator {

@@ -50,9 +50,10 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 
 
+
 import org.apache.log4j.Logger;
-import org.zeromeaner.game.subsystem.ai.AIPlayer;
-import org.zeromeaner.game.subsystem.ai.AbstractAI;
+import org.zeromeaner.game.ai.AIPlayer;
+import org.zeromeaner.game.ai.AbstractAI;
 import org.zeromeaner.util.ResourceInputStream;
 import org.zeromeaner.util.Zeroflections;
 

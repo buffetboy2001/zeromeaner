@@ -8,6 +8,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.FutureTask;
+
 import org.eviline.Field;
 import org.eviline.PlayerAction;
 import org.eviline.PlayerActionType;
@@ -17,9 +18,9 @@ import org.eviline.ai.QueueContext;
 import org.eviline.fitness.EvilineFitness;
 import org.eviline.Shape;
 import org.eviline.ShapeType;
+import org.zeromeaner.game.ai.AbstractAI;
 import org.zeromeaner.game.component.Controller;
 import org.zeromeaner.game.play.GameEngine;
-import org.zeromeaner.game.subsystem.ai.AbstractAI;
 
 public class TNBot extends AbstractAI {
 

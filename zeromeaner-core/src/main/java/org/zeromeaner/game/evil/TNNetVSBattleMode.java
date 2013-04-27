@@ -3,13 +3,14 @@ package org.zeromeaner.game.evil;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+
 import org.zeromeaner.game.component.Block;
 import org.zeromeaner.game.component.Piece;
 import org.zeromeaner.game.event.EventRenderer;
+import org.zeromeaner.game.mode.NetVSBattleMode;
 import org.zeromeaner.game.play.GameEngine;
 import org.zeromeaner.game.play.GameManager;
-import org.zeromeaner.game.subsystem.mode.NetVSBattleMode;
-import org.zeromeaner.game.subsystem.wallkick.StandardWallkick;
+import org.zeromeaner.game.wallkick.StandardWallkick;
 
 public class TNNetVSBattleMode extends NetVSBattleMode {
 	protected EventRenderer receiver;

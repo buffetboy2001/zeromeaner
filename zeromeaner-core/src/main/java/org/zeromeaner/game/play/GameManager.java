@@ -33,7 +33,7 @@ import org.apache.log4j.Logger;
 import org.zeromeaner.game.component.BGMStatus;
 import org.zeromeaner.game.component.BackgroundStatus;
 import org.zeromeaner.game.event.EventRenderer;
-import org.zeromeaner.game.subsystem.mode.GameMode;
+import org.zeromeaner.game.mode.GameMode;
 import org.zeromeaner.util.CustomProperties;
 import org.zeromeaner.util.Version;
 

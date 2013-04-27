@@ -20,11 +20,11 @@ import org.funcish.core.fn.Sequence;
 import org.reflections.Reflections;
 import org.reflections.scanners.ResourcesScanner;
 import org.reflections.scanners.SubTypesScanner;
+import org.zeromeaner.game.ai.AbstractAI;
+import org.zeromeaner.game.mode.GameMode;
+import org.zeromeaner.game.mode.ModeTypes.ModeType;
 import org.zeromeaner.game.randomizer.Randomizer;
-import org.zeromeaner.game.subsystem.ai.AbstractAI;
-import org.zeromeaner.game.subsystem.mode.GameMode;
-import org.zeromeaner.game.subsystem.mode.ModeTypes.ModeType;
-import org.zeromeaner.game.subsystem.wallkick.Wallkick;
+import org.zeromeaner.game.wallkick.Wallkick;
 
 import com.google.common.base.Predicate;
 

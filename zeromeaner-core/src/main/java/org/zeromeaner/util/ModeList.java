@@ -13,8 +13,8 @@ import org.funcish.core.fn.Predicate;
 import org.funcish.core.fn.Predicator;
 import org.funcish.core.impl.AbstractMapper;
 import org.funcish.core.impl.AbstractPredicator;
-import org.zeromeaner.game.subsystem.mode.AbstractNetMode;
-import org.zeromeaner.game.subsystem.mode.GameMode;
+import org.zeromeaner.game.mode.AbstractNetMode;
+import org.zeromeaner.game.mode.GameMode;
 
 
 public class ModeList<E extends GameMode> extends ArrayFunctionalList<E> {

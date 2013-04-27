@@ -1,6 +1,6 @@
 package org.zeromeaner.game.event;
 
-import org.zeromeaner.game.subsystem.mode.GameMode;
+import org.zeromeaner.game.mode.GameMode;
 
 public interface EngineEventGenerator {
 	public void addEngineListener(EngineListener l);

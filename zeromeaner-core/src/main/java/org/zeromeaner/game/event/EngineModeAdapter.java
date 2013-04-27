@@ -1,6 +1,6 @@
 package org.zeromeaner.game.event;
 
-import org.zeromeaner.game.subsystem.mode.GameMode;
+import org.zeromeaner.game.mode.GameMode;
 
 public class EngineModeAdapter implements EngineListener {
 

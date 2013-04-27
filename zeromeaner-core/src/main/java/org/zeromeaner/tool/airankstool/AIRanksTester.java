@@ -2,9 +2,9 @@ package org.zeromeaner.tool.airankstool;
 
 import java.util.Random;
 
+import org.zeromeaner.game.ai.RanksAI;
 import org.zeromeaner.game.component.Piece;
 import org.zeromeaner.game.randomizer.*;
-import org.zeromeaner.game.subsystem.ai.RanksAI;
 
 
 
