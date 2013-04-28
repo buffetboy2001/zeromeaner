@@ -11,13 +11,11 @@ public abstract class AbstractZMenuItem<T> implements ZMenuItem {
 	protected String name;
 	protected T defaultValue;
 	protected T value;
-	protected boolean twoLines;
 	
 	protected abstract void commit(T value);
 
-	public AbstractZMenuItem(String name, T defaultValue, boolean twoLines) {
+	public AbstractZMenuItem(String name, T defaultValue) {
 		this.name = name;
-		this.twoLines = twoLines;
 		this.defaultValue = this.value = defaultValue;
 	}
 	
