@@ -1,6 +1,7 @@
 package org.zeromeaner.game.menu;
 
 import org.zeromeaner.game.event.EventRenderer;
+import org.zeromeaner.game.play.GameManager;
 
 public interface ZMenu {
 	public ZMenuItem[] getMenuItems();
@@ -11,5 +12,5 @@ public interface ZMenu {
 	public void nextValue();
 	public void previousValue();
 	
-	public void render(EventRenderer renderer);
+	public void render(GameManager m);
 }

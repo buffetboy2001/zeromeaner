@@ -1,44 +1,50 @@
 package org.zeromeaner.game.menu;
 
+import java.util.Arrays;
+
 import org.zeromeaner.game.event.EventRenderer;
+import org.zeromeaner.game.play.GameEngine;
+import org.zeromeaner.game.play.GameManager;
 
-public class AbstractZMenuItem implements ZMenuItem {
+public abstract class AbstractZMenuItem<T> implements ZMenuItem {
+	
+	protected String name;
+	protected T defaultValue;
+	protected T value;
+	protected boolean twoLines;
+	
+	protected abstract void commit(T value);
 
+	public AbstractZMenuItem(String name, T defaultValue, boolean twoLines) {
+		this.name = name;
+		this.twoLines = twoLines;
+		this.defaultValue = this.value = defaultValue;
+	}
+	
 	@Override
 	public void reset() {
-		// TODO Auto-generated method stub
-		
+		value = defaultValue;
 	}
 
 	@Override
 	public void commit() {
-		// TODO Auto-generated method stub
-		
+		commit(value);
 	}
 
 	@Override
-	public void nextValue() {
-		// TODO Auto-generated method stub
-		
+	public String renderName() {
+		char[] buf = new char[10];
+		Arrays.fill(buf, ' ');
+		System.arraycopy(name.toCharArray(), 0, buf, 0, name.length());
+		return new String(buf);
 	}
-
+	
 	@Override
-	public void previousValue() {
-		// TODO Auto-generated method stub
-		
+	public String renderValue() {
+		char[] buf = new char[10];
+		Arrays.fill(buf, ' ');
+		String v = String.valueOf(value).toUpperCase();
+		System.arraycopy(v.toCharArray(), 0, buf, buf.length - v.length(), v.length());
+		return new String(buf);
 	}
-
-	@Override
-	public int getNumRows() {
-		// TODO Auto-generated method stub
-		return 0;
-	}
-
-	@Override
-	public void renderRow(EventRenderer renderer, int renderPosition,
-			int rowIndex) {
-		// TODO Auto-generated method stub
-		
-	}
-
 }
