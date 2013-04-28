@@ -1,4 +1,4 @@
-package org.zeromeaner.game.menu;
+package org.zeromeaner.game.zmenu;
 
 import java.util.Arrays;
 

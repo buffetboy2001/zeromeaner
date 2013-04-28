@@ -1,4 +1,4 @@
-package org.zeromeaner.game.menu;
+package org.zeromeaner.game.zmenu;
 
 import org.zeromeaner.game.event.EventRenderer;
 import org.zeromeaner.game.play.GameEngine;
