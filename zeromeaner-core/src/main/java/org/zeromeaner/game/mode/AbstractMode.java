@@ -37,6 +37,7 @@ import org.zeromeaner.game.menu.AbstractMenuItem;
 import org.zeromeaner.game.mode.ModeTypes.ModeType;
 import org.zeromeaner.game.play.GameEngine;
 import org.zeromeaner.game.play.GameManager;
+import org.zeromeaner.game.zmenu.ZMenu;
 import org.zeromeaner.gui.knet.KNetPanel;
 import org.zeromeaner.util.CustomProperties;
 import org.zeromeaner.util.GeneralUtil;
@@ -61,28 +62,18 @@ public class AbstractMode implements GameMode {
 	/** Drawing and event handling EventRenderer */
 	protected EventRenderer receiver;
 
-	/** Current state of menu for drawMenu */
-	protected int statcMenu, menuColor, menuY;
-
-	protected ArrayList<AbstractMenuItem> menu;
-	
 	/** Name of mode in properties file */
 	protected String propName;
-	
-	/** Position of cursor in menu */
-	protected int menuCursor;
 	
 	/** Number of frames spent in menu */
 	protected int menuTime;
 
+	/** The menu for this mode */
+	protected ZMenu menu;
+
 	public AbstractMode() {
-		statcMenu = 0;
-		menuCursor = 0;
 		menuTime = 0;
-		menuColor = EventRenderer.COLOR_WHITE;
-		menuY = 0;
-		menu = new ArrayList<AbstractMenuItem>();
-		propName = "dummy";
+ 		propName = "dummy";
 	}
 
 	protected void loadSetting(CustomProperties prop) {

@@ -2,6 +2,7 @@ package org.zeromeaner.game.zmenu;
 
 import org.zeromeaner.game.event.EventRenderer;
 import org.zeromeaner.game.play.GameManager;
+import org.zeromeaner.util.CustomProperties;
 
 public interface ZMenu {
 	public ZMenuItem[] getMenuItems();
@@ -13,4 +14,7 @@ public interface ZMenu {
 	public void previousValue();
 	
 	public void render(GameManager m);
+	
+	public void load(CustomProperties props);
+	public void store(CustomProperties props);
 }

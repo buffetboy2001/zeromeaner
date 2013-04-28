@@ -14,4 +14,9 @@ public abstract class OnOffZMenuItem extends AbstractZMenuItem<Boolean> {
 	public void previousValue() {
 		value = !value;
 	}
+	
+	@Override
+	public String renderValue() {
+		return value ? "ON" : "OFF";
+	}
 }

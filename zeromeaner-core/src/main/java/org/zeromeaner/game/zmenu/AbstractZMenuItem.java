@@ -31,18 +31,11 @@ public abstract class AbstractZMenuItem<T> implements ZMenuItem {
 
 	@Override
 	public String renderName() {
-		char[] buf = new char[10];
-		Arrays.fill(buf, ' ');
-		System.arraycopy(name.toCharArray(), 0, buf, 0, name.length());
-		return new String(buf);
+		return name.toUpperCase();
 	}
 	
 	@Override
 	public String renderValue() {
-		char[] buf = new char[10];
-		Arrays.fill(buf, ' ');
-		String v = String.valueOf(value).toUpperCase();
-		System.arraycopy(v.toCharArray(), 0, buf, buf.length - v.length(), v.length());
-		return new String(buf);
+		return String.valueOf(value).toUpperCase();
 	}
 }
