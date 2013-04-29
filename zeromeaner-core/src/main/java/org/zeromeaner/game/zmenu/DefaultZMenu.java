@@ -1,5 +1,7 @@
 package org.zeromeaner.game.zmenu;
 
+import java.util.Arrays;
+
 import org.zeromeaner.game.event.EventRenderer;
 import org.zeromeaner.game.play.GameEngine;
 import org.zeromeaner.game.play.GameManager;
@@ -7,14 +9,18 @@ import org.zeromeaner.util.CustomProperties;
 
 public class DefaultZMenu implements ZMenu {
 	
-	private String propertyPrefix;
 	private ZMenuItem[] menuItems;
 	private int cursor;
 	
-	public DefaultZMenu(String propertyPrefix, ZMenuItem... menuItems) {
-		this.propertyPrefix = propertyPrefix;
+	public DefaultZMenu(ZMenuItem... menuItems) {
 		this.menuItems = menuItems;
 		cursor = 0;
+	}
+	
+	public void add(ZMenuItem mi) {
+		ZMenuItem[] nmi = Arrays.copyOf(menuItems, menuItems.length + 1);
+		nmi[nmi.length - 1] = mi;
+		menuItems = nmi;
 	}
 
 	@Override
@@ -79,7 +85,6 @@ public class DefaultZMenu implements ZMenu {
 
 	@Override
 	public void load(CustomProperties props) {
-		props = props.subProperties(propertyPrefix);
 		for(ZMenuItem mi : menuItems) {
 			mi.load(props);
 		}
@@ -87,7 +92,6 @@ public class DefaultZMenu implements ZMenu {
 
 	@Override
 	public void store(CustomProperties props) {
-		props = props.subProperties(propertyPrefix);
 		for(ZMenuItem mi : menuItems) {
 			mi.store(props);
 		}

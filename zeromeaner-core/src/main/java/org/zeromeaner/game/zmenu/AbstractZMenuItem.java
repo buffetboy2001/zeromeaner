@@ -19,6 +19,10 @@ public abstract class AbstractZMenuItem<T> implements ZMenuItem {
 		this.defaultValue = this.value = defaultValue;
 	}
 	
+	public void addTo(ZMenu menu) {
+		menu.add(this);
+	}
+	
 	@Override
 	public void reset() {
 		value = defaultValue;

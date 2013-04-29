@@ -401,6 +401,7 @@ public class AbstractNetMode extends AbstractMode implements KNetListener, KNetP
 	 */
 	@Override
 	public boolean onEndingStart(GameEngine engine, int playerID) {
+/*
 		if(menuCursor == 0) {
 			// NET: Send game completed messages
 			if(netIsNetPlay && !netIsWatch() && ((netNumSpectators() > 0) || (netForceSendMovements))) {
@@ -410,6 +411,7 @@ public class AbstractNetMode extends AbstractMode implements KNetListener, KNetP
 				knetClient().fire(GAME, true, GAME_ENDING, true, CHANNEL_ID, channelInfo().getId());
 			}
 		}
+*/
 		return false;
 	}
 
@@ -510,12 +512,14 @@ public class AbstractNetMode extends AbstractMode implements KNetListener, KNetP
 
 		int change = super.updateCursor(engine, maxCursor, playerID);
 
+/*
 		// NET: Signal cursor change
 		if((engine.ctrl.isMenuRepeatKey(Controller.BUTTON_UP) || engine.ctrl.isMenuRepeatKey(Controller.BUTTON_DOWN)) &&
 			netIsNetPlay && ((netNumSpectators() > 0) || (netForceSendMovements)))
 		{
 			knetClient().fire(GAME, true, GAME_CURSOR, menuCursor);
 		}
+*/
 
 		return change;
 	}
@@ -602,6 +606,7 @@ public class AbstractNetMode extends AbstractMode implements KNetListener, KNetP
 					engine.field = new Field();
 				}
 
+/*
 				// Move cursor
 				if(e.is(GAME_CURSOR)) {
 					if(engine.stat == GameEngine.Status.SETTING) {
@@ -609,6 +614,7 @@ public class AbstractNetMode extends AbstractMode implements KNetListener, KNetP
 						engine.playSE("cursor");
 					}
 				}
+*/
 				// Change game options
 				if(e.is(GAME_OPTIONS)) {
 					netRecvOptions(engine, e);

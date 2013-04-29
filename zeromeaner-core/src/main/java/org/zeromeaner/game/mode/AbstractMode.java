@@ -37,6 +37,7 @@ import org.zeromeaner.game.menu.AbstractMenuItem;
 import org.zeromeaner.game.mode.ModeTypes.ModeType;
 import org.zeromeaner.game.play.GameEngine;
 import org.zeromeaner.game.play.GameManager;
+import org.zeromeaner.game.zmenu.DefaultZMenu;
 import org.zeromeaner.game.zmenu.ZMenu;
 import org.zeromeaner.gui.knet.KNetPanel;
 import org.zeromeaner.util.CustomProperties;
@@ -73,17 +74,16 @@ public class AbstractMode implements GameMode {
 
 	public AbstractMode() {
 		menuTime = 0;
- 		propName = "dummy";
+ 		propName = getClass().getSimpleName().toLowerCase().replace("mode", "");
+ 		menu = new DefaultZMenu();
 	}
 
 	protected void loadSetting(CustomProperties prop) {
-		for (AbstractMenuItem item : menu)
-			item.load(-1, prop, propName);
+		menu.load(prop.subProperties(propName + "."));
 	}
 
 	protected void saveSetting(CustomProperties prop) {
-		for (AbstractMenuItem item : menu)
-			item.save(-1, prop, propName);
+		menu.store(prop.subProperties(propName + "."));
 	}
 
 	public void pieceLocked(GameEngine engine, int playerID, int lines) {
@@ -225,20 +225,7 @@ public class AbstractMode implements GameMode {
 	}
 
 	public void renderSetting(GameEngine engine, int playerID) {
-		//TODO: Custom page breaks
-		AbstractMenuItem menuItem;
-		int pageNum = menuCursor / 10;
-		int pageStart = pageNum * 10;
-		int endPage = Math.min(menu.size(), pageStart+10);
-		for (int i = pageStart; i < endPage; i++)
-		{
-			menuItem = menu.get(i);
-			receiver.drawMenuFont(engine, playerID, 0, i << 1, menuItem.displayName, menuItem.color);
-			if (menuCursor == i && !engine.getOwner().replayMode)
-				receiver.drawMenuFont(engine, playerID, 0, (i << 1) + 1, "b" + menuItem.getValueString(), true);
-			else 
-				receiver.drawMenuFont(engine, playerID, 1, (i << 1) + 1, menuItem.getValueString());
-		}
+		menu.render(owner);
 	}
 
 	public void renderFieldEdit(GameEngine engine, int playerID) {
@@ -287,14 +274,12 @@ public class AbstractMode implements GameMode {
 	protected int updateCursor (GameEngine engine, int maxCursor, int playerID) {
 		// Up
 		if(engine.ctrl.isMenuRepeatKey(Controller.BUTTON_UP)) {
-			menuCursor--;
-			if(menuCursor < 0) menuCursor = maxCursor;
+			menu.previousItem();
 			engine.playSE("cursor");
 		}
 		// Down
 		if(engine.ctrl.isMenuRepeatKey(Controller.BUTTON_DOWN)) {
-			menuCursor++;
-			if(menuCursor > maxCursor) menuCursor = 0;
+			menu.nextItem();
 			engine.playSE("cursor");
 		}
 
@@ -306,77 +291,27 @@ public class AbstractMode implements GameMode {
 
 	protected void updateMenu(GameEngine engine) {
 		// Configuration changes
-		int change = updateCursor(engine, menu.size()-1);
+		int change = updateCursor(engine, menu.getMenuItems().length - 1);
 
 		if(change != 0) {
 			engine.playSE("change");
-			int fast = 0;
-			if (engine.ctrl.isPush(Controller.BUTTON_E)) fast++;
-			if (engine.ctrl.isPush(Controller.BUTTON_F)) fast += 2;
-			menu.get(menuCursor).change(change, fast);
+//			int fast = 0;
+//			if (engine.ctrl.isPush(Controller.BUTTON_E)) fast++;
+//			if (engine.ctrl.isPush(Controller.BUTTON_F)) fast += 2;
+//			menu.get(menuCursor).change(change, fast);
+			if(change > 0)
+				menu.nextValue();
+			if(change < 0)
+				menu.previousValue();
 		}
 	}
 
 	protected void initMenu (int y, int color, int statc) {
-		menuY = y;
-		menuColor = color;
-		statcMenu = statc;
+		menu.reset();
 	}
 
 	protected void initMenu (int color, int statc) {
-		menuY = 0;
-		statcMenu = statc;
-		menuColor = color;
-	}
-
-	protected void drawMenu (GameEngine engine, int playerID, EventRenderer receiver, String... str) {
-		for (int i = 0; i < str.length; i++)
-		{
-			if ((i&1) == 0)
-				receiver.drawMenuFont(engine, playerID, 0, menuY, str[i], menuColor);
-			else if (menuCursor == statcMenu && !engine.getOwner().replayMode)
-			{
-				receiver.drawMenuFont(engine, playerID, 0, menuY, "b" + str[i], true);
-				statcMenu++;
-			}
-			else {
-				receiver.drawMenuFont(engine, playerID, 1, menuY, str[i]);
-				statcMenu++;
-			}
-			menuY++;
-		}
-	}
-
-	protected void drawMenu (GameEngine engine, int playerID, EventRenderer receiver,
-			int y, int color, int statc, String... str) {
-		menuY = y;
-		menuColor = color;
-		statcMenu = statc;
-		drawMenu(engine, playerID, receiver, str);
-	}
-
-	protected void drawMenuCompact (GameEngine engine, int playerID, EventRenderer receiver, String... str) {
-		for (int i = 0; i < str.length-1; i+= 2)
-		{
-			receiver.drawMenuFont(engine, playerID, 1, menuY, str[i] + ":", menuColor);
-			if (menuCursor == statcMenu && !engine.getOwner().replayMode)
-			{
-				receiver.drawMenuFont(engine, playerID, 0, menuY, "b", true);
-				receiver.drawMenuFont(engine, playerID, str[i].length()+2, menuY, str[i+1], true);
-			}
-			else
-				receiver.drawMenuFont(engine, playerID, str[i].length()+2, menuY, str[i+1]);
-			statcMenu++;
-			menuY++;
-		}
-	}
-
-	protected void drawMenuCompact (GameEngine engine, int playerID, EventRenderer receiver,
-			int y, int color, int statc, String... str) {
-		menuY = y;
-		menuColor = color;
-		statcMenu = statc;
-		drawMenuCompact(engine, playerID, receiver, str);
+		menu.reset();
 	}
 
 	protected void drawResult (GameEngine engine, int playerID, EventRenderer receiver, int y, int color, String... str) {

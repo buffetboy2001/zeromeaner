@@ -28,11 +28,18 @@
 */
 package org.zeromeaner.game.mode;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.zeromeaner.game.component.BGMStatus;
 import org.zeromeaner.game.component.Controller;
 import org.zeromeaner.game.component.Piece;
 import org.zeromeaner.game.event.EventRenderer;
 import org.zeromeaner.game.play.GameEngine;
+import org.zeromeaner.game.zmenu.DefaultZMenu;
+import org.zeromeaner.game.zmenu.EnumeratedIntegerZMenuItem;
+import org.zeromeaner.game.zmenu.IntegerZMenuItem;
+import org.zeromeaner.game.zmenu.OnOffZMenuItem;
 import org.zeromeaner.knet.KNetEvent;
 import org.zeromeaner.util.CustomProperties;
 import org.zeromeaner.util.GeneralUtil;
@@ -215,6 +222,66 @@ public class MarathonMode extends AbstractNetMode {
 	/** Rankings' times */
 	private int[][] rankingTime;
 
+	public MarathonMode() {
+		new IntegerZMenuItem("level", 1, 1, 20) {
+			@Override
+			protected void commit(Integer value) {
+				startlevel = value;
+			}
+		}.addTo(menu);
+		new EnumeratedIntegerZMenuItem("tspin", "NONE", "NORMAL", "ALL") {
+			@Override
+			protected void commit(Integer value) {
+				tspinEnableType = value;
+			}
+		}.addTo(menu);
+		new OnOffZMenuItem("tspin kick", false) {
+			@Override
+			protected void commit(Boolean value) {
+				enableTSpinKick = value;
+			}
+		}.addTo(menu);
+		new EnumeratedIntegerZMenuItem("tspin type", "4P", "IMM") {
+			@Override
+			protected void commit(Integer value) {
+				spinCheckType = value;
+			}
+			
+		}.addTo(menu);
+		new OnOffZMenuItem("ez tspin", false) {
+			@Override
+			protected void commit(Boolean value) {
+				tspinEnableEZ = value;
+			}
+		}.addTo(menu);
+		new OnOffZMenuItem("b2b", false) {
+			@Override
+			protected void commit(Boolean value) {
+				enableB2B = value;
+			}
+		}.addTo(menu);
+		List<String> goalTypes = new ArrayList<String>();
+		for(int i : tableGameClearLines) {
+			if(i == -1)
+				goalTypes.add("ENDLESS");
+			else
+				goalTypes.add(i + " LINES");
+		}
+			
+		new EnumeratedIntegerZMenuItem("goal", goalTypes.toArray(new String[0])) {
+			@Override
+			protected void commit(Integer value) {
+				goaltype = value;
+			}
+		}.addTo(menu);
+		new OnOffZMenuItem("big", false) {
+			@Override
+			protected void commit(Boolean value) {
+				big = value;
+			}
+		}.addTo(menu);
+	}
+	
 	/*
 	 * Mode name
 	 */
@@ -286,57 +353,10 @@ public class MarathonMode extends AbstractNetMode {
 			int change = updateCursor(engine, 8, playerID);
 
 			if(change != 0) {
-				engine.playSE("change");
-
-				switch(menuCursor) {
-				case 0:
-					startlevel += change;
-					if(tableGameClearLines[goaltype] >= 0) {
-						if(startlevel < 0) startlevel = (tableGameClearLines[goaltype] - 1) / 10;
-						if(startlevel > (tableGameClearLines[goaltype] - 1) / 10) startlevel = 0;
-					} else {
-						if(startlevel < 0) startlevel = 19;
-						if(startlevel > 19) startlevel = 0;
-					}
-					engine.getOwner().backgroundStatus.bg = startlevel;
-					break;
-				case 1:
-					//enableTSpin = !enableTSpin;
-					tspinEnableType += change;
-					if(tspinEnableType < 0) tspinEnableType = 2;
-					if(tspinEnableType > 2) tspinEnableType = 0;
-					break;
-				case 2:
-					enableTSpinKick = !enableTSpinKick;
-					break;
-				case 3:
-					spinCheckType += change;
-					if(spinCheckType < 0) spinCheckType = 1;
-					if(spinCheckType > 1) spinCheckType = 0;
-					break;
-				case 4:
-					tspinEnableEZ = !tspinEnableEZ;
-					break;
-				case 5:
-					enableB2B = !enableB2B;
-					break;
-				case 6:
-					enableCombo = !enableCombo;
-					break;
-				case 7:
-					goaltype += change;
-					if(goaltype < 0) goaltype = GAMETYPE_MAX - 1;
-					if(goaltype > GAMETYPE_MAX - 1) goaltype = 0;
-
-					if((startlevel > (tableGameClearLines[goaltype] - 1) / 10) && (tableGameClearLines[goaltype] >= 0)) {
-						startlevel = (tableGameClearLines[goaltype] - 1) / 10;
-						engine.getOwner().backgroundStatus.bg = startlevel;
-					}
-					break;
-				case 8:
-					big = !big;
-					break;
-				}
+				if(change > 0)
+					menu.nextValue();
+				if(change < 0)
+					menu.previousValue();
 
 				// NET: Signal options change
 				if(netIsNetPlay && (netNumSpectators() > 0)) {
@@ -367,7 +387,6 @@ public class MarathonMode extends AbstractNetMode {
 		// Replay
 		else {
 			menuTime++;
-			menuCursor = -1;
 
 			if(menuTime >= 60) {
 				return false;
@@ -375,31 +394,6 @@ public class MarathonMode extends AbstractNetMode {
 		}
 
 		return true;
-	}
-
-	/*
-	 * Render the settings screen
-	 */
-	@Override
-	public void renderSetting(GameEngine engine, int playerID) {
-			String strTSpinEnable = "";
-			if(version >= 2) {
-				if(tspinEnableType == 0) strTSpinEnable = "OFF";
-				if(tspinEnableType == 1) strTSpinEnable = "T-ONLY";
-				if(tspinEnableType == 2) strTSpinEnable = "ALL";
-			} else {
-				strTSpinEnable = GeneralUtil.getONorOFF(enableTSpin);
-			}
-			drawMenu(engine, playerID, receiver, 0, EventRenderer.COLOR_BLUE, 0,
-					"LEVEL", String.valueOf(startlevel + 1),
-					"SPIN BONUS", strTSpinEnable,
-					"EZ SPIN", GeneralUtil.getONorOFF(enableTSpinKick),
-					"SPIN TYPE", (spinCheckType == 0) ? "4POINT" : "IMMOBILE",
-					"EZIMMOBILE", GeneralUtil.getONorOFF(tspinEnableEZ),
-					"B2B", GeneralUtil.getONorOFF(enableB2B),
-					"COMBO",  GeneralUtil.getONorOFF(enableCombo),
-					"GOAL",  (goaltype == 2) ? "ENDLESS" : tableGameClearLines[goaltype] + " LINES",
-					"BIG", GeneralUtil.getONorOFF(big));
 	}
 
 	/*

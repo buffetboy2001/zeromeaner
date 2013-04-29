@@ -6,6 +6,8 @@ import org.zeromeaner.util.CustomProperties;
 
 public interface ZMenu {
 	public ZMenuItem[] getMenuItems();
+	public void add(ZMenuItem mi);
+	
 	public void reset();
 	public void commit();
 	public void nextItem();
