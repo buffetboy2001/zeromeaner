@@ -7,10 +7,12 @@ import org.zeromeaner.util.CustomProperties;
 
 public class DefaultZMenu implements ZMenu {
 	
+	private String propertyPrefix;
 	private ZMenuItem[] menuItems;
 	private int cursor;
 	
-	public DefaultZMenu(ZMenuItem... menuItems) {
+	public DefaultZMenu(String propertyPrefix, ZMenuItem... menuItems) {
+		this.propertyPrefix = propertyPrefix;
 		this.menuItems = menuItems;
 		cursor = 0;
 	}
@@ -77,6 +79,7 @@ public class DefaultZMenu implements ZMenu {
 
 	@Override
 	public void load(CustomProperties props) {
+		props = props.subProperties(propertyPrefix);
 		for(ZMenuItem mi : menuItems) {
 			mi.load(props);
 		}
@@ -84,6 +87,7 @@ public class DefaultZMenu implements ZMenu {
 
 	@Override
 	public void store(CustomProperties props) {
+		props = props.subProperties(propertyPrefix);
 		for(ZMenuItem mi : menuItems) {
 			mi.store(props);
 		}

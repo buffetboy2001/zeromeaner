@@ -1,5 +1,7 @@
 package org.zeromeaner.game.zmenu;
 
+import org.zeromeaner.util.CustomProperties;
+
 public abstract class IntegerZMenuItem extends AbstractZMenuItem<Integer> {
 	protected int low;
 	protected int high;
@@ -22,4 +24,17 @@ public abstract class IntegerZMenuItem extends AbstractZMenuItem<Integer> {
 			value = high;
 	}
 
+	@Override
+	public void load(CustomProperties props) {
+		value = props.getProperty(name, defaultValue);
+		if(value < low)
+			value = low;
+		if(value > high)
+			value = high;
+	}
+	
+	@Override
+	public void store(CustomProperties props) {
+		props.setProperty(name, value);
+	}
 }
