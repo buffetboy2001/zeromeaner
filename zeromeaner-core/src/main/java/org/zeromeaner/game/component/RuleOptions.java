@@ -309,6 +309,16 @@ public class RuleOptions implements Serializable {
 	public boolean ghost;
 
 	/**
+	 * Whether to use TGM-style garbage
+	 */
+	public boolean tgmGarbage;
+	
+	/**
+	 * Whether the TGM-style garbage holes are inverted relative to the clearing piece
+	 */
+	public boolean tgmGarbageInverted;
+	
+	/**
 	 * Constructor
 	 */
 	public RuleOptions() {
@@ -448,6 +458,9 @@ public class RuleOptions implements Serializable {
 
 		skin = 0;
 		ghost = true;
+		
+		tgmGarbage = false;
+		tgmGarbageInverted = false;
 	}
 
 	/**
@@ -575,6 +588,9 @@ public class RuleOptions implements Serializable {
 
 		skin = r.skin;
 		ghost = r.ghost;
+		
+		tgmGarbage = r.tgmGarbage;
+		tgmGarbageInverted = r.tgmGarbageInverted;
 	}
 
 	/**
@@ -696,6 +712,11 @@ public class RuleOptions implements Serializable {
 
 		if((ignoreGraphicsSetting) && (skin != r.skin)) return false;
 		if(ghost != r.ghost) return false;
+		
+		if(tgmGarbage != r.tgmGarbage)
+			return false;
+		if(tgmGarbageInverted != r.tgmGarbageInverted)
+			return false;
 
 		return true;
 	}
@@ -818,6 +839,9 @@ public class RuleOptions implements Serializable {
 
 		p.setProperty(id + ".ruleopt.skin", skin);
 		p.setProperty(id + ".ruleopt.ghost", ghost);
+		
+		p.setProperty(id + ".ruleopt.tgmGarbage", tgmGarbage);
+		p.setProperty(id + ".ruleopt.tgmGarbageInverted", tgmGarbageInverted);
 	}
 
 	/**
@@ -937,5 +961,8 @@ public class RuleOptions implements Serializable {
 
 		skin = p.getProperty(id + ".ruleopt.skin", skin);
 		ghost = p.getProperty(id + ".ruleopt.ghost", ghost);
+		
+		tgmGarbage = p.getProperty(id + ".ruleopt.tgmGarbage", tgmGarbage);
+		tgmGarbageInverted = p.getProperty(id + ".ruleopt.tgmGarbageInverted", tgmGarbageInverted);
 	}
 }
