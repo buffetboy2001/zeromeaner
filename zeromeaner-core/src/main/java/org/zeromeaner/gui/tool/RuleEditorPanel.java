@@ -32,6 +32,7 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
@@ -60,6 +61,7 @@ import javax.swing.JTabbedPane;
 import javax.swing.JTextField;
 import javax.swing.ListCellRenderer;
 import javax.swing.filechooser.FileFilter;
+
 
 
 import org.apache.log4j.Logger;
@@ -444,6 +446,10 @@ public class RuleEditorPanel extends JPanel implements ActionListener {
 	//----------------------------------------------------------------------
 	/** BlockImage */
 	private BufferedImage[] imgBlockSkins;
+	
+	private JCheckBox tgmGarbage;
+	
+	private JCheckBox tgmGarbageInverted;
 
 	public JTabbedPane getTabPane() {
 		return tabPane;
@@ -1200,6 +1206,13 @@ public class RuleEditorPanel extends JPanel implements ActionListener {
 			comboboxPieceDirection[i].setMaximumRowCount(strDirectionNames.length);
 			pPieceDirection[i].add(comboboxPieceDirection[i]);
 		}
+		
+		// Garbage tab
+		JPanel garbagePanel = new JPanel(new GridLayout(0, 1));
+		tabPane.addTab(getUIText("TabName_Garbage"), garbagePanel);
+		
+		garbagePanel.add(tgmGarbage = new JCheckBox(getUIText("Garbage_TGM")));
+		garbagePanel.add(tgmGarbageInverted = new JCheckBox(getUIText("Garbage_TGM_Inverted")));
 	}
 
 	/**
@@ -1424,6 +1437,9 @@ public class RuleEditorPanel extends JPanel implements ActionListener {
 			comboboxPieceColor[i].setSelectedIndex(r.pieceColor[i] - 1);
 			comboboxPieceDirection[i].setSelectedIndex(r.pieceDefaultDirection[i]);
 		}
+		
+		tgmGarbage.setSelected(r.tgmGarbage);
+		tgmGarbageInverted.setSelected(r.tgmGarbageInverted);
 	}
 
 	/**
@@ -1553,6 +1569,9 @@ public class RuleEditorPanel extends JPanel implements ActionListener {
 			r.pieceColor[i] = comboboxPieceColor[i].getSelectedIndex() + 1;
 			r.pieceDefaultDirection[i] = comboboxPieceDirection[i].getSelectedIndex();
 		}
+		
+		r.tgmGarbage = tgmGarbage.isSelected();
+		r.tgmGarbageInverted = tgmGarbageInverted.isSelected();
 	}
 
 
