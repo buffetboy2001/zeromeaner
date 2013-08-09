@@ -84,6 +84,25 @@
 	</build>
 	<dependencies>
 		<dependency>
+			<groupId>com.esotericsoftware.kryo</groupId>
+			<artifactId>kryo</artifactId>
+			<version>2.21</version>
+			<exclusions>
+				<exclusion>
+					<artifactId>reflectasm</artifactId>
+					<groupId>com.esotericsoftware.reflectasm</groupId>
+				</exclusion>
+				<exclusion>
+					<artifactId>minlog</artifactId>
+					<groupId>com.esotericsoftware.minlog</groupId>
+				</exclusion>
+				<exclusion>
+					<artifactId>objenesis</artifactId>
+					<groupId>org.objenesis</groupId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		<dependency>
 			<groupId>org.swinglabs</groupId>
 			<artifactId>swing-worker</artifactId>
 			<version>1.1</version>
@@ -164,6 +183,11 @@
 			<groupId>org.zeromeaner</groupId>
 			<artifactId>zeromeaner-laf</artifactId>
 			<version>1.0.19-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.activemq</groupId>
+			<artifactId>activemq-client</artifactId>
+			<version>5.8.0</version>
 		</dependency>
 	</dependencies>
 

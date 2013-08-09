@@ -15,13 +15,14 @@ import com.esotericsoftware.kryo.io.Output;
 
 public class KNetEvent extends EventObject implements KryoSerializable {
 	private Map<KNetEventArgs, Object> args = new HashMap<KNetEventArgs, Object>();
+	protected String topic;
 	
 	@Deprecated
 	public KNetEvent() {
 		super(new Object());
 	}
 	
-	public KNetEvent(KNetEventSource source, Object... args) {
+	public KNetEvent(KNetEventSource source, String topic, Object... args) {
 		super(source);
 		for(int i = 0; i < args.length; i += 2) {
 			if(i+1 < args.length && !(args[i+1] instanceof KNetEventArgs))
@@ -33,12 +34,16 @@ public class KNetEvent extends EventObject implements KryoSerializable {
 	
 	@Override
 	public String toString() {
-		return getClass().getSimpleName() + "[source=" + super.getSource() + ", args=" + args + "]";
+		return getClass().getSimpleName() + "[" + super.getSource() + "->" + topic + ", args=" + args + "]";
 	}
 	
 	@Override
 	public KNetEventSource getSource() {
 		return (KNetEventSource) super.getSource();
+	}
+	
+	public String getTopic() {
+		return topic;
 	}
 	
 	public Object get(KNetEventArgs arg) {
@@ -74,6 +79,7 @@ public class KNetEvent extends EventObject implements KryoSerializable {
 	@Override
 	public void write(Kryo kryo, Output output) {
 		kryo.writeObject(output, getSource());
+		output.writeString(topic);
 		output.writeInt(args.size(), true);
 		for(Map.Entry<KNetEventArgs, Object> e : args.entrySet()) {
 //			output.writeInt(e.getKey().ordinal(), true);
@@ -86,6 +92,7 @@ public class KNetEvent extends EventObject implements KryoSerializable {
 	public void read(Kryo kryo, Input input) {
 		try {
 			source = kryo.readObject(input, KNetEventSource.class);
+			topic = input.readString();
 			KNetEventSource.class.cast(source);
 			int size = input.readInt(true);
 			for(int i = 0; i < size; i++) {

@@ -38,6 +38,10 @@ public class KNetEventSource implements KryoSerializable {
 		this.type = type;
 	}
 	
+	public String asTopic() {
+		return "client." + id + "." + type + "." + name;
+	}
+	
 	@Override
 	public String toString() {
 		return "(" + id + "," + type + "," + name + ")";
@@ -56,8 +60,8 @@ public class KNetEventSource implements KryoSerializable {
 		return id;
 	}
 	
-	public KNetEvent event(Object... args) {
-		return new KNetEvent(this, args);
+	public KNetEvent event(String topic, Object... args) {
+		return new KNetEvent(this, topic, args);
 	}
 	
 	@Override

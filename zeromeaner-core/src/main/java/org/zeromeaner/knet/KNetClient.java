@@ -4,13 +4,16 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.concurrent.Semaphore;
 
+import javax.jms.Connection;
+import javax.jms.JMSException;
+import javax.jms.Session;
+import javax.jms.TopicConnection;
 import javax.swing.event.EventListenerList;
 
+import org.apache.activemq.ActiveMQConnectionFactory;
+import org.zeromeaner.jms.JMSSessionUtil;
+
 import com.esotericsoftware.kryo.Kryo;
-import com.esotericsoftware.kryonet.Client;
-import com.esotericsoftware.kryonet.Connection;
-import com.esotericsoftware.kryonet.KryoSerialization;
-import com.esotericsoftware.kryonet.Listener;
 
 import static org.zeromeaner.knet.KNetEventArgs.*;
 
@@ -18,72 +21,50 @@ public class KNetClient {
 	protected String type;
 	protected String host;
 	protected int port;
-	protected Client client;
-	
+
+	protected Kryo kryo;
+
+	protected JMSSessionUtil tcp;
+	protected JMSSessionUtil udp;
+
 	protected KNetEventSource source;
-	
+
 	protected EventListenerList listenerList = new EventListenerList();
-	
-	protected Listener listener = new Listener() {
-		@Override
-		public void received(Connection connection, Object object) {
-			if(!(object instanceof KNetEvent))
-				return;
-			KNetClient.this.received(connection, (KNetEvent) object);
-		}
-		
-		@Override
-		public void disconnected(Connection connection) {
-			if(source != null)
-				issue(source.event(DISCONNECTED, true));
-		}
-	};
-	
-	public KNetClient(String host, int port) {
+
+	public KNetClient(String host, int port) throws JMSException {
 		this("Unknown", host, port);
 	}
-	
-	public KNetClient(String type, String host, int port) {
+
+	public KNetClient(String type, String host, int port) throws JMSException {
 		this.type = type;
 		this.host = host;
 		this.port = port;
-		Kryo kryo = new Kryo();
+		kryo = new Kryo();
 		KNetKryo.configure(kryo);
-		client = new Client(1024 * 256, 1024 * 256, new KryoSerialization(kryo));
-		client.addListener(listener);
-	}
-	
-	public KNetClient start() throws IOException, InterruptedException {
-		final Semaphore sync = new Semaphore(0);
-		KNetListener lsync = new KNetListener() {
-			@Override
-			public void knetEvented(KNetClient client, KNetEvent e) {
-				sync.release();
-				removeKNetListener(this);
-			}
-		};
-		addKNetListener(lsync);
-		client.start();
-		client.connect(1000, host, port, port);
-		sync.acquire();
-		return this;
-	}
-	
-	public void stop() {
-		client.stop();
 	}
 
-	protected void received(Connection connection, KNetEvent e) {
-		if(e.is(ASSIGN_SOURCE)) {
-			source = (KNetEventSource) e.get(ASSIGN_SOURCE);
-			source.setType(type);
-			source.setName(type + source.getId());
-			issue(source.event(CONNECTED, true));
-			fireTCP(UPDATE_SOURCE, source);
-		}
-		issue(e);
+	public KNetClient start() throws JMSException {
+		Connection c;
+		Session s;
+
+		c = new ActiveMQConnectionFactory("tcp://" + host + ":" + port).createConnection();
+		c.start();
+		s = c.createSession(true, Session.AUTO_ACKNOWLEDGE);
+		tcp = new JMSSessionUtil(s, kryo);
+
+		c = new ActiveMQConnectionFactory("udp://" + host + ":" + port).createConnection();
+		c.start();
+		s = c.createSession(true, Session.AUTO_ACKNOWLEDGE);
+		tcp = new JMSSessionUtil(s, kryo);
+
+		return this;
 	}
-	
+
+	public void stop() throws JMSException {
+		tcp.getSession().close();
+		udp.getSession().close();
+	}
+
 	protected void issue(KNetEvent e) {
 		try {
 			Object[] ll = listenerList.getListenerList();
@@ -100,80 +81,88 @@ public class KNetClient {
 			throw er;
 		}
 	}
-	
+
 	protected KNetEvent process(KNetEvent e) {
 		return e;
 	}
-	
+
 	public KNetEventSource getSource() {
 		return source;
 	}
-	
-	public KNetEvent event(Object... args) {
-		return getSource().event(args);
+
+	public KNetEvent event(String topic, Object... args) {
+		return getSource().event(topic, args);
 	}
-	
+
 	public void addKNetListener(KNetListener l) {
 		listenerList.add(KNetListener.class, l);
 	}
-	
+
 	public void removeKNetListener(KNetListener l) {
 		listenerList.remove(KNetListener.class, l);
 	}
-	
+
 	public boolean isExternal(KNetEvent e) {
 		return !getSource().equals(e.getSource());
 	}
-	
+
 	public boolean isLocal(KNetEvent e) {
 		return getSource().equals(e.getSource());
 	}
-	
+
 	public boolean isMine(KNetEvent e) {
 		return !isLocal(e) && !e.is(ADDRESS) || getSource().equals(e.get(ADDRESS));
 	}
-	
+
 	public void reply(KNetEvent e, Object... args) {
-		KNetEvent resp = event(args);
+		KNetEvent resp = event(e.getSource().asTopic(), args);
 		resp.set(ADDRESS, e.getSource());
 		resp.set(IN_REPLY_TO, e);
 		fire(resp);
 	}
-	
-	public void fire(Object... args) {
-		fire(event(args));
+
+	public void fire(String topic, Object... args) {
+		fire(event(topic, args));
 	}
-	
+
 	public void fire(KNetEvent e) {
 		if(e.is(UDP))
 			fireUDP(e);
 		else
 			fireTCP(e);
 	}
-	
-	public void fireTCP(Object... args) {
+
+	public void fireTCP(String topic, Object... args) {
 		System.err.println(Arrays.asList(args));
-		fireTCP(event(args));
+		fireTCP(event(topic, args));
 	}
-	
+
 	public void fireTCP(KNetEvent e) {
-		System.err.println(e);
 		e = process(e);
 		e.getArgs().remove(UDP);
 		issue(e);
-		e.getSource();
-		client.sendTCP(e);
+
+		try {
+			tcp.sendObject(e.getTopic(), e);
+		} catch(JMSException je) {
+			throw new RuntimeException(je);
+		}
 	}
-	
-	public void fireUDP(Object... args) {
-		fireUDP(event(args));
+
+	public void fireUDP(String topic, Object... args) {
+		fireUDP(event(topic, args));
 	}
-	
+
 	public void fireUDP(KNetEvent e) {
 		e = process(e);
 		e.getArgs().put(UDP, true);
 		issue(e);
-		client.sendUDP(e);
+
+		try {
+			udp.sendObject(e.getTopic(), e);
+		} catch(JMSException je) {
+			throw new RuntimeException(je);
+		}
 	}
 
 	public String getHost() {
