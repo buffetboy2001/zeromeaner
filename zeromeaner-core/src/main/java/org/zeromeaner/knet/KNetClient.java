@@ -181,6 +181,7 @@ public class KNetClient implements TopicalReceiver {
 
 	@Override
 	public void receive(Transport transport, String topicBody, Object object) {
+		System.out.println(">>" + object);
 		if(object instanceof KNetEvent) {
 			issue((KNetEvent) object);
 		}

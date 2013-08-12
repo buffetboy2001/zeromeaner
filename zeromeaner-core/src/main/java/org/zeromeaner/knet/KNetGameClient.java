@@ -70,7 +70,7 @@ public class KNetGameClient extends KNetClient implements KNetListener {
 
 	public KNetGameClient(String type, String host, int port, String prefix) {
 		super(type, host, port, prefix);
-//		addKNetListener(this);
+		addKNetListener(this);
 
 	}
 

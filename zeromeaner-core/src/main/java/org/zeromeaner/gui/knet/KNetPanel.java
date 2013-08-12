@@ -169,7 +169,7 @@ public class KNetPanel extends JPanel implements KNetChannelListener, KNetListen
 				if(!GameManager.VERSION.isSnapshot())
 					connectionsModel.addElement("" + StandaloneApplet.url.getHost() + ":");
 				else {
-					connectionsModel.addElement("" + StandaloneApplet.url.getHost() + ":devel");
+					connectionsModel.addElement("" + StandaloneApplet.url.getHost() + ":devel.");
 				}
 			}
 			
@@ -201,25 +201,16 @@ public class KNetPanel extends JPanel implements KNetChannelListener, KNetListen
 			client = new KNetGameClient("Player", host, 61616, prefix);
 			client.addKNetChannelListener(KNetPanel.this);
 			client.addKNetListener(KNetPanel.this);
-/*			
 			client.addKNetListener(new KNetListener() {
 				@Override
 				public void knetEvented(KNetClient client, KNetEvent e) {
 					if(e.is(CONNECTED)) {
-						String user = username.getText();
-						if(user == null || user.isEmpty())
-							user = "anonymous";
-						if(ai)
-							user += " [AI]";
-						client.getSource().setName(user);
 						client.removeKNetListener(this);
-						client.fireTCP(UPDATE_SOURCE, client.getSource());
-						client.fireTCP(USER_CREATE, null);
-						client.fireTCP(USER_AUTHENTICATE, null);
+						client.fireTCP(Topics.CLIENTS, USER_CREATE, null);
+						client.fireTCP(Topics.CLIENTS, USER_AUTHENTICATE, null);
 					}
 				}
 			});
-*/
 			try {
 				client.start();
 			} catch(Exception ex) {

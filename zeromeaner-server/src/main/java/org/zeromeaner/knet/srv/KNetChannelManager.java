@@ -77,9 +77,9 @@ public class KNetChannelManager extends KNetClient implements KNetListener {
 	
 	@Override
 	public void knetEvented(KNetClient client, KNetEvent e) {
+		System.out.println(e);
 		if(client.isLocal(e))
 			return;
-//		System.out.println(e);
 		try {
 			if(e.is(CHANNEL_LIST)) {
 				client.reply(e,
