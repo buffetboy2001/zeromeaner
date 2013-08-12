@@ -5,6 +5,7 @@ import java.util.concurrent.Semaphore;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.zeromeaner.jms.Topics;
 import org.zeromeaner.knet.KNetClient;
 import org.zeromeaner.knet.KNetEvent;
 import org.zeromeaner.knet.KNetListener;
@@ -40,7 +41,7 @@ public class KSChannelManagerTest {
 		});
 		try {
 			c.start();
-			c.fire(CHANNEL_LIST, true);
+			c.fire(Topics.CHANNELS, CHANNEL_LIST, true);
 			sync.acquire();
 		} finally {
 			c.stop();
