@@ -10,6 +10,12 @@
 	<artifactId>zeromeaner-server</artifactId>
 	<dependencies>
 		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-simple</artifactId>
+			<version>1.7.5</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
 			<groupId>org.zeromeaner</groupId>
 			<artifactId>zeromeaner-core</artifactId>
 		</dependency>

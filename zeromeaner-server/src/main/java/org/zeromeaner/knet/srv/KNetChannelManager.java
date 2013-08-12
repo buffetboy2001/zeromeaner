@@ -12,6 +12,7 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import javax.jms.JMSException;
 import javax.swing.text.html.HTMLDocument.HTMLReader.SpecialAction;
 
 import org.apache.log4j.Logger;
@@ -58,6 +59,13 @@ public class KNetChannelManager extends KNetClient implements KNetListener {
 		states.put(lobby, new ChannelState(lobby));
 		
 		addKNetListener(this);
+	}
+	
+	@Override
+	public KNetClient start() throws JMSException {
+		super.start();
+		jms.subscribe(Topics.CHANNELS, kryo, this);
+		return this;
 	}
 
 	public List<KNetEventSource> getMembers(int channelId) {

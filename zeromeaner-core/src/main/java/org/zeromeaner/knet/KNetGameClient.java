@@ -12,6 +12,7 @@ import org.funcish.core.Predicates;
 import org.funcish.core.fn.Predicate;
 import org.funcish.core.impl.AbstractPredicate;
 import org.zeromeaner.game.component.Field;
+import org.zeromeaner.jms.TopicalJMS.Transport;
 import org.zeromeaner.jms.Topics;
 import org.zeromeaner.knet.obj.KNetChannelInfo;
 import org.zeromeaner.util.KryoCopy;
@@ -70,6 +71,14 @@ public class KNetGameClient extends KNetClient implements KNetListener {
 	public KNetGameClient(String type, String host, int port) {
 		super(type, host, port);
 //		addKNetListener(this);
+
+	}
+
+	@Override
+	public KNetClient start() throws JMSException {
+		super.start();
+		jms.subscribe(Topics.CHANNELS, kryo, this);
+		return this;
 	}
 	
 	@Override

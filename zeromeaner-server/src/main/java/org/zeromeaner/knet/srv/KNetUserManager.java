@@ -1,8 +1,11 @@
 package org.zeromeaner.knet.srv;
 
+import javax.jms.JMSException;
+
 import org.apache.ibatis.exceptions.PersistenceException;
 import org.apache.log4j.Logger;
 import org.zeromeaner.dbo.Users;
+import org.zeromeaner.jms.Topics;
 import org.zeromeaner.knet.KNetClient;
 import org.zeromeaner.knet.KNetEvent;
 import org.zeromeaner.knet.KNetEventArgs;
@@ -17,6 +20,13 @@ public class KNetUserManager extends KNetClient implements KNetListener {
 		super("UserManager", "localhost", port);
 		
 		addKNetListener(this);
+	}
+	
+	@Override
+	public KNetClient start() throws JMSException {
+		super.start();
+		jms.subscribe(Topics.CLIENTS, kryo, this);
+		return this;
 	}
 	
 	@Override

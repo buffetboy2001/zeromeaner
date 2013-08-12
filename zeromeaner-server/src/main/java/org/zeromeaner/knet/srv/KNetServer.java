@@ -25,7 +25,7 @@ import static org.zeromeaner.knet.KNetEventArgs.*;
 public class KNetServer {
 	private static final Logger log = Logger.getLogger(KNetServer.class);
 	
-	public static final int DEFAULT_PORT = 61897;
+	public static final int DEFAULT_PORT = 61616;
 	
 	protected int port;
 	

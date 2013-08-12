@@ -2,24 +2,29 @@ package org.zeromeaner.knet;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.UUID;
 import java.util.concurrent.Semaphore;
 
 import javax.jms.Connection;
 import javax.jms.JMSException;
+import javax.jms.Message;
+import javax.jms.MessageListener;
 import javax.jms.Session;
 import javax.jms.TopicConnection;
 import javax.swing.event.EventListenerList;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.zeromeaner.jms.TopicalJMS;
+import org.zeromeaner.jms.TopicalJMS.TopicalReceiver;
 import org.zeromeaner.jms.TopicalJMS.Transport;
+import org.zeromeaner.jms.Topics;
 
 import com.esotericsoftware.kryo.Kryo;
 
 import static org.zeromeaner.knet.KNetEventArgs.*;
 
-public class KNetClient {
-	protected String type;
+public class KNetClient implements TopicalReceiver {
+	protected final String type;
 	protected String host;
 	protected int port;
 
@@ -45,6 +50,11 @@ public class KNetClient {
 
 	public KNetClient start() throws JMSException {
 		jms = new TopicalJMS(host, port);
+		source = new KNetEventSource(Topics.CLIENTS + "." + type + "." + UUID.randomUUID());
+		
+		jms.subscribe(source.getTopic(), kryo, this);
+		
+		fireTCP(Topics.CLIENTS, CONNECTED);
 
 		return this;
 	}
@@ -165,5 +175,12 @@ public class KNetClient {
 
 	public int getPort() {
 		return port;
+	}
+
+	@Override
+	public void receive(Transport transport, String topicBody, Object object) {
+		if(object instanceof KNetEvent) {
+			issue((KNetEvent) object);
+		}
 	}
 }

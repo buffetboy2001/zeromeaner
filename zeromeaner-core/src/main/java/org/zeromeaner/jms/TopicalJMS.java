@@ -61,13 +61,15 @@ public class TopicalJMS {
 
 	private class TransportContext {
 		private Transport transport;
+		private Connection connection;
 		private Session session;
 		private Map<String, MessageConsumer> consumers = new ConcurrentHashMap<>();
 		private Map<String, MessageProducer> producers = new ConcurrentHashMap<>();
 		private Map<String, List<MessageListener>> topicListeners = new ConcurrentHashMap<>();
 		
-		public TransportContext(Transport transport, Session session) {
+		public TransportContext(Transport transport, Connection connection, Session session) {
 			this.transport = transport;
+			this.connection = connection;
 			this.session = session;
 		}
 		
@@ -109,7 +111,7 @@ public class TopicalJMS {
 		}
 		
 		public void close() throws JMSException {
-			session.close();
+			connection.close();
 		}
 		
 		private void ensureDispatch(String topicName) throws JMSException {
@@ -169,7 +171,7 @@ public class TopicalJMS {
 			ConnectionFactory cf = new ActiveMQConnectionFactory(t.url(host, port));
 			Connection c = cf.createConnection();
 			c.start();
-			contexts[t.ordinal()] = new TransportContext(t, c.createSession(false, Session.AUTO_ACKNOWLEDGE));
+			contexts[t.ordinal()] = new TransportContext(t, c, c.createSession(false, Session.AUTO_ACKNOWLEDGE));
 		}
 		
 	}
