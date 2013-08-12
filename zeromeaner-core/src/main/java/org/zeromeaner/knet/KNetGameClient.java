@@ -6,10 +6,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.jms.JMSException;
+
 import org.funcish.core.Predicates;
 import org.funcish.core.fn.Predicate;
 import org.funcish.core.impl.AbstractPredicate;
 import org.zeromeaner.game.component.Field;
+import org.zeromeaner.jms.Topics;
 import org.zeromeaner.knet.obj.KNetChannelInfo;
 import org.zeromeaner.util.KryoCopy;
 
@@ -111,7 +114,7 @@ public class KNetGameClient extends KNetClient implements KNetListener {
 		if(e.is(MAPS))
 			maps = Arrays.asList((Field[]) e.get(MAPS));
 		else if(e.is(CONNECTED)) {
-			client.fireTCP(CHANNEL_LIST, true);
+			client.fireTCP(Topics.CHANNELS, CHANNEL_LIST, true);
 		} else if(e.is(CHANNEL_LISTING)) {
 			List<KNetChannelInfo> chl = Arrays.asList((KNetChannelInfo[]) e.get(CHANNEL_INFO));
 			for(KNetChannelInfo c : chl) {
@@ -166,22 +169,38 @@ public class KNetGameClient extends KNetClient implements KNetListener {
 		return currentChannel;
 	}
 	
+	public void fireTCP(Object... args) {
+		super.fireTCP(getCurrentChannel().getTopic(), args);
+	}
+	
+	public void fireUDP(Object... args) {
+		super.fireUDP(getCurrentChannel().getTopic(), args);
+	}
+	
+	public KNetEvent event(Object... args) {
+		return super.event(getCurrentChannel().getTopic(), args);
+	}
+	
+	public void fire(Object... args) {
+		super.fire(getCurrentChannel().getTopic(), args);
+	}
+	
 	public void joinChannel(int channelId) {
 		if(currentChannel != null && currentChannel.getId() != channelId)
 			leaveChannel();
-		fireTCP(CHANNEL_JOIN, CHANNEL_ID, channelId);
+		fireTCP(Topics.CHANNELS, CHANNEL_JOIN, CHANNEL_ID, channelId);
 	}
 	
 	public void spectateChannel(int channelId) {
 		if(currentChannel != null && currentChannel.getId() != channelId)
 			leaveChannel();
-		fireTCP(CHANNEL_JOIN, CHANNEL_SPECTATE, CHANNEL_ID, channelId);
+		fireTCP(Topics.CHANNELS, CHANNEL_JOIN, CHANNEL_SPECTATE, CHANNEL_ID, channelId);
 	}
 	
 	public void leaveChannel() {
 		if(currentChannel == null)
 			return;
-		fireTCP(CHANNEL_LEAVE, CHANNEL_ID, currentChannel.getId());
+		fireTCP(Topics.CHANNELS, CHANNEL_LEAVE, CHANNEL_ID, currentChannel.getId());
 	}
 	
 	public void addKNetChannelListener(KNetChannelListener l) {

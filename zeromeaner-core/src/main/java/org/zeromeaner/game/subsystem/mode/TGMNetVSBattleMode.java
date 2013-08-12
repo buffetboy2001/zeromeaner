@@ -85,7 +85,7 @@ public class TGMNetVSBattleMode extends NetVSBattleMode {
 	}
 	
 	@Override
-	protected void receiveGarbage(KNetEvent e, int uid, int seatID, int playerID) {
+	protected void receiveGarbage(KNetEvent e, int seatID, int playerID) {
 		TGMAttackInfo attack = (TGMAttackInfo) e.get(TGMNETVSBATTLE_GAME_ATTACK);
 		int mySeatId = channelInfo().getPlayers().indexOf(knetClient().getSource());
 		System.out.println("Attack received.  My seat ID:" + mySeatId + " target ID:" + attack.getTargetSeatId());
@@ -127,13 +127,13 @@ public class TGMNetVSBattleMode extends NetVSBattleMode {
 	public void knetEvented(KNetClient client, KNetEvent e) {
 		super.knetEvented(client, e);
 		if(e.is(GAME) && channelInfo().getSeatId(e) != -1) {
-			int uid = e.getSource().getId();
+//			int uid = e.getSource().getId();
 			int seatID = channelInfo().getPlayers().indexOf(e.getSource());
 			int playerID = netvsGetPlayerIDbySeatID(seatID);
 
 			// Attack
 			if(e.is(TGMNETVSBATTLE_GAME_ATTACK)) { 
-				receiveGarbage(e, uid, seatID, playerID);
+				receiveGarbage(e, seatID, playerID);
 			}
 		}
 	}

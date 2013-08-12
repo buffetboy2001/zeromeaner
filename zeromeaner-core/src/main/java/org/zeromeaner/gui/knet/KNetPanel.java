@@ -38,6 +38,7 @@ import javax.swing.event.ListSelectionListener;
 
 import org.zeromeaner.game.play.GameManager;
 import org.zeromeaner.gui.reskin.StandaloneApplet;
+import org.zeromeaner.jms.Topics;
 import org.zeromeaner.knet.KNetChannelEvent;
 import org.zeromeaner.knet.KNetChannelListener;
 import org.zeromeaner.knet.KNetClient;
@@ -201,6 +202,7 @@ public class KNetPanel extends JPanel implements KNetChannelListener, KNetListen
 			client = new KNetGameClient("Player", host, port);
 			client.addKNetChannelListener(KNetPanel.this);
 			client.addKNetListener(KNetPanel.this);
+/*			
 			client.addKNetListener(new KNetListener() {
 				@Override
 				public void knetEvented(KNetClient client, KNetEvent e) {
@@ -218,6 +220,7 @@ public class KNetPanel extends JPanel implements KNetChannelListener, KNetListen
 					}
 				}
 			});
+*/
 			try {
 				client.start();
 			} catch(Exception ex) {
@@ -247,7 +250,7 @@ public class KNetPanel extends JPanel implements KNetChannelListener, KNetListen
 				String pw = pass.getText();
 				if(pw.isEmpty())
 					pw = null;
-				client.fireTCP(USER_AUTHENTICATE, pw);
+				client.fireTCP(Topics.CLIENTS, USER_AUTHENTICATE, pw);
 			}
 		});
 		
@@ -409,6 +412,7 @@ public class KNetPanel extends JPanel implements KNetChannelListener, KNetListen
 					if(e.getKeyCode() != KeyEvent.VK_ENTER)
 						return;
 					client.fireTCP(
+							channel.getTopic(),
 							CHANNEL_CHAT, line.getText(),
 							CHANNEL_ID, channel.getId(),
 							TIMESTAMP, System.currentTimeMillis());
@@ -627,7 +631,7 @@ public class KNetPanel extends JPanel implements KNetChannelListener, KNetListen
 		
 		public void create() {
 			channelPanel.updateChannel();
-			client.fireTCP(CHANNEL_CREATE, channel);
+			client.fireTCP(Topics.CHANNELS, CHANNEL_CREATE, channel);
 			KNetPanel.this.remove(CreateChannelPanel.this);
 			KNetPanel.this.add(createChannelPanel = new CreateChannelPanel(), CREATE_CHANNEL_PANEL_CARD);
 			cards.show(KNetPanel.this, CONNECTED_PANEL_CARD);
@@ -680,7 +684,7 @@ public class KNetPanel extends JPanel implements KNetChannelListener, KNetListen
 				String n = newPw.getText();
 				if(n.isEmpty())
 					n = null;
-				client.fireTCP(USER_UPDATE_PASSWORD, new String[] {o, n});
+				client.fireTCP(Topics.CLIENTS, USER_UPDATE_PASSWORD, new String[] {o, n});
 			}
 		});
 		
@@ -900,7 +904,7 @@ public class KNetPanel extends JPanel implements KNetChannelListener, KNetListen
 		connectedPanel.channels.addTab(e.getChannel().getName(), chanPan);
 		channels.put(e.getChannel().getId(), chanPan);
 		if(e.getChannel().getId() == KNetChannelInfo.LOBBY_CHANNEL_ID)
-			client.fireTCP(CHANNEL_JOIN, CHANNEL_ID, KNetChannelInfo.LOBBY_CHANNEL_ID);
+			client.fireTCP(Topics.CHANNELS, CHANNEL_JOIN, CHANNEL_ID, KNetChannelInfo.LOBBY_CHANNEL_ID);
 		connectedPanel.channels.setSelectedComponent(chanPan);
 		revalidate();
 		repaint();

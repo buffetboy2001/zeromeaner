@@ -857,7 +857,7 @@ public class NetVSBattleMode extends AbstractNetVSMode {
 
 	}
 	
-	protected void receiveGarbage(KNetEvent e, int uid, int seatID, int playerID) {
+	protected void receiveGarbage(KNetEvent e, int seatID, int playerID) {
 		AttackInfo attack = (AttackInfo) e.get(NETVSBATTLE_GAME_ATTACK);
 //		int[] pts = new int[ATTACK_CATEGORIES];
 		int[] pts = attack.getPoints();
@@ -884,11 +884,11 @@ public class NetVSBattleMode extends AbstractNetVSMode {
 				secondAdd = pts[ATTACK_CATEGORY_B2B];
 			}
 
-			GarbageEntry garbageEntry = new GarbageEntry(sumPts - secondAdd, playerID, uid);
+			GarbageEntry garbageEntry = new GarbageEntry(sumPts - secondAdd, playerID);
 			garbageEntries.add(garbageEntry);
 
 			if(secondAdd > 0){
-				garbageEntry = new GarbageEntry(secondAdd, playerID, uid);
+				garbageEntry = new GarbageEntry(secondAdd, playerID);
 				garbageEntries.add(garbageEntry);
 			}
 
@@ -1325,22 +1325,23 @@ public class NetVSBattleMode extends AbstractNetVSMode {
 			if(e.is(DEAD_KO))
 				koUID = (Integer) e.get(DEAD_KO);
 
-			// Increase KO count
-			if(koUID == knetClient().getSource().getId()) {
-				playerKObyYou[playerID] = true;
-				currentKO++;
-			}
+			// FIXME: This is terminally broken.  Commenting it out.
+//			// Increase KO count
+//			if(koUID == knetClient().getSource().getId()) {
+//				playerKObyYou[playerID] = true;
+//				currentKO++;
+//			}
 		}
 		// Game messages
 //		if(message[0].equals("game")) {
 		if(e.is(GAME) && channelInfo().getSeatId(e) != -1) {
-			int uid = e.getSource().getId();
+//			int uid = e.getSource().getId();
 			int seatID = channelInfo().getPlayers().indexOf(e.getSource());
 			int playerID = netvsGetPlayerIDbySeatID(seatID);
 
 			// Attack
 			if(e.is(NETVSBATTLE_GAME_ATTACK)) {
-				receiveGarbage(e, uid, seatID, playerID);
+				receiveGarbage(e, seatID, playerID);
 				/*
 				AttackInfo attack = (AttackInfo) e.get(NETVSBATTLE_GAME_ATTACK);
 //				int[] pts = new int[ATTACK_CATEGORIES];

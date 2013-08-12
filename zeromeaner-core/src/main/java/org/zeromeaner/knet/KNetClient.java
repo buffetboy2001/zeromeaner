@@ -11,7 +11,8 @@ import javax.jms.TopicConnection;
 import javax.swing.event.EventListenerList;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
-import org.zeromeaner.jms.JMSSessionUtil;
+import org.zeromeaner.jms.TopicalJMS;
+import org.zeromeaner.jms.TopicalJMS.Transport;
 
 import com.esotericsoftware.kryo.Kryo;
 
@@ -24,18 +25,17 @@ public class KNetClient {
 
 	protected Kryo kryo;
 
-	protected JMSSessionUtil tcp;
-	protected JMSSessionUtil udp;
+	protected TopicalJMS jms;
 
 	protected KNetEventSource source;
 
 	protected EventListenerList listenerList = new EventListenerList();
 
-	public KNetClient(String host, int port) throws JMSException {
+	public KNetClient(String host, int port) {
 		this("Unknown", host, port);
 	}
 
-	public KNetClient(String type, String host, int port) throws JMSException {
+	public KNetClient(String type, String host, int port) {
 		this.type = type;
 		this.host = host;
 		this.port = port;
@@ -44,25 +44,17 @@ public class KNetClient {
 	}
 
 	public KNetClient start() throws JMSException {
-		Connection c;
-		Session s;
-
-		c = new ActiveMQConnectionFactory("tcp://" + host + ":" + port).createConnection();
-		c.start();
-		s = c.createSession(true, Session.AUTO_ACKNOWLEDGE);
-		tcp = new JMSSessionUtil(s, kryo);
-
-		c = new ActiveMQConnectionFactory("udp://" + host + ":" + port).createConnection();
-		c.start();
-		s = c.createSession(true, Session.AUTO_ACKNOWLEDGE);
-		tcp = new JMSSessionUtil(s, kryo);
+		jms = new TopicalJMS(host, port);
 
 		return this;
 	}
 
-	public void stop() throws JMSException {
-		tcp.getSession().close();
-		udp.getSession().close();
+	public void stop() {
+		try {
+			jms.close();
+		} catch(JMSException ex) {
+			throw new RuntimeException(ex);
+		}
 	}
 
 	protected void issue(KNetEvent e) {
@@ -115,7 +107,7 @@ public class KNetClient {
 	}
 
 	public void reply(KNetEvent e, Object... args) {
-		KNetEvent resp = event(e.getSource().asTopic(), args);
+		KNetEvent resp = event(e.getSource().getTopic(), args);
 		resp.set(ADDRESS, e.getSource());
 		resp.set(IN_REPLY_TO, e);
 		fire(resp);
@@ -143,7 +135,8 @@ public class KNetClient {
 		issue(e);
 
 		try {
-			tcp.sendObject(e.getTopic(), e);
+//			tcp.sendObject(e.getTopic(), e);
+			jms.createSender(e.getTopic(), kryo).send(Transport.TCP, e);
 		} catch(JMSException je) {
 			throw new RuntimeException(je);
 		}
@@ -159,7 +152,8 @@ public class KNetClient {
 		issue(e);
 
 		try {
-			udp.sendObject(e.getTopic(), e);
+//			udp.sendObject(e.getTopic(), e);
+			jms.createSender(e.getTopic(), kryo).send(Transport.UDP, e);
 		} catch(JMSException je) {
 			throw new RuntimeException(je);
 		}

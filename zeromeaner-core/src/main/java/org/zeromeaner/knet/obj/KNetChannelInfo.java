@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.zeromeaner.game.component.RuleOptions;
+import org.zeromeaner.jms.Topics;
 import org.zeromeaner.knet.KNetEvent;
 import org.zeromeaner.knet.KNetEventSource;
 
@@ -52,6 +53,10 @@ public class KNetChannelInfo implements KryoSerializable {
 		players.remove(source);
 		if(index != -1)
 			playerInfo.remove(source);
+	}
+	
+	public String getTopic() {
+		return Topics.CHANNELS + "." + id;
 	}
 	
 	@Override

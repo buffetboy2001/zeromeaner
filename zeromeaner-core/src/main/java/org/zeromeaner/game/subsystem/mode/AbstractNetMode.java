@@ -173,6 +173,12 @@ public class AbstractNetMode extends AbstractMode implements KNetListener, KNetP
 			return null;
 		return knetPanel.getClient().getCurrentChannel();
 	}
+	
+	protected String topic() {
+		if(channelInfo() == null)
+			return null;
+		return channelInfo().getTopic();
+	}
 
 	/** NET: GameManager (Declared in NetDummyMode; Don't override it!) */
 	public GameManager owner;

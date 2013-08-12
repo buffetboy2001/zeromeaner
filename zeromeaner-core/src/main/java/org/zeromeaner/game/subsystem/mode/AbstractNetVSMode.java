@@ -94,8 +94,8 @@ public abstract class AbstractNetVSMode extends AbstractNetMode {
 	/** NET-VS: Player's Seat ID array (-1:No Player) */
 	protected int[] netvsPlayerSeatID;
 
-	/** NET-VS: Player's UID array (-1:No Player) */
-	protected int[] netvsPlayerUID;
+//	/** NET-VS: Player's UID array (-1:No Player) */
+//	protected int[] netvsPlayerUID;
 
 	/** NET-VS: Player's place */
 	protected int[] netvsPlayerPlace;
@@ -217,7 +217,7 @@ public abstract class AbstractNetVSMode extends AbstractNetMode {
 		netvsPlayerReady = new boolean[NETVS_MAX_PLAYERS];
 		netvsPlayerActive = new boolean[NETVS_MAX_PLAYERS];
 		netvsPlayerSeatID = new int[NETVS_MAX_PLAYERS];
-		netvsPlayerUID = new int[NETVS_MAX_PLAYERS];
+//		netvsPlayerUID = new int[NETVS_MAX_PLAYERS];
 		netvsPlayerWinCount = new int[NETVS_MAX_PLAYERS];
 		netvsPlayerPlayCount = new int[NETVS_MAX_PLAYERS];
 		netvsPlayerTeamColor = new int[NETVS_MAX_PLAYERS];
@@ -287,7 +287,7 @@ public abstract class AbstractNetVSMode extends AbstractNetMode {
 			netvsPlayerReady[i] = false;
 			netvsPlayerActive[i] = false;
 			netvsPlayerSeatID[i] = -1;
-			netvsPlayerUID[i] = -1;
+//			netvsPlayerUID[i] = -1;
 			netvsPlayerWinCount[i] = 0;
 			netvsPlayerPlayCount[i] = 0;
 			netvsPlayerName[i] = "";
@@ -310,7 +310,7 @@ public abstract class AbstractNetVSMode extends AbstractNetMode {
 				netvsPlayerReady[playerID] = info.isReady();
 				netvsPlayerActive[playerID] = info.isPlaying();
 				netvsPlayerSeatID[playerID] = players.indexOf(player);
-				netvsPlayerUID[playerID] = player.getId();
+//				netvsPlayerUID[playerID] = player.getId();
 				netvsPlayerWinCount[playerID] = info.getWinCount();
 				netvsPlayerPlayCount[playerID] = info.getPlayCount();
 				netvsPlayerName[playerID] = player.getName();

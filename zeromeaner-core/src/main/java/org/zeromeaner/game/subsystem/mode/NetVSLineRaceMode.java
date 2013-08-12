@@ -145,7 +145,7 @@ public class NetVSLineRaceMode extends AbstractNetVSMode {
 				}
 				for(int i = 0; i < getPlayers(); i++) {
 					if((places[i] >= 0) && (places[i] < NETVS_MAX_PLAYERS)) {
-						uidArray[places[i]] = netvsPlayerUID[i];
+//						uidArray[places[i]] = netvsPlayerUID[i];
 					}
 				}
 
