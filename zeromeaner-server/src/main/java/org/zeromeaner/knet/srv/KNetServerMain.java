@@ -22,6 +22,7 @@ public class KNetServerMain {
 	static {
 		OPTIONS = new Options();
 		OPTIONS.addOption("p", "port", true, "server port");
+		OPTIONS.addOption(null, "prefix", true, "server JMS topic prefix");
 		OPTIONS.addOption("n", "nogui", false, "don't show a gui");
 	}
 	
@@ -42,6 +43,7 @@ public class KNetServerMain {
 		CommandLine cli = new PosixParser().parse(OPTIONS, args);
 
 		int port = Integer.parseInt(cli.getOptionValue("port", "" + KNetServer.DEFAULT_PORT));
+		String prefix = cli.getOptionValue("prefix", "");
 
 		if(!cli.hasOption("nogui")) {
 			// enable anti-aliased text:
@@ -63,7 +65,7 @@ public class KNetServerMain {
 		
 		log.debug("Starting zeromeaner server on port " + port + "...");
 		
-		new KNetServer(port);
+		new KNetServer(port, prefix);
 	}
 
 }

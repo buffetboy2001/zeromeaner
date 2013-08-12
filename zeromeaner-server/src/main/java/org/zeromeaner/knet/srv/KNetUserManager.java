@@ -16,8 +16,8 @@ import static org.zeromeaner.knet.KNetEventArgs.*;
 public class KNetUserManager extends KNetClient implements KNetListener {
 	private static final Logger log = Logger.getLogger(KNetUserManager.class);
 
-	public KNetUserManager(int port) {
-		super("UserManager", "localhost", port);
+	public KNetUserManager(int port, String prefix) {
+		super("UserManager", "localhost", port, prefix);
 		
 		addKNetListener(this);
 	}

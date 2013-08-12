@@ -27,6 +27,7 @@ public class KNetClient implements TopicalReceiver {
 	protected final String type;
 	protected String host;
 	protected int port;
+	protected String prefix;
 
 	protected Kryo kryo;
 
@@ -36,20 +37,21 @@ public class KNetClient implements TopicalReceiver {
 
 	protected EventListenerList listenerList = new EventListenerList();
 
-	public KNetClient(String host, int port) {
-		this("Unknown", host, port);
+	public KNetClient(String host, int port, String prefix) {
+		this("Unknown", host, port, prefix);
 	}
 
-	public KNetClient(String type, String host, int port) {
+	public KNetClient(String type, String host, int port, String prefix) {
 		this.type = type;
 		this.host = host;
 		this.port = port;
+		this.prefix = prefix;
 		kryo = new Kryo();
 		KNetKryo.configure(kryo);
 	}
 
 	public KNetClient start() throws JMSException {
-		jms = new TopicalJMS(host, port);
+		jms = new TopicalJMS(host, port, prefix);
 		source = new KNetEventSource(Topics.CLIENTS + "." + type + "." + UUID.randomUUID());
 		
 		jms.subscribe(source.getTopic(), kryo, this);

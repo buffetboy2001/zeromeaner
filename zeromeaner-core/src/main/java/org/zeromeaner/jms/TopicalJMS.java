@@ -74,7 +74,7 @@ public class TopicalJMS {
 		}
 		
 		public void subscribe(String topicBody, MessageListener l) throws JMSException {
-			String topicName = transport.topicName(topicBody);
+			String topicName = prefix + transport.topicName(topicBody);
 			synchronized(topicListeners) {
 				if(!topicListeners.containsKey(topicName))
 					topicListeners.put(topicName, new CopyOnWriteArrayList<MessageListener>());
@@ -87,7 +87,7 @@ public class TopicalJMS {
 		}
 		
 		public void unsubscribe(String topicBody, MessageListener l) throws JMSException {
-			String topicName = transport.topicName(topicBody);
+			String topicName = prefix + transport.topicName(topicBody);
 			synchronized(topicListeners) {
 				if(!topicListeners.containsKey(topicName))
 					return;
@@ -101,7 +101,7 @@ public class TopicalJMS {
 		}
 		
 		public void send(String topicBody, Message message) throws JMSException {
-			String topicName = transport.topicName(topicBody);
+			String topicName = prefix + transport.topicName(topicBody);
 			ensureProducer(topicName);
 			producers.get(topicName).send(message);
 		}
@@ -162,9 +162,12 @@ public class TopicalJMS {
 		}
 	}
 	
+	private String prefix;
 	private TransportContext[] contexts;
 	
-	public TopicalJMS(String host, int port) throws JMSException {
+	public TopicalJMS(String host, int port, String prefix) throws JMSException {
+		this.prefix = prefix;
+		
 		contexts = new TransportContext[Transport.values().length];
 		
 		for(Transport t : Transport.values()) {

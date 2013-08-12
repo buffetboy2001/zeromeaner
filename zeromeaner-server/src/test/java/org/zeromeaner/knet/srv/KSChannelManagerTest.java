@@ -19,7 +19,7 @@ public class KSChannelManagerTest {
 	
 	@BeforeClass
 	public static void beforeClass() throws Exception {
-		server = new KNetServer(61899);
+		server = new KNetServer(61899, "test.");
 	}
 	
 	@AfterClass
@@ -29,7 +29,7 @@ public class KSChannelManagerTest {
 	
 	@Test
 	public void testChannelList() throws Exception {
-		KNetClient c = new KNetClient("localhost", server.getPort());
+		KNetClient c = new KNetClient("localhost", server.getPort(), "test.");
 		final Semaphore sync = new Semaphore(0);
 		c.addKNetListener(new KNetListener() {
 			@Override

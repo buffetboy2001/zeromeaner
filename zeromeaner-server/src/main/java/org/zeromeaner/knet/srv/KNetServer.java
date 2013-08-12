@@ -28,6 +28,7 @@ public class KNetServer {
 	public static final int DEFAULT_PORT = 61616;
 	
 	protected int port;
+	protected String prefix;
 	
 	
 	protected Map<Integer, KNetEventSource> sourcesByConnectionId = new HashMap<Integer, KNetEventSource>();
@@ -39,13 +40,13 @@ public class KNetServer {
 	protected KNetChannelManager chanman;
 	protected KNetUserManager uman;
 	
-	public KNetServer(int port) throws JMSException {
+	public KNetServer(int port, String prefix) throws JMSException {
 		this.port = port;
 		Kryo kryo = new Kryo();
 		KNetKryo.configure(kryo);
-		chanman = new KNetChannelManager(port);
+		chanman = new KNetChannelManager(port, prefix);
 		chanman.start();
-		uman = new KNetUserManager(port);
+		uman = new KNetUserManager(port, prefix);
 		uman.start();
 	}
 	

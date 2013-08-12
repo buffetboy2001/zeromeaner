@@ -64,12 +64,12 @@ public class KNetGameClient extends KNetClient implements KNetListener {
 	private Map<Integer, KNetChannelInfo> channels = new HashMap<Integer, KNetChannelInfo>();
 	private KNetChannelInfo currentChannel;
 	
-	public KNetGameClient(String host, int port) {
-		this(KNetGameClient.class.getSimpleName(), host, port);
+	public KNetGameClient(String host, int port, String prefix) {
+		this(KNetGameClient.class.getSimpleName(), host, port, prefix);
 	}
 
-	public KNetGameClient(String type, String host, int port) {
-		super(type, host, port);
+	public KNetGameClient(String type, String host, int port, String prefix) {
+		super(type, host, port, prefix);
 //		addKNetListener(this);
 
 	}

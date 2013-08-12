@@ -105,9 +105,7 @@ public class KNetPanel extends JPanel implements KNetChannelListener, KNetListen
 			public void actionPerformed(ActionEvent e) {
 				if(host.getText().isEmpty())
 					return;
-				if(port.getText().isEmpty())
-					port.setText("61897");
-				String c = host.getText() + ":" + port.getText();
+				String c = host.getText() + ":" + prefix.getText();
 				if(connectionsModel.contains(c))
 					return;
 				connectionsModel.addElement(c);
@@ -142,7 +140,7 @@ public class KNetPanel extends JPanel implements KNetChannelListener, KNetListen
 		
 		private JTextField host = new JTextField("");
 		
-		private JTextField port = new JTextField("");
+		private JTextField prefix = new JTextField("");
 		
 		public ConnectionListPanel() {
 			super(new BorderLayout());
@@ -154,7 +152,7 @@ public class KNetPanel extends JPanel implements KNetChannelListener, KNetListen
 			p.add(new JScrollPane(connectionsList), BorderLayout.CENTER);
 			q = new JPanel(new GridLayout(1, 0));
 			q.add(host);
-			q.add(port);
+			q.add(prefix);
 			p.add(q, BorderLayout.SOUTH);
 			p.setBorder(BorderFactory.createTitledBorder(lz.s("conn_list_border")));
 			add(p, BorderLayout.CENTER);
@@ -169,9 +167,9 @@ public class KNetPanel extends JPanel implements KNetChannelListener, KNetListen
 			
 			if(StandaloneApplet.url != null) {
 				if(!GameManager.VERSION.isSnapshot())
-					connectionsModel.addElement("" + StandaloneApplet.url.getHost() + ":61897");
+					connectionsModel.addElement("" + StandaloneApplet.url.getHost() + ":");
 				else {
-					connectionsModel.addElement("" + StandaloneApplet.url.getHost() + ":61898");
+					connectionsModel.addElement("" + StandaloneApplet.url.getHost() + ":devel");
 				}
 			}
 			
@@ -184,12 +182,12 @@ public class KNetPanel extends JPanel implements KNetChannelListener, KNetListen
 				public void valueChanged(ListSelectionEvent e) {
 					if(connectionsList.getSelectedValue() == null) {
 						host.setText("");
-						port.setText("");
+						prefix.setText("");
 						return;
 					}
 					String[] f = ((String) connectionsList.getSelectedValue()).split(":", 2);
 					host.setText(f[0]);
-					port.setText(f.length > 1 ? f[1] : "61897");
+					prefix.setText(f.length > 1 ? f[1] : "");
 				}
 			});
 			connectionsList.setSelectedIndex(0);
@@ -197,9 +195,10 @@ public class KNetPanel extends JPanel implements KNetChannelListener, KNetListen
 		
 		public void connect() {
 			String host = this.host.getText();
-			int port = Integer.parseInt(this.port.getText().isEmpty() ? "61897" : this.port.getText());
+//			int port = Integer.parseInt(this.port.getText().isEmpty() ? "61897" : this.port.getText());
+			String prefix = this.prefix.getText();
 			
-			client = new KNetGameClient("Player", host, port);
+			client = new KNetGameClient("Player", host, 61616, prefix);
 			client.addKNetChannelListener(KNetPanel.this);
 			client.addKNetListener(KNetPanel.this);
 /*			

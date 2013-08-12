@@ -46,12 +46,12 @@ public class KNetChannelManager extends KNetClient implements KNetListener {
 	protected AtomicInteger nextChannelId = new AtomicInteger(-1);
 	protected KNetChannelInfo lobby;
 	
-	public KNetChannelManager(int port) {
-		this("localhost", port);
+	public KNetChannelManager(int port, String prefix) {
+		this("localhost", port, prefix);
 	}
 	
-	public KNetChannelManager(String host, int port) {
-		super("RoomManager", host, port);
+	public KNetChannelManager(String host, int port, String prefix) {
+		super("RoomManager", host, port, prefix);
 		
 		lobby = new KNetChannelInfo(nextChannelId.incrementAndGet(), "lobby");
 		
